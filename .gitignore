@@ -1,0 +1,7 @@
+# OS X junk
+*.DS_Store
+_*
+
+# Samples and recordings
+samples/
+recs/
