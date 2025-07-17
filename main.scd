@@ -223,7 +223,7 @@ s.newBusAllocators;
         ~pulse = Pbindef(\pulse,
             \instrument, \osc,
             \dur, Pseq([
-                Pstutter(24, Pseq([1/4], 1)),
+                Pdup(24, Pseq([1/4], 1)),
                 Prand([1, 2, 4, 6, 12], 1)
             ],inf),
             \atk, 0.001,
@@ -235,7 +235,7 @@ s.newBusAllocators;
             \buf, Prand(~wt_buf[4..9], inf),
             \scale, Scale.minorPentatonic,
             \degree, Pseq([Prand([-15,-10,-5],24), Pseq([\],1)],inf)
-            + Pstutter(25,Pwrand([0,2,-1],[0.78,0.1,0.12],inf)),
+            + Pdup(25,Pwrand([0,2,-1],[0.78,0.1,0.12],inf)),
             \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)],inf),
             \pan, Pwhite(0.01, 0.3) * Pseq([1, -1],inf),
             \out, 0,
