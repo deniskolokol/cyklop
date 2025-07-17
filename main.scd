@@ -117,7 +117,7 @@ s.newBusAllocators;
 
     ~evnts.add(\kick_base -> {
         ~kickBase = Pbind(
-            \instrument, \kick_synth,
+            \instrument, \kick_acoustic,
             \dur, Pseq(~measure * 2, inf),
             \amp, Pseq([
                 // fig 1 - main line
@@ -208,7 +208,7 @@ s.newBusAllocators;
             \buf, Prand(~wt_buf[0..3], inf),
             \scale, Scale.minorPentatonic,
             \degree, Pfunc({
-                (-12,-10..12).scramble[0..rrand(1,3)]
+                (-12,-10..0).scramble[0..rrand(1,3)]
             }),
             \amp, Pexprand(0.05, 0.07),
             \pan, Pwhite(-0.4, 0.4),
@@ -227,15 +227,16 @@ s.newBusAllocators;
                 Prand([1, 2, 4, 6, 12], 1)
             ],inf),
             \atk, 0.001,
-            \sus, 0,
-            \rel, Pexprand(0.4,1),
+            \sus, 0.2,
+            \rel, Pexprand(0.4, 1),
             \c0, 0,
-            \c1, Pwhite(5,10).neg,
+            \c1, Pwhite(5, 10).neg,
             \detune, 0.3,
             \buf, Prand(~wt_buf[4..9], inf),
             \scale, Scale.minorPentatonic,
-            \degree, Pseq([Prand([-15,-10,-5],24), Pseq([\],1)],inf)
-            + Pdup(25,Pwrand([0,2,-1],[0.78,0.1,0.12],inf)),
+            \degree, Pseq(
+                [Prand([-15, -10, -5], 24), Pseq([\], 1)], inf)
+                + Pdup(25, Pwrand([0, 2, -1], [0.78, 0.1, 0.12], inf)),
             \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)],inf),
             \pan, Pwhite(0.01, 0.3) * Pseq([1, -1],inf),
             \out, 0,
@@ -259,9 +260,9 @@ s.newBusAllocators;
             \c1, -2,
             \detune, Pexprand(0.18,0.25),
             \buf, Pwrand([
-                Pseq([~wt_buf[0]],4),
-                Pseq([~wt_buf[1]],4),
-                Pseq([~wt_buf[2]],4),
+                Pseq([~wt_buf[0]], 4),
+                Pseq([~wt_buf[1]], 4),
+                Pseq([~wt_buf[2]], 4),
             ],[9,3,1].normalizeSum,inf),
             \midinote, Pxrand([
                 Pseq([\,67,60,Prand([58,70,\])],1),

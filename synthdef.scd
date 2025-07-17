@@ -179,8 +179,8 @@ SynthDef(\osc, {
     atk=0.01, sus=1, rel=0.01, c0=1, c1=(-1);
     var sig, env, detuneCtrl;
     env = EnvGen.ar(
-        Env([0,1,1,0],[atk,sus,rel],[c0,0,c1]),
-        doneAction:2
+        Env([0, 1, 1, 0], [atk, sus, rel], [c0, 0, c1]),
+        doneAction: Done.freeSelf
     );
 
     // array of eight Oscs with uniquely detune frequencies
