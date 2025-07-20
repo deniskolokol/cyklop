@@ -276,6 +276,19 @@ s.newBusAllocators;
         )
     });
 
+    ~evnts.add(\mix_full -> {
+        ~mixFull = Pdef(
+            \mix_full,
+            Ptpar([
+                0.0, ~evnts[\snare_base].value,
+                0.0, ~evnts[\beat_base_tom].value,
+                0.0, ~evnts[\pad].value,
+                0.0, ~evnts[\pulse].value,
+                0.0, ~evnts[\melody].value,
+            ], inf)
+        );
+    });
+
     postf("OK\n");
 };
 
@@ -297,11 +310,24 @@ s.newBusAllocators;
         ["Stop", Color.white, Color.red]
     ])
     .action_({ |bt|
-        if (bt.value == 1) {
-            ~evnts[\beat_base].value;
-        } {
-            ~beatBase.stop;
-        }
+		// if (bt.value == 1) {
+		// 	~evnts[\beat_base].value;
+		// } {
+		// 	~beatBase.stop;
+		// };
+
+		if (~evnts[\mix_full].isNil) {
+			"WARNING: No event defined for 'mix_full'".postln;
+		} {
+			~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
+				if (~evnts[\mix_full].value.isPlaying) {
+					~evnts[\mix_full].value.stop;
+				} {
+					~evnts[\mix_full].value.play;
+				};
+				nil; // Return nil to prevent rescheduling
+			});
+		};
     });
     ~win.front;
 };
