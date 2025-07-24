@@ -96,12 +96,170 @@ s.newBusAllocators;
 
 ~makeEvents = {
     "> Loading event definitions...".post;
-    ~evnts = Dictionary.new;
 
     // Warning: every event that should be controlled by MIDI
     // should be defined as Pdef!
+    ~evnts = Dictionary.new;
 
-    // Clean hat.
+    // 1 bar straignt patterns.
+    ~hihatBarStraight = Pbind(
+        \instrument, \hihat,
+        \dur, Pseq(~measure * 2, inf),
+        \amp, Pwhite(0.5, 1.0, 10),
+        \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 10),
+        \pan, Pgauss(0, 0.7, 10),
+    );
+    ~hihatBarStraight_x2 = Pbind(
+        \instrument, \hihat,
+        \dur, Pseq(~measure, inf),
+        \amp, Pwhite(0.5, 1.0, 20),
+        \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 20),
+        \pan, Pgauss(0, 0.7, 20),
+    );
+
+    // Define templates as Events.
+    ~snareBarTemplate = { |params|
+        var baseEvent = (
+            instrument: \snare,
+            dur: Pseq(~measure * 2, inf),
+            pDistPreGain: Pwhite(11, 13).dbamp,
+            pDistGain: Pwhite(-8, -10).dbamp,
+            bpfreq1: Pwhite(2000, 2300),
+            bprq1: Pwhite(0.2, 0.5),
+            bpfreq2: Pwhite(3800, 4300),
+            bprq2: Pwhite(0.5, 0.7),
+            pan: Pwhite(-0.4, -0.1)
+        );
+        
+        // Merge with parameters if provided
+        if (params.notNil) {
+            baseEvent = baseEvent.putAll(params);
+        };
+        
+        // Convert Event to array of key-value pairs for Pbind
+        baseEvent.asPairs;
+    };
+    ~kickBarTemplate = { |params|
+        var baseEvent = (
+            instrument: \kick_acoustic,
+            dur: Pseq(~measure * 2, inf),
+        );
+        if (params.notNil) {
+            baseEvent = baseEvent.putAll(params);
+        };
+        baseEvent.asPairs;
+    };
+    ~tomBarTemplate = { |params|
+        var baseEvent = (
+            instrument: \tom,
+            dur: Pseq(~measure * 2, inf),
+        );
+        if (params.notNil) {
+            baseEvent = baseEvent.putAll(params);
+        };
+        baseEvent.asPairs;
+    };
+
+    // Straight patterns.
+    ~kickBarStraight = Pbind(
+        *~kickBarTemplate.((amp: Pseq([Pwrand([0, 1], [0.2, 0.8], 1), 0, 1, 0, 0, 0, 1, 1, 0, 0])))
+    );
+    ~snareBarStraight = Pbind(
+        *~snareBarTemplate.((amp: Pseq([0, 0, 0, 1, 0, 0, 0, 0, 1, 0])))
+    );
+    ~tomBarStraight = Pbind(
+        *~tomBarTemplate.((amp: Pseq([0, 0, 0, 0, 0, 1, Pwrand([1, 0], [0.7, 0.3], 1), 0, 0, 1])))
+    );
+
+    // Syncopated patterns.
+    ~snareBarSyncopated_1 = Pbind(
+        *~snareBarTemplate.((amp: Pseq([1, 1, 0, 0, 0, 1, 0, 0, 1, Prand([0, 1], 1)])))
+    );
+    ~snareBarSyncopated_2 = Pbind(
+        *~snareBarTemplate.((amp: Pseq([1, 0, 0, 1, 0, 0, 1, 0, 1, Prand([0, 1], 1)])))
+    );
+    ~snareBarSyncopated_3 = Pbind(
+        *~snareBarTemplate.((
+            pDistPreGain: Pwhite(8, 10).dbamp,
+            bpfreq1: Pwhite(1800, 2100),
+            amp: Pseq([0, 1, 0, 0, 1, 1, 0, 0, 1, 1])
+        ))
+    );
+    ~kickBarSyncopated_1 = Pbind(
+        *~kickBarTemplate.((amp: Pseq([0, 0, 1, 0, 0, 1, 1, 1, 0, 0])))
+    );
+    ~kickBarSyncopated_2 = Pbind(
+        *~kickBarTemplate.((amp: Pseq([0, 1, 0, 0, 1, 0, 0, 1, 0, 0])))
+    );
+    ~kickBarSyncopated_2 = Pbind(
+        *~kickBarTemplate.((amp: Pseq([0, 1, 0, 0, 1, 1, 0, 0, 1, 1])))
+    );
+    ~tomBarSyncopated_1 = Pbind( // silent
+        *~tomBarTemplate.((amp: Pseq(0 ! 10)))
+    );
+
+    // Mix 1 bar straight patterns into one.
+    ~beatBarStraight = Ptpar([
+        0.0, ~hihatBarStraight, // HAT
+        0.0, ~kickBarStraight, // KICK
+        0.0, ~snareBarStraight, // SNARE
+    ]);
+    ~beatBarStraight_x2 = Ptpar([
+        0.0, ~hihatBarStraight_x2, // HAT
+        0.0, ~kickBarStraight, // KICK
+        0.0, ~snareBarStraight, // SNARE
+        0.0, ~tomBarStraight, // TOM
+    ]);
+
+    // Mix 1 bar syncopated patterns into one.
+    ~beatBarSyncop_x2_1 = Ptpar([
+        0.0, ~hihatBarStraight_x2, // HAT
+        0.0, ~kickBarSyncopated_1, // KICK
+        0.0, ~snareBarSyncopated_1, // SNARE
+        0.0, ~tomBarSyncopated_1, // TOM
+    ]);
+    ~beatBarSyncop_x2_2 = Ptpar([
+        0.0, ~hihatBarStraight_x2, // HAT
+        0.0, ~kickBarSyncopated_2, // KICK
+        0.0, ~snareBarSyncopated_2, // SNARE
+        0.0, ~tomBarStraight, // TOM
+    ]);
+    ~beatBarSyncop_x2_3 = Ptpar([
+        0.0, ~hihatBarStraight_x2, // HAT
+        0.0, ~kickBarSyncopated_3, // KICK
+        0.0, ~snareBarSyncopated_3, // SNARE
+        0.0, ~tomBarStraight, // TOM
+    ]);
+
+    // Base drum line.
+    ~evnts.add(\beat_base_straight -> {
+        ~beatBaseStraight = Pdef(
+            // bookmark! \beat_base_straight is a "slow" steady beat
+        )
+    });
+    ~evnts.add(\beat_base_inf -> {
+        ~beatBaseInf = Pdef(
+            \beat_base_inf,
+            Pseq([
+                ~beatBarStraight_x2,
+                Pwrand([
+                    ~beatBarStraight_x2,
+                    ~beatBarSyncop_x2_1,
+                    ~beatBarSyncop_x2_2,
+                    ~beatBarSyncop_x2_3
+                ], [0.7, 0.1, 0.1, 0.1].normalizeSum, 1),
+                ~beatBarStraight_x2,
+                Pxrand([
+                    ~beatBarSyncop_x2_1,
+                    ~beatBarSyncop_x2_2,
+                    ~beatBarSyncop_x2_3
+                ], 1)
+            ], inf)
+        );
+    });
+
+    // LEGACY
+    // Clean hat - infinite series.
     ~evnts.add(\clean_hat -> {
         ~cleanHat = Pdef(
             \clean_hat,
@@ -364,8 +522,8 @@ s.newBusAllocators;
     MIDIdef.noteOn(\noteOnKeyPad, { |vel, num, chan, src|
         var setParm = switch(num)
         { 36 } { \clean_hat }
-        { 37 } { \beat_base }
-        { 38 } { \beat_base_tom }
+        { 37 } { \beat_bar_straight }
+        { 38 } { \beat_base_inf }
         { 39 } { \pad }
         { 40 } { \pulse }
         { 41 } { \melody };
