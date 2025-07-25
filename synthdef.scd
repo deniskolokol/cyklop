@@ -44,7 +44,7 @@ SynthDef(\kick_acoustic, {
     snd = SinOsc.ar(sndfreq);
 
     // ...as well as amplitudes, attacks and release times.
-    snd = snd * [0, -10, -5, -19, -15, -20, -15].dbamp;
+    snd = snd * [0, -10, -5, -19, -15, -20, -25].dbamp;
     snd = snd * Env.perc(
         attackTime: [0.01, 0.01, 0.015, 0.01, 0.03, 0.01, 0.02] * 0.5,
         releaseTime:[1,    0.3,  0.1,   0.03, 0.05, 0.03, 0.06] * 3

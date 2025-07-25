@@ -28,7 +28,7 @@ ServerQuit.removeAll;
 ~stretch = 25/128 * ~baseQuant;
 ~freq = 2;
 ~measure = 1 / ~baseQuant ! 10 * ~freq;
-~tempo = TempoClock.new(120/60).schedAbs(0, { ~tempo.beatsPerBar_(4) });
+~tempo = TempoClock.new(120/60).schedAbs(0, { ~tempo.beatsPerBar_(5) });
 s.newBusAllocators;
 ~rbus = Bus.audio(s, 2);
 
@@ -162,7 +162,7 @@ s.newBusAllocators;
 
     // Straight patterns.
     ~kickBarStraight = Pbind(
-        *~kickBarTemplate.((amp: Pseq([Pwrand([0, 1], [0.2, 0.8], 1), 0, 1, 0, 0, 0, 1, 1, 0, 0])))
+        *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 1, 1, 0, 0])))
     );
     ~snareBarStraight = Pbind(
         *~snareBarTemplate.((amp: Pseq([0, 0, 0, 1, 0, 0, 0, 0, 1, 0])))
@@ -171,30 +171,42 @@ s.newBusAllocators;
         *~tomBarTemplate.((amp: Pseq([0, 0, 0, 0, 0, 1, Pwrand([1, 0], [0.7, 0.3], 1), 0, 0, 1])))
     );
 
-    // Syncopated patterns.
-    ~snareBarSyncopated_1 = Pbind(
-        *~snareBarTemplate.((amp: Pseq([1, 1, 0, 0, 0, 1, 0, 0, 1, Prand([0, 1], 1)])))
+    // Syn patterns.
+    ~kickBarSyn_1 = Pbind(
+        *~kickBarTemplate.((amp: Pseq([Pwrand([0, 1], [0.2, 0.8], 1), 0, 1, 0, 0, 1, 1, 1, 0, 0])))
     );
-    ~snareBarSyncopated_2 = Pbind(
+    ~snareBarSyn_1 = Pbind(
+        *~snareBarTemplate.((amp: Pseq([0, 0, 0, 1, 0, 0, 0, 0, 1, 1])))
+    );
+
+    ~kickBarSyn_2 = Pbind(
+        *~kickBarTemplate.((amp: Pseq([0, 1, 0, 0, 1, 0, 0, 1, 0, 0])))
+    );
+    ~snareBarSyn_2 = Pbind(
         *~snareBarTemplate.((amp: Pseq([1, 0, 0, 1, 0, 0, 1, 0, 1, Prand([0, 1], 1)])))
     );
-    ~snareBarSyncopated_3 = Pbind(
+
+    ~snareBarSyn_3 = Pbind(
         *~snareBarTemplate.((
             pDistPreGain: Pwhite(8, 10).dbamp,
             bpfreq1: Pwhite(1800, 2100),
             amp: Pseq([0, 1, 0, 0, 1, 1, 0, 0, 1, 1])
         ))
     );
-    ~kickBarSyncopated_1 = Pbind(
-        *~kickBarTemplate.((amp: Pseq([0, 0, 1, 0, 0, 1, 1, 1, 0, 0])))
+    ~snareBarSyn_4 = Pbind(
+        *~snareBarTemplate.((amp: Pseq([1, 1, 0, 0, 0, 1, 0, 0, 1, Prand([0, 1], 1)])))
     );
-    ~kickBarSyncopated_2 = Pbind(
-        *~kickBarTemplate.((amp: Pseq([0, 1, 0, 0, 1, 0, 0, 1, 0, 0])))
+    // Drum roll.
+    ~kickBarSyn_5 = Pbind(
+        *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 0, 0, 0, 0])))
     );
-    ~kickBarSyncopated_2 = Pbind(
-        *~kickBarTemplate.((amp: Pseq([0, 1, 0, 0, 1, 1, 0, 0, 1, 1])))
+    ~snareBarSyn_5 = Pbind(
+        *~snareBarTemplate.((
+            dur: Pseq((1 / ~baseQuant ! 26) ++ ~measure[6..], inf),
+            amp: Pseq(0 ! 10) ++ Pgeom(0.01, 1.3, 16) ++ Pseries(0.85, 0.05, 4)
+            ))
     );
-    ~tomBarSyncopated_1 = Pbind( // silent
+    ~tomBarSyn_1 = Pbind( // TODO, silent at the moment
         *~tomBarTemplate.((amp: Pseq(0 ! 10)))
     );
 
@@ -212,141 +224,48 @@ s.newBusAllocators;
     ]);
 
     // Mix 1 bar syncopated patterns into one.
-    ~beatBarSyncop_x2_1 = Ptpar([
+    ~beatBarSyn_x2_1 = Ptpar([
         0.0, ~hihatBarStraight_x2, // HAT
-        0.0, ~kickBarSyncopated_1, // KICK
-        0.0, ~snareBarSyncopated_1, // SNARE
-        0.0, ~tomBarSyncopated_1, // TOM
+        0.0, ~kickBarSyn_1, // KICK
+        0.0, ~snareBarSyn_1, // SNARE
     ]);
-    ~beatBarSyncop_x2_2 = Ptpar([
+    ~beatBarSyn_x2_2 = Ptpar([
         0.0, ~hihatBarStraight_x2, // HAT
-        0.0, ~kickBarSyncopated_2, // KICK
-        0.0, ~snareBarSyncopated_2, // SNARE
-        0.0, ~tomBarStraight, // TOM
+        0.0, ~kickBarSyn_2, // KICK
+        0.0, ~snareBarSyn_2, // SNARE
     ]);
-    ~beatBarSyncop_x2_3 = Ptpar([
+    ~beatBarSyn_x2_3 = Ptpar([
         0.0, ~hihatBarStraight_x2, // HAT
-        0.0, ~kickBarSyncopated_3, // KICK
-        0.0, ~snareBarSyncopated_3, // SNARE
-        0.0, ~tomBarStraight, // TOM
+        0.0, ~kickBarSyn_3, // KICK
+        0.0, ~snareBarSyn_3, // SNARE
+    ]);
+    // <..insert 4..>
+    ~beatBarSyn_x2_5 = Ptpar([
+        0.0, ~hihatBarStraight, // HAT
+        0.0, ~kickBarSyn_5, // KICK
+        0.0, ~snareBarSyn_5, // SNARE
     ]);
 
     // Base drum line.
-    ~evnts.add(\beat_base_straight -> {
-        ~beatBaseStraight = Pdef(
-            // bookmark! \beat_base_straight is a "slow" steady beat
-        )
+    ~evnts.add(\beat_base_x1 -> {
+        ~beatBase_x1 = Pdef(
+            \beat_base_x1,
+            Pseq([~beatBarStraight], inf)
+        );
     });
-    ~evnts.add(\beat_base_inf -> {
-        ~beatBaseInf = Pdef(
-            \beat_base_inf,
+    ~evnts.add(\beat_base_x2 -> {
+        ~beatBase_x2 = Pdef(
+            \beat_base_x2,
             Pseq([
                 ~beatBarStraight_x2,
-                Pwrand([
-                    ~beatBarStraight_x2,
-                    ~beatBarSyncop_x2_1,
-                    ~beatBarSyncop_x2_2,
-                    ~beatBarSyncop_x2_3
-                ], [0.7, 0.1, 0.1, 0.1].normalizeSum, 1),
+                Pxrand([~beatBarStraight_x2, ~beatBarSyn_x2_1]),
                 ~beatBarStraight_x2,
                 Pxrand([
-                    ~beatBarSyncop_x2_1,
-                    ~beatBarSyncop_x2_2,
-                    ~beatBarSyncop_x2_3
+                    ~beatBarSyn_x2_2,
+                    ~beatBarSyn_x2_3,
+                    // <..insert 4..>
+                    ~beatBarSyn_x2_5
                 ], 1)
-            ], inf)
-        );
-    });
-
-    // LEGACY
-    // Clean hat - infinite series.
-    ~evnts.add(\clean_hat -> {
-        ~cleanHat = Pdef(
-            \clean_hat,
-            Pbind(
-                \instrument, \hihat,
-                \dur, Pseq(~measure, inf),
-                \amp, Pwhite(0.5, 1.0, inf),
-                \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], inf),
-                \pan, Pgauss(0, 0.7, inf),
-            )
-        );
-    });
-
-    ~evnts.add(\kick_base -> {
-        ~kickBase = Pbind(
-            \instrument, \kick_acoustic,
-            \dur, Pseq(~measure * 2, inf),
-            \amp, Pseq([
-                // fig 1 - main line
-                Pseq([Pwrand([0, 1], [0.2, 0.8], 1), 0, 1, 0, 0, 0, 1, 1, 0, 0], 3),
-                Pxrand([
-                    // fig 2 - syncope 1
-                    Pseq([0, 0, 1, 0, 0, 1, 1, 1, 0, 0], 1),
-                    // fig 3 - syncope 2
-                    Pseq([0, 1, 0, 0, 1, 0, 0, 1, 0, 0], 1),
-                    // fig 4 - syncope 3
-                    Pseq([0, 1, 0, 0, 1, 1, 0, 0, 1, 1], 1),
-                ], 1),
-            ])
-        )
-    });
-    ~evnts.add(\snare_base -> {
-        ~snareBase = Pbind(
-            \instrument, \snare,
-            \dur, Pseq(~measure * 2, inf),
-            \pDistPreGain, Pwhite(11, 13).dbamp,
-            \pDistGain, Pwhite(-8, -10).dbamp,
-            \bpfreq1, Pwhite(2000, 2300),
-            \bprq1, Pwhite(0.2, 0.5),
-            \bpfreq2, Pwhite(3800, 4300),
-            \bprq2, Pwhite(0.5, 0.7),
-            \amp, Pseq([
-                // fig 1 - main line
-                Pseq([0, 0, 0, 1, 0, 0, 0, 0, 1, 0], 3),
-                Pxrand([
-                    // fig 2 - syncope 1
-                    Pseq([1, 1, 0, 0, 0, 1, 0, 0, 1, Prand([0, 1], 1)], 1),
-                    // fig 3 - syncope 2
-                    Pseq([1, 0, 0, 1, 0, 0, 1, 0, 1, Prand([0, 1], 1)], 1),
-                    // fig 4 - syncope 3
-                    Pseq([0, 0, 1, 0, 0, 0, 1, 0, 1, 1], 1),
-                ], 1),
-            ])
-        )
-    });
-    ~evnts.add(\tom_base -> {
-        ~tomBase = Pbind(
-            \instrument, \tom,
-            \dur, Pseq(~measure * 2, inf),
-            \amp, Pseq([
-                // fig 1 - main line
-                Pseq([0, 0, 0, 0, 0, 1, Pwrand([1, 0], [0.7, 0.3], 1), 0, 0, 1], 3),
-                // fig 2 - syncope 1 (silent)
-                Pseq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 1),
-            ]),
-        )
-    });
-
-    // Base beat without tom.
-    ~evnts.add(\beat_base -> {
-        ~beatBase = Pdef(
-            \beat_base,
-            Ptpar([
-                0.0, ~evnts[\kick_base].value, // KICK
-                0.0, ~evnts[\snare_base].value, // SNARE
-            ], inf)
-        );
-    });
-
-    // Base beat with tom.
-    ~evnts.add(\beat_base_tom -> {
-        ~beatBaseTom = Pdef(
-            \beat_base_tom,
-            Ptpar([
-                0.0, ~evnts[\kick_base].value, // KICK
-                0.0, ~evnts[\snare_base].value, // SNARE
-                0.0, ~evnts[\tom_base].value, // TOM
             ], inf)
         );
     });
@@ -438,8 +357,7 @@ s.newBusAllocators;
         ~mixFull = Pdef(
             \mix_full,
             Ptpar([
-                0.0, ~evnts[\snare_base].value,
-                0.0, ~evnts[\beat_base_tom].value,
+                0.0, ~evnts[\beat_base_x2].value,
                 0.0, ~evnts[\pad].value,
                 0.0, ~evnts[\pulse].value,
                 0.0, ~evnts[\melody].value,
@@ -522,8 +440,8 @@ s.newBusAllocators;
     MIDIdef.noteOn(\noteOnKeyPad, { |vel, num, chan, src|
         var setParm = switch(num)
         { 36 } { \clean_hat }
-        { 37 } { \beat_bar_straight }
-        { 38 } { \beat_base_inf }
+        { 37 } { \beat_base_x1 }
+        { 38 } { \beat_base_x2 }
         { 39 } { \pad }
         { 40 } { \pulse }
         { 41 } { \melody };
