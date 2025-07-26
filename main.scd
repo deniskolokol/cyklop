@@ -128,7 +128,7 @@ s.newBusAllocators;
             bprq1: Pwhite(0.2, 0.5),
             bpfreq2: Pwhite(3800, 4300),
             bprq2: Pwhite(0.5, 0.7),
-            pan: Pwhite(-0.4, -0.1)
+            pan: Pwhite(-0.4, -0.7) // Spread snare slightly left of center
         );
         
         // Merge with parameters if provided
@@ -153,6 +153,7 @@ s.newBusAllocators;
         var baseEvent = (
             instrument: \tom,
             dur: Pseq(~measure * 2, inf),
+            pan: Pwhite(0.2, 0.5) // Spread toms slightly right of center
         );
         if (params.notNil) {
             baseEvent = baseEvent.putAll(params);

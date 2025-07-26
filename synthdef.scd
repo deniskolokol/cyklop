@@ -71,7 +71,8 @@ SynthDef(\kick_acoustic, {
 }).add;
 
 SynthDef(\snare, {
-    arg out=0, att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
+    arg out=0, rout=0, rsend=(-20),
+    att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
     bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6,
     pDistPreGain=4.4668359215096, // 13.dbamp
     pDistGain=0.31622776601684; // -10.dbamp
@@ -114,16 +115,20 @@ SynthDef(\snare, {
     // Add some reverb and the second env so it can ring out.
     // Important: GVerb is mono-to-stereo, avoiding Pan2!
     snd = snd + (GVerb.ar(snd, 16, 2) * -30.dbamp);
-    snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
+    snd = Splay.ar(snd, center: pan);
 
+    // Sculpt by percussion env.
+    snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
     snd = snd * amp;
 
     Out.ar(out, snd);
+    Out.ar(rout, snd * rsend.dbamp); //"post-fader" send to reverb
 }).add;
 
 
 SynthDef(\tom, {
-    arg out=0, att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
+    arg out=0, rout=0, rsend=(-20),
+    att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
     bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6;
 
     var snd, sndfreq;
@@ -152,11 +157,14 @@ SynthDef(\tom, {
     // Add some reverb and the second env so it can ring out.
     // Important: GVerb is mono-to-stereo, avoiding Pan2!
     snd = snd + (GVerb.ar(snd, 16, 2) * -30.dbamp);
-    snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
+    snd = Splay.ar(snd, center: pan);
 
+    // Sculpt by percussion env.
+    snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
     snd = snd * amp;
 
     Out.ar(out, snd);
+    Out.ar(rout, snd * rsend.dbamp); //"post-fader" send to reverb
 }).add;
 
 
