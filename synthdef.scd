@@ -7,7 +7,7 @@
 // Synthetic kick drum.
 SynthDef(\kick_synth, {
     arg out=0, att=0.001, rel=0.8, curve=(-8), amp=0.5, pan=0,
-    bpfreq=10120, bprq=0.5;
+        bpfreq=10120, bprq=0.5;
 
     // Base frequency with a slight downhill (XLine) - to make kick sounding less "tonal".
     var sndfreq = 55 * (1 + (4 * Env.perc(0, 0.13, curve: curve).ar)) * XLine.ar(1, 0.5, 1);
@@ -34,7 +34,7 @@ SynthDef(\kick_synth, {
 // "Acoutsic" kick drum
 SynthDef(\kick_acoustic, {
     arg out=0, att=0.001, rel=1.3, curve=(-6), amp=0.56, pan=0,
-    bpfreq1=7120, bprq1=0.5, bpfreq2=3120, bprq2=0.3;
+        bpfreq1=7120, bprq1=0.5, bpfreq2=3120, bprq2=0.3;
 
     var snd, sndfreq;
 
@@ -72,10 +72,10 @@ SynthDef(\kick_acoustic, {
 
 SynthDef(\snare, {
     arg out=0, rout=0, rsend=(-20),
-    att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
-    bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6,
-    pDistPreGain=4.4668359215096, // 13.dbamp
-    pDistGain=0.31622776601684; // -10.dbamp
+        att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
+        bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6,
+        pDistPreGain=4.4668359215096, // 13.dbamp
+        pDistGain=0.31622776601684; // -10.dbamp
 
     var snd, sndfreq;
     sndfreq = 200 * (1 + (2 * Env.perc(0.001, 0.03).ar)) * [1, 2.3, 3.5, 5.8];
@@ -128,8 +128,8 @@ SynthDef(\snare, {
 
 SynthDef(\tom, {
     arg out=0, rout=0, rsend=(-20),
-    att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
-    bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6;
+        att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
+        bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6;
 
     var snd, sndfreq;
     sndfreq = 130 * (1 + (2 * Env.perc(0.001, 0.03).ar)) * [0.85, 0.82, 0.8, 0.77, 0.74];
@@ -183,15 +183,16 @@ SynthDef(\hihat, {
 // Wavetable synthesis.
 SynthDef(\osc, {
     arg buf=0, freq=200, detune=0.2,
-    amp=0.2, pan=0, out=0, rout=0, rsend=(-20),
-    atk=0.01, sus=1, rel=0.01, c0=1, c1=(-1);
+        amp=0.2, pan=0, out=0, rout=0, rsend=(-20),
+        atk=0.01, sus=1, rel=0.01, c0=1, c1=(-1);
+
     var sig, env, detuneCtrl;
     env = EnvGen.ar(
         Env([0, 1, 1, 0], [atk, sus, rel], [c0, 0, c1]),
         doneAction: Done.freeSelf
     );
 
-    // array of eight Oscs with uniquely detune frequencies
+    // Array of eight Oscs with uniquely detune frequencies
     // and unique initial phase offsets
     detuneCtrl = LFNoise1.kr(0.1!8).bipolar(detune).midiratio;
     sig = Osc.ar(buf, freq * detuneCtrl, {Rand(0,2pi)}!8);

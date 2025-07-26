@@ -277,14 +277,14 @@ s.newBusAllocators;
         ~pad = Pbindef(\pad,
             \instrument, \osc,
             \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
-            \atk, Pexprand(3, 6),
+            \atk, Pexprand(0.5, 2),
             \sus, 0,
             \rel, Pexprand(5, 10),
             \c0, Pexprand(1, 2),
             \c1, Pexprand(1, 2).neg,
             \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
-            \buf, Prand(~wt_buf[0..3], inf),
-            \scale, Scale.minorPentatonic,
+            \buf, Prand(~wt_buf[3..6], inf),
+            \scale, Scale.pelog,
             \degree, Pfunc({
                 (-12,-10..0).scramble[0..rrand(1,3)]
             }),
@@ -301,9 +301,10 @@ s.newBusAllocators;
         ~pulse = Pbindef(\pulse,
             \instrument, \osc,
             \dur, Pseq([
-                Pdup(24, Pseq([1/4], 1)),
+                Pdup(16, Pseq([1/4], 1)),
+                Pdup(8, Pseq([1/2], 1)),
                 Prand([1, 2, 4, 6, 12], 1)
-            ],inf),
+            ], inf),
             \atk, 0.001,
             \sus, 0.2,
             \rel, Pexprand(0.4, 1),
@@ -311,12 +312,11 @@ s.newBusAllocators;
             \c1, Pwhite(5, 10).neg,
             \detune, 0.3,
             \buf, Prand(~wt_buf[4..9], inf),
-            \scale, Scale.minorPentatonic,
-            \degree, Pseq(
-                [Prand([-15, -10, -5], 24), Pseq([\], 1)], inf)
+            \scale, Scale.pelog,
+            \degree, Pseq([Prand([-12, -10, -8], 24), Pseq([\], 1)], inf)
                 + Pdup(25, Pwrand([0, 2, -1], [0.78, 0.1, 0.12], inf)),
-            \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)],inf),
-            \pan, Pwhite(0.01, 0.3) * Pseq([1, -1],inf),
+            \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
+            \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
             \out, 0,
             \rout, ~rbus,
             \rsend, -10,
