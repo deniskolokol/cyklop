@@ -186,16 +186,30 @@ s.newBusAllocators;
     ~snareBarSyn_2 = Pbind(
         *~snareBarTemplate.((amp: Pseq([1, 0, 0, 1, 0, 0, 1, 0, 1, Prand([0, 1], 1)])))
     );
-
+    ~kickBarSyn_3 = Pbind(
+        *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 0, 1, 0, 0])))
+    );
     ~snareBarSyn_3 = Pbind(
         *~snareBarTemplate.((
             pDistPreGain: Pwhite(8, 10).dbamp,
             bpfreq1: Pwhite(1800, 2100),
-            amp: Pseq([0, 1, 0, 0, 1, 1, 0, 0, 1, 1])
+            amp: Pseq([0, 1, 0, 1, 1, 0, 0, 0, 1, 1])
         ))
     );
+    ~tomBarSyn_3 = Pbind(
+        *~tomBarTemplate.((
+            dur: Pseq((~measure * 2)[..4] ++ ~measure[5..8] ++ (~measure[9] * 2 ! 3), inf),
+            amp: Pseq([0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0])
+        ))
+    );
+    ~kickBarSyn_4 = Pbind(
+        *~kickBarTemplate.((amp: Pseq([0, 0, 1, 0, 1, 0, 0, 1, 0, 0])))
+    );
     ~snareBarSyn_4 = Pbind(
-        *~snareBarTemplate.((amp: Pseq([1, 1, 0, 0, 0, 1, 0, 0, 1, Prand([0, 1], 1)])))
+        *~snareBarTemplate.((
+            dur: Pseq((~measure * 2)[..7] ++ (~measure[8] ! 4), inf),
+            amp: Pseq([1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0])
+            ))
     );
     // Drum roll.
     ~kickBarSyn_5 = Pbind(
@@ -236,11 +250,16 @@ s.newBusAllocators;
         0.0, ~snareBarSyn_2, // SNARE
     ]);
     ~beatBarSyn_x2_3 = Ptpar([
-        0.0, ~hihatBarStraight_x2, // HAT
+        0.0, ~hihatBarStraight, // HAT
         0.0, ~kickBarSyn_3, // KICK
         0.0, ~snareBarSyn_3, // SNARE
+        0.0, ~tomBarSyn_3, // TOM
     ]);
-    // <..insert 4..>
+    ~beatBarSyn_x2_4 = Ptpar([
+        0.0, ~hihatBarStraight_x2, // HAT
+        0.0, ~kickBarSyn_4, // KICK
+        0.0, ~snareBarSyn_4, // SNARE
+    ]);
     ~beatBarSyn_x2_5 = Ptpar([
         0.0, ~hihatBarStraight, // HAT
         0.0, ~kickBarSyn_5, // KICK
@@ -264,7 +283,7 @@ s.newBusAllocators;
                 Pxrand([
                     ~beatBarSyn_x2_2,
                     ~beatBarSyn_x2_3,
-                    // <..insert 4..>
+                    ~beatBarSyn_x2_4,
                     ~beatBarSyn_x2_5
                 ], 1)
             ], inf)
@@ -275,19 +294,17 @@ s.newBusAllocators;
 	// background pad using simple wavetables
     ~evnts.add(\pad -> {
         ~pad = Pbindef(\pad,
-            \instrument, \osc,
+            \instrument, "osc__s2",
             \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
             \atk, Pexprand(0.5, 2),
             \sus, 0,
             \rel, Pexprand(5, 10),
-            \c0, Pexprand(1, 2),
-            \c1, Pexprand(1, 2).neg,
+            \cAtk, Pexprand(1, 2),
+            \cRel, Pexprand(1, 2).neg,
             \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
-            \buf, Prand(~wt_buf[3..6], inf),
+            \bufnum, Prand(~wt_buf[3..6], inf),
             \scale, Scale.pelog,
-            \degree, Pfunc({
-                (-12,-10..0).scramble[0..rrand(1,3)]
-            }),
+            \degree, Pfunc({ (-12,-10..0).scramble[0..rrand(1,3)] }),
             \amp, Pexprand(0.05, 0.07),
             \pan, Pwhite(-0.4, 0.4),
             \out, 0,
@@ -299,7 +316,7 @@ s.newBusAllocators;
 	// Arpeggiated bass pulse using mid/high complexity wavetables
     ~evnts.add(\pulse -> {
         ~pulse = Pbindef(\pulse,
-            \instrument, \osc,
+            \instrument, "osc__s2",
             \dur, Pseq([
                 Pdup(16, Pseq([1/4], 1)),
                 Pdup(8, Pseq([1/2], 1)),
@@ -308,10 +325,10 @@ s.newBusAllocators;
             \atk, 0.001,
             \sus, 0.2,
             \rel, Pexprand(0.4, 1),
-            \c0, 0,
-            \c1, Pwhite(5, 10).neg,
+            \cAtk, 0,
+            \cRel, Pwhite(5, 10).neg,
             \detune, 0.3,
-            \buf, Prand(~wt_buf[4..9], inf),
+            \bufnum, Prand(~wt_buf[4..9], inf),
             \scale, Scale.pelog,
             \degree, Pseq([Prand([-12, -10, -8], 24), Pseq([\], 1)], inf)
                 + Pdup(25, Pwrand([0, 2, -1], [0.78, 0.1, 0.12], inf)),
@@ -326,7 +343,7 @@ s.newBusAllocators;
     //minimal melody using simple wavetables
 	~evnts.add(\melody -> {
         ~melody = Pbindef(\melody,
-            \instrument, \osc,
+            \instrument, "osc__s2",
             \dur, Prand([
                 Pseq([Prand([12,16,20]),2,1.5,0.5],1),
                 Pseq([Prand([12,16,20]),1.5,1,1.5],1),
@@ -334,10 +351,10 @@ s.newBusAllocators;
             \atk, 0.01,
             \sus, 0.3,
             \rel, 1.5,
-            \c0, -2,
-            \c1, -2,
+            \cAtk, -2,
+            \cRel, -2,
             \detune, Pexprand(0.18,0.25),
-            \buf, Pwrand([
+            \bufnum, Pwrand([
                 Pseq([~wt_buf[0]], 4),
                 Pseq([~wt_buf[1]], 4),
                 Pseq([~wt_buf[2]], 4),
@@ -387,22 +404,19 @@ s.newBusAllocators;
         ["Stop", Color.white, Color.red]
     ])
     .action_({ |bt|
-		// if (bt.value == 1) {
-		// 	~evnts[\beat_base].value;
-		// } {
-		// 	~beatBase.stop;
-		// };
-
-		if (~evnts[\mix_full].isNil) {
-			"WARNING: No event defined for 'mix_full'".postln;
+        var fullMixName = \mix_full;
+		if (~evnts[fullMixName].isNil) {
+			postf("WARNING: No event defined for '%'\n", fullMixName);
 		} {
 			~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
-				if (~evnts[\mix_full].value.isPlaying) {
-					~evnts[\mix_full].value.stop;
+				if (~evnts[fullMixName].value.isPlaying) {
+					~evnts[fullMixName].value.stop;
 				} {
-					~evnts[\mix_full].value.play;
+					~evnts[fullMixName].value.play;
 				};
-				nil; // Return nil to prevent rescheduling
+
+                // Return nil to prevent rescheduling
+				nil;
 			});
 		};
     });
