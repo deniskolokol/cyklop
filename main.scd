@@ -45,14 +45,14 @@ s.newBusAllocators;
 		Env(
 			//env always begins and ends with zero
 			//inner points are random from -1.0 to 1.0
-			[0]++({1.0.rand}.dup(numSegs-1) * [1,-1]).scramble++[0],
+			[0]++({1.0.rand}.dup(numSegs-1) * [1, -1]).scramble++[0],
 
 			//greater segment duration variety in higher-index wavetables
-			{exprand(1,i.linexp(0,9,1,50))}.dup(numSegs),
+			{exprand(1, i.linexp(0, 9, 1, 50))}.dup(numSegs),
 
 			//low-index wavetables tend to be sinusoidal
 			//high index wavetables tend to have sharp angles and corners
-			{[\sine,0,exprand(1,20) * [1,-1].choose].wchoose([9-i,3,i].normalizeSum)}.dup(numSegs)
+			{[\sine, 0, exprand(1,20) * [1,-1].choose].wchoose([9-i, 3, i].normalizeSum)}.dup(numSegs)
 		).asSignal(1024);
 	});
 
@@ -304,7 +304,7 @@ s.newBusAllocators;
             \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
             \bufnum, Prand(~wt_buf[3..6], inf),
             \scale, Scale.pelog,
-            \degree, Pfunc({ (-12,-10..0).scramble[0..rrand(1,3)] }),
+            \degree, Pfunc({ ([-24] ++ (Scale.pelog.degrees-12) ++ [0]).scramble[0..rrand(1, 3)] }),
             \amp, Pexprand(0.05, 0.07),
             \pan, Pwhite(-0.4, 0.4),
             \out, 0,
@@ -330,8 +330,8 @@ s.newBusAllocators;
             \detune, 0.3,
             \bufnum, Prand(~wt_buf[4..9], inf),
             \scale, Scale.pelog,
-            \degree, Pseq([Prand([-12, -10, -8], 24), Pseq([\], 1)], inf)
-                + Pdup(25, Pwrand([0, 2, -1], [0.78, 0.1, 0.12], inf)),
+            \degree, Pseq([Prand([-12, -11, -5], 24), Pseq([\], 1)], inf)
+                + Pdup(25, Pwrand([0, 3, -4], [0.78, 0.1, 0.12], inf)),
             \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
             \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
             \out, 0,
@@ -345,9 +345,9 @@ s.newBusAllocators;
         ~melody = Pbindef(\melody,
             \instrument, "osc__s2",
             \dur, Prand([
-                Pseq([Prand([12,16,20]),2,1.5,0.5],1),
-                Pseq([Prand([12,16,20]),1.5,1,1.5],1),
-            ],inf),
+                Pseq([Prand([12, 16, 20]), 2, 1.5, 0.5], 1),
+                Pseq([Prand([12, 16, 20]), 1.5, 1, 1.5], 1),
+            ], inf),
             \atk, 0.01,
             \sus, 0.3,
             \rel, 1.5,
@@ -358,12 +358,12 @@ s.newBusAllocators;
                 Pseq([~wt_buf[0]], 4),
                 Pseq([~wt_buf[1]], 4),
                 Pseq([~wt_buf[2]], 4),
-            ],[9,3,1].normalizeSum,inf),
-            \midinote, Pxrand([
-                Pseq([\,67,60,Prand([58,70,\])],1),
-                Pseq([\,67,58,Prand([57,63,\])],1),
-                Pseq([\,70,72,Prand([65,79,\])],1)
-            ],inf),
+            ], [9, 3, 1].normalizeSum, inf),
+            \degree, Pxrand([
+                Pseq([\, 7,  0, Prand([-4, 12, \])], 1),
+                Pseq([\, 7, -4, Prand([-5, 3,  \])], 1),
+                Pseq([\, 8, 12, Prand([7,  8,  \])], 1)
+            ], inf),
             \amp, Pseq([0,0.18,0.24,0.28],inf),
             \out, 0,
             \rout, ~rbus,
@@ -375,10 +375,11 @@ s.newBusAllocators;
         ~mixFull = Pdef(
             \mix_full,
             Ptpar([
-                0.0, ~evnts[\beat_base_x2].value,
+                0.0, ~evnts[\beat_base_x1].value,
+                // 0.0, ~evnts[\beat_base_x2].value,
                 0.0, ~evnts[\pad].value,
-                0.0, ~evnts[\pulse].value,
-                0.0, ~evnts[\melody].value,
+                // 0.0, ~evnts[\pulse].value,
+                // 0.0, ~evnts[\melody].value,
             ], inf)
         );
     });
@@ -495,6 +496,13 @@ s.newBusAllocators;
 
     "> Freeing MIDI...".post;
     MIDIdef.freeAll;
+    postf("OK\n");
+
+    "> Cleaning up buffers...".post;
+    if (~wt_buf.isNil.not) {
+        ~wt_buf.do({ |buf| buf.free });
+        ~wt_buf = nil;
+    };
     postf("OK\n");
 
     "> Removing all functions...".post;
