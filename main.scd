@@ -305,7 +305,7 @@ s.newBusAllocators;
             \bufnum, Prand(~wt_buf[3..6], inf),
             \scale, Scale.pelog,
             \degree, Pfunc({ ([-24] ++ (Scale.pelog.degrees-12) ++ [0]).scramble[0..rrand(1, 3)] }),
-            \amp, Pexprand(0.05, 0.07),
+            \amp, Pexprand(0.07, 0.1),
             \pan, Pwhite(-0.4, 0.4),
             \out, 0,
             \rout, ~rbus,
@@ -343,7 +343,7 @@ s.newBusAllocators;
     //minimal melody using simple wavetables
 	~evnts.add(\melody -> {
         ~melody = Pbindef(\melody,
-            \instrument, "osc__s2",
+            \instrument, "vosc__s2",
             \dur, Prand([
                 Pseq([Prand([12, 16, 20]), 2, 1.5, 0.5], 1),
                 Pseq([Prand([12, 16, 20]), 1.5, 1, 1.5], 1),
@@ -359,6 +359,7 @@ s.newBusAllocators;
                 Pseq([~wt_buf[1]], 4),
                 Pseq([~wt_buf[2]], 4),
             ], [9, 3, 1].normalizeSum, inf),
+            \numBufs, Prand((2..4), inf),
             \degree, Pxrand([
                 Pseq([\, 7,  0, Prand([-4, 12, \])], 1),
                 Pseq([\, 7, -4, Prand([-5, 3,  \])], 1),
@@ -375,11 +376,11 @@ s.newBusAllocators;
         ~mixFull = Pdef(
             \mix_full,
             Ptpar([
-                0.0, ~evnts[\beat_base_x1].value,
-                // 0.0, ~evnts[\beat_base_x2].value,
+                // 0.0, ~evnts[\beat_base_x1].value,
+                0.0, ~evnts[\beat_base_x2].value,
                 0.0, ~evnts[\pad].value,
-                // 0.0, ~evnts[\pulse].value,
-                // 0.0, ~evnts[\melody].value,
+                0.0, ~evnts[\pulse].value,
+                0.0, ~evnts[\melody].value,
             ], inf)
         );
     });
