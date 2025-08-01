@@ -206,14 +206,14 @@ SynthDef("osc__s2", {
 }).add;
 
 SynthDef("vosc__s2", {
-    arg bufnum=0, numBufs=2, freq=200, detune=0.2, dur=1.0,
+    arg bufnum=0, numBufs=2, freq=200, detune=0.2,
         amp=0.2, pan=0, out=0, rout=0, rsend=(-20),
         atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
 
     var sig, env, bufpos, detuneCtrl;
 
     // This will create a vibrato effect by changing the buffer position
-    bufpos = bufnum + SinOsc.kr(XLine.kr(0.01, numBufs-1, dur/4)).range(0, 1);
+    bufpos = bufnum + SinOsc.kr(XLine.kr(0.01, numBufs-1, atk+sus)).range(0, 1);
     env = EnvGen.ar(
         Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
         doneAction: Done.freeSelf
