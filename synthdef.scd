@@ -230,6 +230,35 @@ SynthDef("vosc__s2", {
     Out.ar(rout, sig * rsend.dbamp); //"post-fader" send to reverb
 }).add;
 
+
+SynthDef("shaper__s2", {
+    arg bufnum=0, freq=200, detune=0.2,
+        amp=0.2, pan=0, out=0, rout=0, rsend=(-20),
+        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
+
+    var input, sig, env, detuneCtrl;
+    env = EnvGen.ar(
+        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
+        doneAction: Done.freeSelf
+    );
+
+    input = SinOsc.ar({ freq * Rand(0-detune, detune).midiratio} ! 8);
+
+    // Array of eight Oscs with uniquely detune frequencies
+    // and unique initial phase offsets
+    // detuneCtrl = LFNoise1.kr(0.5 ! 8).range(0.1, 1.0);
+    detuneCtrl = LFNoise1.kr(0.1 ! 8).bipolar(detune).midiratio;
+    sig = Shaper.ar(bufnum, input * detuneCtrl);
+
+    sig = Splay.ar(sig); //spread 8 signals over stereo field
+    sig = LeakDC.ar(sig); //remove DC bias
+    sig = Balance2.ar(sig[0], sig[1], pan, amp); //L/R balance (pan)
+    sig = sig * env;
+    Out.ar(out, sig);
+    Out.ar(rout, sig * rsend.dbamp); //"post-fader" send to reverb
+}).add;
+
+
 // FX.
 SynthDef(\reverb, {
     arg in, out=0, predelay=0.1, revtime=1.8, lpf=4500, amp=1, mix=0.15;

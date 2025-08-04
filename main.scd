@@ -29,12 +29,11 @@ s.newBusAllocators;
 
 // Global functions.
 ~makeBuffers = {
-    // 10 wavetables with increasing complexity
+    // Create 10 wavetables with increasing complexity
     "> Creating wavetables...\n".postf;
-	~wt_sig = 10.collect({
-		arg i;
+	~wt_sig = 10.collect({ |i|
 
-		//random number of envelope segments
+		// Random number of envelope segments
 		var numSegs = i.linexp(0, 9, 4, 40).round;
 
 		Env(
@@ -58,6 +57,29 @@ s.newBusAllocators;
 		buf.setnMsg(0, ~wt_sig[index].asWavetable);
 	});
     postf("OK\n");
+
+    // Load a few more buffers for Shaper.
+    "> Loading buffers for Shaper...\n".postf;
+    ~tf_sig = 6.collect ({ |i|
+        ~tf = Env([-1, 1], [1], [0]).asSignal(1025);
+
+		// More partials in higher-index wavetables
+        ~tf = ~tf + (
+            Signal.sineFill(
+                1025,
+                (0 ! 3) ++ ((1 ! (i+1)) ++ (0 ! (6-i))).scramble,
+                {rrand(0, 2pi)} ! 9
+            ) / 4
+        );
+
+        ~tf = ~tf.normalize;
+    });
+
+    ~tf_buf = Buffer.allocConsecutive(5, s, 2050, 1, {
+        arg buf, index;
+        buf.setnMsg(0, ~tf_sig[index].asWavetableNoWrap);
+    });
+    "> OK\n".postf;
 };
 
 ~makeBuses = {
@@ -157,10 +179,10 @@ s.newBusAllocators;
     // triggering events with MIDI
     MIDIdef.noteOn(\noteOnKeyPad, { |vel, num, chan, src|
         var setParm = switch(num)
-        { 36 } { \clean_hat }
-        { 37 } { \beat_base_x1 }
-        { 38 } { \beat_base_x2 }
-        { 39 } { \pad }
+        { 36 } { \beat_base_x1 }
+        { 37 } { \beat_base_x2 }
+        { 38 } { \pad }
+        { 39 } { \pad_s }
         { 40 } { \pulse }
         { 41 } { \melody };
 

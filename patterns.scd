@@ -222,6 +222,27 @@
     )
 });
 
+~evnts.add(\pad_s -> {
+    ~pad_s = Pbindef(\pad_s,
+        \instrument, "shaper__s2",
+        \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
+        \atk, Pexprand(0.5, 2),
+        \sus, 0,
+        \rel, Pexprand(5, 10),
+        \cAtk, Pexprand(0.01, 0.5),
+        \cRel, Pexprand(1, 2).neg,
+        \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
+        \bufnum, Prand(~tf_buf, inf),
+        \scale, Scale.pelog,
+        \degree, Pfunc({ ([-24] ++ (Scale.pelog.degrees-12) ++ [0]).scramble[0..rrand(1, 3)] }),
+        \amp, Pexprand(0.7, 0.3),
+        \pan, Pwhite(-0.4, 0.4),
+        \out, 0,
+        \rout, ~rbus,
+        \rsend, -20,
+    )
+});
+
 // Arpeggiated bass pulse using mid/high complexity wavetables
 ~evnts.add(\pulse -> {
     ~pulse = Pbindef(\pulse,
