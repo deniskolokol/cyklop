@@ -17,6 +17,7 @@
     \amp, Pwhite(0.5, 1.0, 10),
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 10),
     \pan, Pgauss(0, 0.7, 10),
+    \out, ~out
 );
 ~hihatBarStraight_x2 = Pbind(
     \instrument, \hihat,
@@ -24,6 +25,7 @@
     \amp, Pwhite(0.5, 1.0, 20),
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 20),
     \pan, Pgauss(0, 0.7, 20),
+    \out, ~out
 );
 
 // Define templates as Events.
@@ -38,7 +40,7 @@
         bpfreq2: Pwhite(3800, 4300),
         bprq2: Pwhite(0.5, 0.7),
         pan: Pwhite(-0.4, -0.7), // Spread snare slightly left of center
-        // out: ~bus[\dist]
+        out: ~out
     );
     
     // Merge with parameters if provided
@@ -51,9 +53,9 @@
 };
 ~kickBarTemplate = { |params|
     var baseEvent = (
-        instrument: \kick_acoustic,
+        instrument: \kick_acoustic, // \kick_synth
         dur: Pseq(~measure * 2, inf),
-        // out: ~bus[\dist]
+        out: ~out
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -65,7 +67,7 @@
         instrument: \tom,
         dur: Pseq(~measure * 2, inf),
         pan: Pwhite(0.2, 0.5), // Spread toms slightly right of center
-        // out: ~bus[\dist]
+        out: ~out
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);

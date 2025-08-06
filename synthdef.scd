@@ -27,6 +27,7 @@ SynthDef(\kick_synth, {
     snd = snd * Env.perc(att, rel, curve: curve).ar(Done.freeSelf);
     snd = snd * amp;
     snd = Pan2.ar(snd, pan);
+
     Out.ar(out, snd);
 }).add;
 
@@ -67,12 +68,12 @@ SynthDef(\kick_acoustic, {
     snd = snd * Env.perc(att, rel, curve: curve).ar(Done.freeSelf);
     snd = snd * amp;
     snd = Pan2.ar(snd, pan);
+
     Out.ar(out, snd);
 }).add;
 
 SynthDef(\snare, {
-    arg out=0, rout=0, rsend=(-20),
-        att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
+    arg out=0, att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
         bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6,
         pDistPreGain=4.4668359215096, // 13.dbamp
         pDistGain=0.31622776601684; // -10.dbamp
@@ -122,13 +123,11 @@ SynthDef(\snare, {
     snd = snd * amp;
 
     Out.ar(out, snd);
-    Out.ar(rout, snd * rsend.dbamp); //"post-fader" send to reverb
 }).add;
 
 
 SynthDef(\tom, {
-    arg out=0, rout=0, rsend=(-20),
-        att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
+    arg out=0, att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
         bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6;
 
     var snd, sndfreq;
@@ -164,7 +163,6 @@ SynthDef(\tom, {
     snd = snd * amp;
 
     Out.ar(out, snd);
-    Out.ar(rout, snd * rsend.dbamp); //"post-fader" send to reverb
 }).add;
 
 
@@ -175,8 +173,9 @@ SynthDef(\hihat, {
         LPF.ar(WhiteNoise.ar, freq: ffreq),
         Rand(1000, 8000)
     );
-    signal = signal * env;
-    Out.ar(out, Pan2.ar(signal, pan));
+    signal = Pan2.ar(signal * env, pan);
+
+    Out.ar(out, signal);
 }).add;
 
 
@@ -277,10 +276,11 @@ SynthDef(\reverb, {
 }).add;
 
 SynthDef(\dist, {
-    arg in=0, out=0, xFade=1, preGain=75, postGain=0.1, amount= 0.5;
+    arg in, out=0, xFade=1, preGain=75, postGain=0.1, amount=0.5;
 	var dry = In.ar(in, 2) * preGain;
 	var ratio = 2 * amount / (1 - amount);
-	var signal = (1 + ratio) * dry / (1 + (ratio * dry.abs));
-	XOut.ar(out, xFade, signal * postGain);
+	var wet = (1 + ratio) * dry / (1 + (ratio * dry.abs));
+    var signal = wet * postGain;
+	XOut.ar(out, xFade, signal);
 }).add;
 )

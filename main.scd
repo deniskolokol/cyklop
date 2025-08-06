@@ -10,7 +10,7 @@ s.quit;
 Server.default = s = Server.local;
 
 s.options.numInputBusChannels = 2; // Behringer U-Foria: 2; Focusrite Saffire: 4
-s.options.numOutputBusChannels = 10; // Behringer U-Foria: 2; Focusrite Saffire: 10
+s.options.numOutputBusChannels = 2; // Behringer U-Foria: 2; Focusrite Saffire: 10
 s.options.blockSize = 512;
 s.options.memSize = 2097152; // 2Gb
 s.options.numBuffers = 2048;
@@ -25,7 +25,6 @@ ServerQuit.removeAll;
 ~path = PathName(thisProcess.nowExecutingPath).parentPath;
 
 s.newBusAllocators;
-// ~rbus = Bus.audio(s, 2);
 
 // Global functions.
 ~makeBuffers = {
@@ -85,8 +84,7 @@ s.newBusAllocators;
 ~makeBuses = {
     "> Creating buses...".post;
     ~bus = Dictionary[
-        \reverb -> Bus.audio(s, 2),
-        \dist -> Bus.audio(s, 2),
+        \reverb -> Bus.audio(s, 2)
     ];
     postf("OK\n");
 };
@@ -113,12 +111,11 @@ s.newBusAllocators;
         ~distGrp = Group.after(~mainGrp);
         ~distSynth = Synth.new(
             \dist, [
-                \amp, 1,
-                \xFade, 1,
+                \xFade, 0.7,
                 \preGain, 75,
                 \postGain, 0.5,
                 \amount, 0.5,
-                \in, ~bus[\dist],
+                \in, ~out, // input from main output will be XOut'ed
                 \out, ~out
             ],
             ~distGrp
@@ -287,7 +284,6 @@ s.waitForBoot({
 
     // Show server meter and Node Tree.
     s.meter;
-    s.plotTree;
 
     // ...and again!
     s.sync;
