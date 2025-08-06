@@ -9,8 +9,16 @@ s.quit;
 // Server config.
 Server.default = s = Server.local;
 
-s.options.numInputBusChannels = 2; // Behringer U-Foria: 2; Focusrite Saffire: 4
-s.options.numOutputBusChannels = 2; // Behringer U-Foria: 2; Focusrite Saffire: 10
+// Behringer U-Foria: 2
+// Focusrite Saffire: 4
+// PreSonus Studio: 12
+s.options.numInputBusChannels = 12;
+
+// Behringer U-Foria: 2
+// Focusrite Saffire: 10
+// PreSonus Studio: 12
+s.options.numOutputBusChannels = 12;
+
 s.options.blockSize = 512;
 s.options.memSize = 2097152; // 2Gb
 s.options.numBuffers = 2048;
@@ -22,6 +30,7 @@ ServerQuit.removeAll;
 
 // Global variables.
 ~out = 0;
+~outDrums = 2;
 ~path = PathName(thisProcess.nowExecutingPath).parentPath;
 
 s.newBusAllocators;
@@ -111,12 +120,12 @@ s.newBusAllocators;
         ~distGrp = Group.after(~mainGrp);
         ~distSynth = Synth.new(
             \dist, [
-                \xFade, 0.7,
+                \xFade, 0.0,
                 \preGain, 75,
                 \postGain, 0.5,
                 \amount, 0.5,
-                \in, ~out, // input from main output will be XOut'ed
-                \out, ~out
+                \in, ~outDrums, // input from main output will be XOut'ed
+                \out, ~outDrums
             ],
             ~distGrp
         );
