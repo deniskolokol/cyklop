@@ -37,7 +37,8 @@
         bprq1: Pwhite(0.2, 0.5),
         bpfreq2: Pwhite(3800, 4300),
         bprq2: Pwhite(0.5, 0.7),
-        pan: Pwhite(-0.4, -0.7) // Spread snare slightly left of center
+        pan: Pwhite(-0.4, -0.7), // Spread snare slightly left of center
+        // out: ~bus[\dist]
     );
     
     // Merge with parameters if provided
@@ -52,6 +53,7 @@
     var baseEvent = (
         instrument: \kick_acoustic,
         dur: Pseq(~measure * 2, inf),
+        // out: ~bus[\dist]
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -62,7 +64,8 @@
     var baseEvent = (
         instrument: \tom,
         dur: Pseq(~measure * 2, inf),
-        pan: Pwhite(0.2, 0.5) // Spread toms slightly right of center
+        pan: Pwhite(0.2, 0.5), // Spread toms slightly right of center
+        // out: ~bus[\dist]
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -217,7 +220,7 @@
         \amp, Pexprand(0.07, 0.1),
         \pan, Pwhite(-0.4, 0.4),
         \out, 0,
-        \rout, ~rbus,
+        \rout, ~bus[\reverb],
         \rsend, -10,
     )
 });
@@ -235,10 +238,10 @@
         \bufnum, Prand(~tf_buf, inf),
         \scale, Scale.pelog,
         \degree, Pfunc({ ([-24] ++ (Scale.pelog.degrees-12) ++ [0]).scramble[0..rrand(1, 3)] }),
-        \amp, Pexprand(0.7, 0.3),
+        \amp, Pexprand(0.1, 0.3),
         \pan, Pwhite(-0.4, 0.4),
         \out, 0,
-        \rout, ~rbus,
+        \rout, ~bus[\reverb],
         \rsend, -20,
     )
 });
@@ -265,7 +268,7 @@
         \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
         \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
         \out, 0,
-        \rout, ~rbus,
+        \rout, ~bus[\reverb],
         \rsend, -10,
     )
 });
@@ -297,7 +300,7 @@
         ], inf),
         \amp, Pseq([0,0.18,0.24,0.28],inf),
         \out, 0,
-        \rout, ~rbus,
+        \rout, ~bus[\reverb],
         \rsend, -6,
     )
 });

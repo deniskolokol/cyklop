@@ -10,7 +10,7 @@ s.quit;
 Server.default = s = Server.local;
 
 s.options.numInputBusChannels = 2; // Behringer U-Foria: 2; Focusrite Saffire: 4
-s.options.numOutputBusChannels = 2; // Behringer U-Foria: 2; Focusrite Saffire: 10
+s.options.numOutputBusChannels = 10; // Behringer U-Foria: 2; Focusrite Saffire: 10
 s.options.blockSize = 512;
 s.options.memSize = 2097152; // 2Gb
 s.options.numBuffers = 2048;
@@ -25,7 +25,7 @@ ServerQuit.removeAll;
 ~path = PathName(thisProcess.nowExecutingPath).parentPath;
 
 s.newBusAllocators;
-~rbus = Bus.audio(s, 2);
+// ~rbus = Bus.audio(s, 2);
 
 // Global functions.
 ~makeBuffers = {
@@ -84,8 +84,10 @@ s.newBusAllocators;
 
 ~makeBuses = {
     "> Creating buses...".post;
-    ~bus = Dictionary.new;
-    ~bus.add(\reverb -> Bus.audio(s, 2));
+    ~bus = Dictionary[
+        \reverb -> Bus.audio(s, 2),
+        \dist -> Bus.audio(s, 2),
+    ];
     postf("OK\n");
 };
 
@@ -93,6 +95,7 @@ s.newBusAllocators;
     "> Initiating configuration of groups and synths...".post;
     s.bind({
         ~mainGrp = Group.new;
+
         ~reverbGrp = Group.after(~mainGrp);
         ~reverbSynth = Synth.new(
             \reverb, [
@@ -105,7 +108,21 @@ s.newBusAllocators;
                 \out, ~out
             ],
             ~reverbGrp
-        )
+        );
+
+        ~distGrp = Group.after(~mainGrp);
+        ~distSynth = Synth.new(
+            \dist, [
+                \amp, 1,
+                \xFade, 1,
+                \preGain, 75,
+                \postGain, 0.5,
+                \amount, 0.5,
+                \in, ~bus[\dist],
+                \out, ~out
+            ],
+            ~distGrp
+        );
     });
     postf("OK\n");
 };
@@ -265,12 +282,12 @@ s.waitForBoot({
     ServerTree.add(~makeNodes);
     ServerTree.add(~makeGUI);
 
-	// Instantiate reverb and re-instantiate when cmd-period is pressed.
-	~add_reverb = {Synth(\reverb, [\in, ~rbus])};
-	ServerTree.add(~add_reverb);
+	// Trigger re-instantiating of the FX groups.
     s.freeAll;
 
+    // Show server meter and Node Tree.
     s.meter;
+    s.plotTree;
 
     // ...and again!
     s.sync;

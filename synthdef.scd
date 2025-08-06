@@ -275,4 +275,12 @@ SynthDef(\reverb, {
     sig = XFade2.ar(dry, wet, mix*2-1, amp);
     Out.ar(out, sig);
 }).add;
+
+SynthDef(\dist, {
+    arg in=0, out=0, xFade=1, preGain=75, postGain=0.1, amount= 0.5;
+	var dry = In.ar(in, 2) * preGain;
+	var ratio = 2 * amount / (1 - amount);
+	var signal = (1 + ratio) * dry / (1 + (ratio * dry.abs));
+	XOut.ar(out, xFade, signal * postGain);
+}).add;
 )
