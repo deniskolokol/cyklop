@@ -198,7 +198,7 @@ s.newBusAllocators;
     MIDIdef.cc(\ccHandler, { |val, num, chan, src|
 		var setParm=nil, setVal=nil;
 		switch(num)
-		{ 86 } { // CC 74 (Knob 1) to detune
+		{ 86 } { // CC 86 (Knob 1) to Dist xFade
 			setVal = val.linlin(0, 127, 0.0, 1.0);
 			setParm = "Dist xFade";
 			~distSynth.set(\xFade, setVal);
