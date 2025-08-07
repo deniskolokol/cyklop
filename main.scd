@@ -202,8 +202,23 @@ s.newBusAllocators;
 			setVal = val.linlin(0, 127, 0.0, 1.0);
 			setParm = "Dist xFade";
 			~distSynth.set(\xFade, setVal);
-		};
-		~postMIDI.(val, num, chan, src);
+		}
+        { 87 } { // CC 87 (Knob 2) to Dist PreGain
+            setVal = val.linlin(0, 127, 0.0, 200.0);
+            setParm = "Dist PreGain";
+            ~distSynth.set(\preGain, setVal);
+        }
+        { 89 } { // CC 89 (Knob 4) to Dist PostGain
+            setVal = val.linlin(0, 127, 0.0, 2.0);
+            setParm = "Dist PostGain";
+            ~distSynth.set(\postGain, setVal);
+        }
+        { 90 } { // CC 90 (Knob 5) to Dist Amount
+            setVal = val.linlin(0, 127, 0.0001, 0.9999);
+            setParm = "Dist Amount";
+            ~distSynth.set(\amount, setVal);
+        };
+		~postMIDI.(val, num, chan, src, setParm, setVal);
     });
 
     // triggering events with MIDI
