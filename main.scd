@@ -173,6 +173,7 @@ s.newBusAllocators;
 
 
 ~postMIDI = { |val, num, chan, src, setParm, setVal|
+	// Post MIDI event
     var ln = format("src  %\tchan  %\tnum  % ", src, chan, num);
     if (setParm.isNil) {
         ln = ln + format(" | val: %", val);
@@ -195,7 +196,13 @@ s.newBusAllocators;
 
     // MIDI control messages
     MIDIdef.cc(\ccHandler, { |val, num, chan, src|
-		// Post MIDI event
+		var setParm=nil, setVal=nil;
+		switch(num)
+		{ 86 } { // CC 74 (Knob 1) to detune
+			setVal = val.linlin(0, 127, 0.0, 1.0);
+			setParm = "Dist xFade";
+			~distSynth.set(\xFade, setVal);
+		};
 		~postMIDI.(val, num, chan, src);
     });
 
