@@ -1,5 +1,20 @@
 // Cyklop patterns
 (
+var myPrepeat;
+
+// Starting with version 3.13.0 SuperCollider stopped supporting Pstutter in favor of Pdup.
+// Check before use.
+var pdupClass = \Pdup.asClass;
+
+// Check if pdupClass is not nil.
+if (pdupClass.notNil) {
+	// If Pdup exists (newer version), use it.
+	myPrepeat = pdupClass;
+} {
+	// Otherwise, fall back to Pstutter (older version).
+	myPrepeat = Pstutter;
+};
+
 ~baseQuant = 16;
 ~stretch = 25/128 * ~baseQuant;
 ~freq = 2;
@@ -42,12 +57,12 @@
         pan: Pwhite(-0.4, -0.7), // Spread snare slightly left of center
         out: ~outDrums
     );
-    
+
     // Merge with parameters if provided
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
     };
-    
+
     // Convert Event to array of key-value pairs for Pbind
     baseEvent.asPairs;
 };
@@ -253,8 +268,8 @@
     ~pulse = Pbindef(\pulse,
         \instrument, "osc__s2",
         \dur, Pseq([
-            Pdup(16, Pseq([1/4], 1)),
-            Pdup(8, Pseq([1/2], 1)),
+            myPrepeat.new(16, Pseq([1/4], 1)),
+            myPrepeat.new(8, Pseq([1/2], 1)),
             Prand([1, 2, 4, 6, 12], 1)
         ], inf),
         \atk, 0.001,
@@ -266,7 +281,7 @@
         \bufnum, Prand(~wt_buf[4..9], inf),
         \scale, Scale.pelog,
         \degree, Pseq([Prand([-12, -11, -5], 24), Pseq([\], 1)], inf)
-            + Pdup(25, Pwrand([0, 3, -4], [0.78, 0.1, 0.12], inf)),
+            + myPrepeat.new(25, Pwrand([0, 3, -4], [0.78, 0.1, 0.12], inf)),
         \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
         \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
         \out, 0,

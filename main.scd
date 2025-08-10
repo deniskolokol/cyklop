@@ -30,7 +30,7 @@ ServerQuit.removeAll;
 
 // Global variables.
 ~out = 0;
-~outDrums = 2;
+~outDrums = 0;
 ~path = PathName(thisProcess.nowExecutingPath).parentPath;
 
 s.newBusAllocators;
