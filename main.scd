@@ -28,12 +28,53 @@ ServerBoot.removeAll;
 ServerTree.removeAll;
 ServerQuit.removeAll;
 
+
 // Global variables.
 ~out = 0;
-~outDrums = 0;
-~path = PathName(thisProcess.nowExecutingPath).parentPath;
-
+~outDrums = 4;
 s.newBusAllocators;
+
+// Root key
+//
+// Define all possible notes (chromatic scale with enharmonic equivalents)
+~noteNames = [
+    "C", "C#/Db", "D", "D#/Eb", "E", "F", 
+    "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"
+];
+// Create expanded note list with multiple octaves
+~fullNoteList = [];
+~midiValues = [];
+
+// Generate notes from C0 to B8 (MIDI 0-127)
+11.do { |octave|
+    ~noteNames.do { |noteName, index|
+        var midiNote = (octave * 12) + index;
+        if(midiNote <= 127) {
+            ~fullNoteList = ~fullNoteList.add(noteName ++ octave.asString);
+            ~midiValues = ~midiValues.add(midiNote);
+        };
+    };
+};
+
+~getRoot = { |midinote| midinote % 12 }; // Note in 12-tone chromatic scale (0-11)
+~getOctave = { |midinote| (midinote / 12).floor - 2 }; // Octave number (0-8)
+~setRoot = { |midinum|
+    ~rootMIDI = ~midiValues[midinum];
+    ~root = ~getRoot.(~rootMIDI);
+    ~octave =~getOctave.(~rootMIDI);
+    postf(
+        "New root note: % (%), key % in octave %\n",
+        ~rootMIDI,
+        ~fullNoteList[midinum],
+        ~root,
+        ~octave
+    );
+};
+~setRoot.(36); // Default root note in 12-tone scale (C1, MIDI 36)
+
+
+// Find index of middle C (MIDI 60) for default selection
+~defaultIndex = ~midiValues.indexOf(60);
 
 // Global functions.
 ~makeBuffers = {
@@ -135,18 +176,23 @@ s.newBusAllocators;
 
 
 ~makeGUI = {
-	var winWidth=350, winHeight=250;
+	var winWidth=550, winHeight=1250, palette=QPalette.dark;
     ~win = Window.new(
 		"Cyklop",
 		Rect(
 			Window.screenBounds.width-winWidth,
 			1250,
 			winWidth,
-			winHeight
+			Window.screenBounds.height
 		),
 		resizable: false
 	);
-    b = Button(~win, Rect(20, 20, 300, 30))
+    ~win.view.decorator = FlowLayout(~win.view.bounds);
+    ~win.view.decorator.gap=1@1;    
+    palette.setColor(Color.grey(0.2), \window);
+    ~win.view.palette = palette;
+
+    b = Button(~win, 100@30)
     .states_([
         ["Play", Color.white, Color.gray],
         ["Stop", Color.white, Color.red]
@@ -168,12 +214,32 @@ s.newBusAllocators;
 			});
 		};
     });
+
+    // Create a dropdown menu for selecting root notes
+    ~noteDropdown = PopUpMenu(~win, 200@30)
+        .items_(~fullNoteList)
+        .value_(~defaultIndex)
+        .action_({ |menu| ~setRoot.(menu.value) });
+
+    // Check ~root changes twice per second and update dropdown
+    ~rootWatcher = Routine({
+        loop {
+            var index = ~midiValues.indexOf(~rootMIDI);
+            {
+                if (index.notNil and: { ~noteDropdown.value != index }) {
+                    ~noteDropdown.value_(index);
+                }
+            }.defer;
+            0.5.yield; // Wait 0.5 seconds (twice per second)
+        }
+    }).play;
+
     ~win.front;
 };
 
 
+// Post MIDI event
 ~postMIDI = { |val, num, chan, src, setParm, setVal|
-	// Post MIDI event
     var ln = format("src  %\tchan  %\tnum  % ", src, chan, num);
     if (setParm.isNil) {
         ln = ln + format(" | val: %", val);
@@ -185,6 +251,7 @@ s.newBusAllocators;
 };
 
 
+// MIDI handlers
 ~makeMIDI = {
     "> Initializing MIDI sources...".postln;
     if(MIDIClient.initialized.not) {
@@ -253,6 +320,16 @@ s.newBusAllocators;
     },
     chan:9
     );
+
+    // MIDI notes
+    MIDIdef.noteOn(\noteOnKeyboard, { |vel, num, chan, src|
+        // ~noteDropdown.valueAction_(~rootMIDI);
+        ~setRoot.(num)
+        // ~postMIDI.(vel, num, chan, src, "ROOT", num);
+    },
+    chan:0
+    );
+
 };
 
 ~cleanup = {
@@ -290,11 +367,13 @@ ServerQuit.add(~cleanup);
 
 // Boot server
 s.waitForBoot({
+    var path = PathName(thisProcess.nowExecutingPath).parentPath;
+
     // wait until all asynchronous tasks are finished
     s.sync;
 
     "> Loading synth definitions...".post;
-    if (this.executeFile(~path +/+ "synthdef.scd").isNil.not) {
+    if (this.executeFile(path +/+ "synthdef.scd").isNil.not) {
         postf("OK\n")
     };
 
@@ -302,7 +381,7 @@ s.waitForBoot({
     s.sync;
 
     "> Loading event definitions...".post;
-    if (this.executeFile(~path +/+ "patterns.scd").isNil.not) {
+    if (this.executeFile(path +/+ "patterns.scd").isNil.not) {
         postf("OK\n")
     };
 

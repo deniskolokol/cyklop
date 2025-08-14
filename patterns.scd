@@ -32,7 +32,7 @@ if (pdupClass.notNil) {
     \amp, Pwhite(0.5, 1.0, 10),
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 10),
     \pan, Pgauss(0, 0.7, 10),
-    \out, ~outDrums
+    \out, Pfunc({~outDrums})
 );
 ~hihatBarStraight_x2 = Pbind(
     \instrument, \hihat,
@@ -40,7 +40,7 @@ if (pdupClass.notNil) {
     \amp, Pwhite(0.5, 1.0, 20),
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 20),
     \pan, Pgauss(0, 0.7, 20),
-    \out, ~outDrums
+    \out, Pfunc({~outDrums})
 );
 
 // Define templates as Events.
@@ -55,7 +55,7 @@ if (pdupClass.notNil) {
         bpfreq2: Pwhite(3800, 4300),
         bprq2: Pwhite(0.5, 0.7),
         pan: Pwhite(-0.4, -0.7), // Spread snare slightly left of center
-        out: ~outDrums
+        out: Pfunc({~outDrums})
     );
 
     // Merge with parameters if provided
@@ -70,7 +70,7 @@ if (pdupClass.notNil) {
     var baseEvent = (
         instrument: \kick_acoustic, // \kick_synth
         dur: Pseq(~measure * 2, inf),
-        out: ~outDrums
+        out: Pfunc({~outDrums})
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -82,7 +82,7 @@ if (pdupClass.notNil) {
         instrument: \tom,
         dur: Pseq(~measure * 2, inf),
         pan: Pwhite(0.2, 0.5), // Spread toms slightly right of center
-        out: ~outDrums
+        out: Pfunc({~outDrums})
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -232,8 +232,13 @@ if (pdupClass.notNil) {
         \cRel, Pexprand(1, 2).neg,
         \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
         \bufnum, Prand(~wt_buf[3..6], inf),
+
         \scale, Scale.pelog,
-        \degree, Pfunc({ ([-24] ++ (Scale.pelog.degrees-12) ++ [0]).scramble[0..rrand(1, 3)] }),
+        \root, Pfunc({~root}),
+        \octave, Pfunc({~octave}),
+        \degree, Pfunc({ ([0] ++ (Scale.pelog.degrees) ++ [12]).scramble[0..rrand(1, 3)] }),
+        // \degree, Pfunc({ ([-24] ++ (Scale.pelog.degrees-12) ++ [0]).scramble[0..rrand(1, 3)] }),
+
         \amp, Pexprand(0.07, 0.1),
         \pan, Pwhite(-0.4, 0.4),
         \out, 0,
@@ -253,8 +258,13 @@ if (pdupClass.notNil) {
         \cRel, Pexprand(1, 2).neg,
         \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
         \bufnum, Prand(~tf_buf, inf),
+
         \scale, Scale.pelog,
-        \degree, Pfunc({ ([-24] ++ (Scale.pelog.degrees-12) ++ [0]).scramble[0..rrand(1, 3)] }),
+        \root, Pfunc({~root}),
+        \octave, Pfunc({~octave}),
+        \degree, Pfunc({ ([0] ++ (Scale.pelog.degrees) ++ [12]).scramble[0..rrand(1, 3)] }),
+        // \degree, Pfunc({ ([-24] ++ (Scale.pelog.degrees-12) ++ [0]).scramble[0..rrand(1, 3)] }),
+
         \amp, Pexprand(0.1, 0.3),
         \pan, Pwhite(-0.4, 0.4),
         \out, 0,
@@ -280,8 +290,10 @@ if (pdupClass.notNil) {
         \detune, 0.3,
         \bufnum, Prand(~wt_buf[4..9], inf),
         \scale, Scale.pelog,
-        \degree, Pseq([Prand([-12, -11, -5], 24), Pseq([\], 1)], inf)
-            + myPrepeat.new(25, Pwrand([0, 3, -4], [0.78, 0.1, 0.12], inf)),
+        \degree, Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
+            + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
+        \root, Pfunc({~root}),
+        \octave, Pfunc({~octave}),
         \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
         \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
         \out, 0,
@@ -310,12 +322,22 @@ if (pdupClass.notNil) {
             Pseq([~wt_buf[2]], 4),
         ], [9, 3, 1].normalizeSum, inf),
         \numBufs, Prand((2..4), inf),
+ 
+        \scale, Scale.pelog,
+        \root, Pfunc({~root}),
+        \octave, Pfunc({~octave}),
         \degree, Pxrand([
-            Pseq([\, 7,  0, Prand([-4, 12, \])], 1),
-            Pseq([\, 7, -4, Prand([-5, 3,  \])], 1),
-            Pseq([\, 8, 12, Prand([7,  8,  \])], 1)
+            Pseq([\, 19, 12, Prand([8, 24, \])], 1),
+            Pseq([\, 19, 8, Prand([7, 15, \])], 1),
+            Pseq([\, 20, 32, Prand([5, 20, \])], 1)
         ], inf),
-        \amp, Pseq([0,0.18,0.24,0.28],inf),
+
+        // \degree, Pxrand([
+        //     Pseq([\, 7,  0, Prand([-4, 12, \])], 1),
+        //     Pseq([\, 7, -4, Prand([-5, 3,  \])], 1),
+        //     Pseq([\, 8, 12, Prand([7,  8,  \])], 1)
+        // ], inf),
+        \amp, Pseq([0, 0.18, 0.24, 0.28], inf),
         \out, 0,
         \rout, ~bus[\reverb],
         \rsend, -6,
