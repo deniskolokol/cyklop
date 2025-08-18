@@ -31,7 +31,7 @@ ServerQuit.removeAll;
 
 // Global variables.
 ~out = 0;
-~outDrums = 4;
+~outDrums = 2;
 s.newBusAllocators;
 
 // Root key
@@ -70,7 +70,7 @@ s.newBusAllocators;
         ~octave
     );
 };
-~setRoot.(36); // Default root note in 12-tone scale (C1, MIDI 36)
+~setRoot.(48); // Default root note in 12-tone scale (C2, MIDI 36)
 
 
 // Find index of middle C (MIDI 60) for default selection
@@ -180,10 +180,10 @@ s.newBusAllocators;
     ~win = Window.new(
 		"Cyklop",
 		Rect(
-			Window.screenBounds.width-winWidth,
+			Window.screenBounds.width-(winWidth*2), // optimized for personal VS code setup
 			1250,
 			winWidth,
-			Window.screenBounds.height
+			Window.screenBounds.height-55 // optimized for personal window manager setup
 		),
 		resizable: false
 	);

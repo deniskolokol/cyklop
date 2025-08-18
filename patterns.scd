@@ -1,12 +1,10 @@
 // Cyklop patterns
 (
+// Backward compatibility for Pstutter and Pdup: starting with version 3.13.0
+// SuperCollider stopped supporting Pstutter in favor of Pdup.
 var myPrepeat;
-
-// Starting with version 3.13.0 SuperCollider stopped supporting Pstutter in favor of Pdup.
-// Check before use.
 var pdupClass = \Pdup.asClass;
 
-// Check if pdupClass is not nil.
 if (pdupClass.notNil) {
 	// If Pdup exists (newer version), use it.
 	myPrepeat = pdupClass;
@@ -232,13 +230,10 @@ if (pdupClass.notNil) {
         \cRel, Pexprand(1, 2).neg,
         \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
         \bufnum, Prand(~wt_buf[3..6], inf),
-
         \scale, Scale.pelog,
         \root, Pfunc({~root}),
         \octave, Pfunc({~octave}),
         \degree, Pfunc({ ([0] ++ (Scale.pelog.degrees) ++ [12]).scramble[0..rrand(1, 3)] }),
-        // \degree, Pfunc({ ([-24] ++ (Scale.pelog.degrees-12) ++ [0]).scramble[0..rrand(1, 3)] }),
-
         \amp, Pexprand(0.07, 0.1),
         \pan, Pwhite(-0.4, 0.4),
         \out, 0,
@@ -258,13 +253,11 @@ if (pdupClass.notNil) {
         \cRel, Pexprand(1, 2).neg,
         \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
         \bufnum, Prand(~tf_buf, inf),
-
         \scale, Scale.pelog,
         \root, Pfunc({~root}),
         \octave, Pfunc({~octave}),
         \degree, Pfunc({ ([0] ++ (Scale.pelog.degrees) ++ [12]).scramble[0..rrand(1, 3)] }),
-        // \degree, Pfunc({ ([-24] ++ (Scale.pelog.degrees-12) ++ [0]).scramble[0..rrand(1, 3)] }),
-
+        \curveMax, Pexprand(1, 5),
         \amp, Pexprand(0.1, 0.3),
         \pan, Pwhite(-0.4, 0.4),
         \out, 0,
@@ -293,7 +286,7 @@ if (pdupClass.notNil) {
         \degree, Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
             + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
         \root, Pfunc({~root}),
-        \octave, Pfunc({~octave}),
+        \octave, Pfunc({~octave - 2}),
         \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
         \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
         \out, 0,
@@ -302,7 +295,7 @@ if (pdupClass.notNil) {
     )
 });
 
-//minimal melody using simple wavetables
+// Minimal melody in the upper regfister using variable wavetable oscillator
 ~evnts.add(\melody -> {
     ~melody = Pbindef(\melody,
         \instrument, "vosc__s2",
@@ -322,21 +315,14 @@ if (pdupClass.notNil) {
             Pseq([~wt_buf[2]], 4),
         ], [9, 3, 1].normalizeSum, inf),
         \numBufs, Prand((2..4), inf),
- 
         \scale, Scale.pelog,
         \root, Pfunc({~root}),
-        \octave, Pfunc({~octave}),
+        \octave, Pfunc({~octave + 2}),
         \degree, Pxrand([
-            Pseq([\, 19, 12, Prand([8, 24, \])], 1),
-            Pseq([\, 19, 8, Prand([7, 15, \])], 1),
-            Pseq([\, 20, 32, Prand([5, 20, \])], 1)
+            Pseq([\, 7,  0, Prand([-4, 12, \])], 1),
+            Pseq([\, 7, -4, Prand([-5, 3,  \])], 1),
+            Pseq([\, 8, 12, Prand([7,  8,  \])], 1)
         ], inf),
-
-        // \degree, Pxrand([
-        //     Pseq([\, 7,  0, Prand([-4, 12, \])], 1),
-        //     Pseq([\, 7, -4, Prand([-5, 3,  \])], 1),
-        //     Pseq([\, 8, 12, Prand([7,  8,  \])], 1)
-        // ], inf),
         \amp, Pseq([0, 0.18, 0.24, 0.28], inf),
         \out, 0,
         \rout, ~bus[\reverb],
