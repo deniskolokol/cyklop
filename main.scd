@@ -80,12 +80,12 @@ s.newBusAllocators;
 ~makeBuffers = {
     // Create 10 wavetables with increasing complexity
     "> Creating wavetables...\n".postf;
-	~wt_sig = 10.collect({ |i|
+    ~wt_sig = 10.collect({ |i|
 
 		// Random number of envelope segments
 		var numSegs = i.linexp(0, 9, 4, 40).round;
 
-		Env(
+        Env(
 			// Env always begins and ends with zero
 			// Inner points are random from -1.0 to 1.0
 			[0]++({1.0.rand}.dup(numSegs-1) * [1, -1]).scramble++[0],
@@ -96,10 +96,10 @@ s.newBusAllocators;
 			// Low-index wavetables tend to be sinusoidal
 			// High index wavetables tend to have sharp angles and corners
 			{[\sine, 0, exprand(1,20) * [1,-1].choose].wchoose([9-i, 3, i].normalizeSum)}.dup(numSegs)
-		).asSignal(1024);
+		).asSignal(1024)
 	});
 
-	//load into 10 buffers in wavetable format
+	// Load into 10 buffers in wavetable format
     "> Loading wavetables into buffers...\n".postf;
 	~wt_buf = Buffer.allocConsecutive(10, s, 2048, 1, {
 		arg buf, index;
@@ -172,69 +172,6 @@ s.newBusAllocators;
         );
     });
     postf("OK\n");
-};
-
-
-~makeGUI = {
-	var winWidth=550, winHeight=1250, palette=QPalette.dark;
-    ~win = Window.new(
-		"Cyklop",
-		Rect(
-			Window.screenBounds.width-(winWidth*2), // optimized for personal VS code setup
-			1250,
-			winWidth,
-			Window.screenBounds.height-55 // optimized for personal window manager setup
-		),
-		resizable: false
-	);
-    ~win.view.decorator = FlowLayout(~win.view.bounds);
-    ~win.view.decorator.gap=1@1;    
-    palette.setColor(Color.grey(0.2), \window);
-    ~win.view.palette = palette;
-
-    b = Button(~win, 100@30)
-    .states_([
-        ["Play", Color.white, Color.gray],
-        ["Stop", Color.white, Color.red]
-    ])
-    .action_({ |bt|
-        var fullMixName = \mix_full;
-		if (~evnts[fullMixName].isNil) {
-			postf("WARNING: No event defined for '%'\n", fullMixName);
-		} {
-			~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
-				if (~evnts[fullMixName].value.isPlaying) {
-					~evnts[fullMixName].value.stop;
-				} {
-					~evnts[fullMixName].value.play;
-				};
-
-                // Return nil to prevent rescheduling
-				nil;
-			});
-		};
-    });
-
-    // Create a dropdown menu for selecting root notes
-    ~noteDropdown = PopUpMenu(~win, 200@30)
-        .items_(~fullNoteList)
-        .value_(~defaultIndex)
-        .action_({ |menu| ~setRoot.(menu.value) });
-
-    // Check ~root changes twice per second and update dropdown
-    ~rootWatcher = Routine({
-        loop {
-            var index = ~midiValues.indexOf(~rootMIDI);
-            {
-                if (index.notNil and: { ~noteDropdown.value != index }) {
-                    ~noteDropdown.value_(index);
-                }
-            }.defer;
-            0.5.yield; // Wait 0.5 seconds (twice per second)
-        }
-    }).play;
-
-    ~win.front;
 };
 
 
@@ -332,6 +269,28 @@ s.newBusAllocators;
 
 };
 
+
+// Load external file
+~loadExternal = { 
+    arg path,
+        descr,
+        requiresSync=true;
+
+    postf("> Loading %... ", descr);
+    if (this.executeFile(path).isNil.not) {
+        "OK".postln;
+        if (requiresSync) {
+            "[i] Server sync... ".post;
+            s.sync; // wait until all asynchronous tasks are finished
+            "OK".postln;
+        };
+    } {
+        postf("ERROR: Could not load %!\n", path);
+    };
+};
+
+
+// Clean up buffers and MIDI
 ~cleanup = {
     "[i] Cleaning up".postln;
     ~win.close;
@@ -365,25 +324,23 @@ ServerBoot.add(~makeBuses);
 ServerBoot.add(~makeMIDI);
 ServerQuit.add(~cleanup);
 
+
 // Boot server
 s.waitForBoot({
     var path = PathName(thisProcess.nowExecutingPath).parentPath;
 
-    // wait until all asynchronous tasks are finished
-    s.sync;
+    // List of external files to load in the order they should be loaded.
+    // Format: [filename <str>, description <str>, requiresSync <bool>]
+    var externals = [
+        ["synthdef.scd", "synth definitions", true],
+        ["patterns.scd", "event definitions", true],
+        ["gui.scd", "GUI", false]
+    ];
 
-    "> Loading synth definitions...".post;
-    if (this.executeFile(path +/+ "synthdef.scd").isNil.not) {
-        postf("OK\n")
-    };
-
-    // yes, again!
-    s.sync;
-
-    "> Loading event definitions...".post;
-    if (this.executeFile(path +/+ "patterns.scd").isNil.not) {
-        postf("OK\n")
-    };
+    externals.do({ |elt|
+        elt[0] = path +/+ elt[0];
+        ~loadExternal.(*elt);
+    });
 
     // Register remaining functions
     ServerTree.add(~makeNodes);
@@ -393,7 +350,7 @@ s.waitForBoot({
     s.freeAll;
 
     // Show server meter and Node Tree.
-    s.meter;
+    // s.meter;
 
     // ...and again!
     s.sync;
