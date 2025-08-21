@@ -70,7 +70,7 @@ s.newBusAllocators;
         ~octave
     );
 };
-~setRoot.(48); // Default root note in 12-tone scale (C2, MIDI 36)
+~setRoot.(60); // Default root note in 12-tone scale (C2, MIDI 36)
 
 
 // Find index of middle C (MIDI 60) for default selection

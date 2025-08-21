@@ -300,8 +300,8 @@ if (pdupClass.notNil) {
     ~melody = Pbindef(\melody,
         \instrument, "vosc__s2",
         \dur, Prand([
-            Pseq([Prand([12, 16, 20]), 2, 1.5, 0.5], 1),
-            Pseq([Prand([12, 16, 20]), 1.5, 1, 1.5], 1),
+            Pseq([2, 1.5, 0.5, Prand([12, 16, 20])], 1),
+            Pseq([1.5, 1, 1.5, Prand([12, 16, 20])], 1),
         ], inf),
         \atk, 0.01,
         \sus, 0.3,
@@ -319,11 +319,11 @@ if (pdupClass.notNil) {
         \root, Pfunc({~root}),
         \octave, Pfunc({~octave + 2}),
         \degree, Pxrand([
-            Pseq([\, 7,  0, Prand([-4, 12, \])], 1),
-            Pseq([\, 7, -4, Prand([-5, 3,  \])], 1),
-            Pseq([\, 8, 12, Prand([7,  8,  \])], 1)
+            Pseq([7,  0, Prand([-4, 12, \]), \], 1),
+            Pseq([7, -4, Prand([-5, 3, \]), \], 1),
+            Pseq([8, 12, Prand([7, 8, \]), \], 1)
         ], inf),
-        \amp, Pseq([0, 0.18, 0.24, 0.28], inf),
+        \amp, Pseq([0.18, 0.24, 0.28, 0], inf),
         \out, 0,
         \rout, ~bus[\reverb],
         \rsend, -6,
