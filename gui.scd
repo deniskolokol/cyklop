@@ -59,7 +59,7 @@ var createWavetableGUI = {
     Button(window, 120@30)
         .states_([["Generate New", Color.white, colorButton]])
         .action_({ 
-            ~makeBuffers.();
+            ~makeWavetableBufs.();
             updateWavetablePlots.(plotView)
         });
 

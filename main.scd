@@ -28,7 +28,6 @@ ServerBoot.removeAll;
 ServerTree.removeAll;
 ServerQuit.removeAll;
 
-
 // Global variables.
 ~out = 0;
 ~outDrums = 2;
@@ -76,8 +75,24 @@ s.newBusAllocators;
 // Find index of middle C (MIDI 60) for default selection
 ~defaultIndex = ~midiValues.indexOf(60);
 
-// Global functions.
-~makeBuffers = {
+// Buffers.
+~cleanupWavetableBufs = {
+    // Cleans up buffers used for wavetables and Shaper.
+    if (~wt_buf.isNil.not) {
+        ~wt_buf.do({ |buf| buf.free });
+        ~wt_buf = nil;
+    };
+};
+
+~cleanupShaperBufs = {
+    // Cleans up buffers used for Shaper.
+    if (~tf_buf.isNil.not) {
+        ~tf_buf.do({ |buf| buf.free });
+        ~tf_buf = nil;
+    };
+};
+
+~makeWavetableBufs = {
     // Create 10 wavetables with increasing complexity
     "> Creating wavetables...\n".postf;
     ~wt_sig = 10.collect({ |i|
@@ -99,6 +114,9 @@ s.newBusAllocators;
 		).asSignal(1024)
 	});
 
+    // Check if there are buffers already and clean them up
+    ~cleanupWavetableBufs.();
+
 	// Load into 10 buffers in wavetable format
     "> Loading wavetables into buffers...\n".postf;
 	~wt_buf = Buffer.allocConsecutive(10, s, 2048, 1, {
@@ -106,8 +124,10 @@ s.newBusAllocators;
 		buf.setnMsg(0, ~wt_sig[index].asWavetable);
 	});
     postf("OK\n");
+};
 
-    // Load a few more buffers for Shaper.
+~makeShaperBufs = {
+    // Create 6 Envs and load them into buffers for Shaper.
     "> Loading buffers for Shaper...\n".postf;
     ~tf_sig = 6.collect ({ |i|
         ~tf = Env([-1, 1], [1], [0]).asSignal(1025);
@@ -124,12 +144,23 @@ s.newBusAllocators;
         ~tf = ~tf.normalize;
     });
 
+    // Check if there are buffers already and clean them up
+    ~cleanupShaperBufs.();
+
+    // Load into 6 buffers in wavetable format without wrapping
     ~tf_buf = Buffer.allocConsecutive(5, s, 2050, 1, {
         arg buf, index;
         buf.setnMsg(0, ~tf_sig[index].asWavetableNoWrap);
     });
     "> OK\n".postf;
 };
+
+~makeBuffers = {
+    // Create buffers for wavetables and Shaper.
+    ~makeWavetableBufs.();
+    ~makeShaperBufs.();
+};
+
 
 ~makeBuses = {
     "> Creating buses...".post;
@@ -304,10 +335,8 @@ s.newBusAllocators;
     postf("OK\n");
 
     "> Cleaning up buffers...".post;
-    if (~wt_buf.isNil.not) {
-        ~wt_buf.do({ |buf| buf.free });
-        ~wt_buf = nil;
-    };
+    ~cleanupShaperBufs.();
+    ~cleanupWavetableBufs.();
     postf("OK\n");
 
     "> Removing all functions...".post;
