@@ -7,42 +7,45 @@ var transparent=Color.grey(alpha:0.0);
 
 // Wavetable GUI Visualizer
 var createWavetableGUI = {
-    arg window,
+    arg wtArr,
+        makeBuffersFunc,
+        parent,
+        label,
+        signalType,
         height=200,
         width=800;
 
     var mainView, wavetablePanel, scrollView, plotView;
+    var plotHeight = height - 60 - (margin*4);
 
     // Function to update all plots
     var updateWavetablePlots = { |plotView|
+        var freshArray = if(signalType == \wavetable) { ~wt_sig } { ~tf_sig };
         "> Updating wavetable plots...".postln;
-        if (~wt_sig.notNil) {
-            plotView.value = ~wt_sig;
+        if (freshArray.notNil) {
+            plotView.value = freshArray;
             plotView.refresh;
         } {
-            "No wavetable signals found. Run ~makeBuffers first.".warn;
+            "No wavetable signals found. Fill signals first.".warn;
         }
     };
 
-    // Create scroll view for the wavetable panel
-    scrollView = ScrollView(window, width@height);
-    scrollView.decorator = FlowLayout(scrollView.bounds, margin@margin, margin@margin);
-    scrollView.background_(colorPane);
-
-    // Create plots for existing wavetables or placeholders
-    if (~wt_sig.isNil) { ~makeBuffers.() };
+    StaticText(parent, Rect(0, 0, width, 30))
+        .string_(label)
+        .font_(Font("Arial", 16))
+        .stringColor_(Color.white);
 
     // Create the plot view
     plotView = Plotter(
         name: "WT",
-        bounds: Rect(0, 0, width-(margin * 2), height-(margin * 2)),
-        parent: scrollView
+        bounds: Rect(0, 0, width-(margin * 2), plotHeight),
+        parent: parent
     );
-    plotView.value = ~wt_sig;
+    plotView.value = wtArr;
     plotView.editMode = true;
     plotView.setProperties(
         \fontColor, Color(0.5, 1, 0);,
-        \plotColor, Color.red,
+        \plotColor, Color.red(0.7),
         \backgroundColor, transparent,
         \gridColorX, Color.yellow(0.5),
         \gridColorY, Color.yellow(0.5)
@@ -50,80 +53,94 @@ var createWavetableGUI = {
     plotView.refresh;
 
     // Add control buttons
-    window.view.decorator.nextLine;
+    parent.decorator.nextLine;
 
-    Button(window, 120@30)
+    Button(parent, 120@30)
         .states_([["Refresh Plots", Color.white, colorButton]])
         .action_({ updateWavetablePlots.(plotView) });
 
-    Button(window, 120@30)
+    Button(parent, 120@30)
         .states_([["Generate New", Color.white, colorButton]])
         .action_({ 
-            ~makeWavetableBufs.();
+            makeBuffersFunc.value;
             updateWavetablePlots.(plotView)
         });
-
-    Button(window, 120@30)
-        .states_([["Export Image", Color.white, colorButton]])
-        .action_({ 
-            "Export functionality would go here".postln;
-            // Could implement screenshot or data export here
-        });
-    
-    "> Wavetable GUI created. Use ~updateWavetablePlots to refresh after generating new wavetables.\n".postf;
 };
 
 
 ~makeGUI = {
-	var winWidth=550, winHeight=1250, palette=QPalette.dark;
+    var winWidth = 1100;
+    var winHeight = Window.screenBounds.height-55;
+    var palette = QPalette.dark;
     var btPlay, popupNote;
     var rootWatcher;
+    var ctrlPaneTransp, ctrlPaneNotes, plotPanel1, plotPanel2;
+    var panelHeight = 50;  // height for control panels
+    var plotPanelHeight = winHeight-panelHeight-(margin*4);  // remaining height for plot panels
 
     ~win = Window.new(
-		"Cyklop",
-		Rect(
-			Window.screenBounds.width-(winWidth*2), // optimized for personal VS code setup
-			1250,
-			winWidth,
-			Window.screenBounds.height-55 // optimized for personal window manager setup
-		),
-		resizable: false
-	);
+        "Cyklop",
+        Rect(
+            Window.screenBounds.width-(winWidth*2),
+            1200,
+            winWidth,
+            Window.screenBounds.height-55
+        ),
+        resizable: false
+    );
     ~win.view.decorator = FlowLayout(~win.view.bounds);
-    ~win.view.decorator.gap=1@1;    
+    ~win.view.decorator.gap=gap@gap;    
     palette.setColor(Color.grey(0.2), \window);
     ~win.view.palette = palette;
 
-    btPlay = Button(~win, 100@30)
-    .states_([
-        ["Play", Color.white, Color.gray],
-        ["Stop", Color.white, Color.red]
-    ])
-    .action_({ |bt|
-        var fullMixName = \mix_full;
-		if (~evnts[fullMixName].isNil) {
-			postf("WARNING: No event defined for '%'\n", fullMixName);
-		} {
-			~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
-				if (~evnts[fullMixName].value.isPlaying) {
-					~evnts[fullMixName].value.stop;
-				} {
-					~evnts[fullMixName].value.play;
-				};
+    // Create two control panels at the top
+    ctrlPaneTransp = View(~win, (winWidth/2-margin)@panelHeight)
+        .background_(colorPane);
+    ctrlPaneTransp.decorator = FlowLayout(ctrlPaneTransp.bounds, margin@margin, gap@gap);
 
-                // Return nil to prevent rescheduling
-				nil;
-			});
-		};
-    });
+    ctrlPaneNotes = View(~win, (winWidth/2-margin)@panelHeight)
+        .background_(colorPane);
+    ctrlPaneNotes.decorator = FlowLayout(ctrlPaneNotes.bounds, margin@margin, gap@gap);
 
-    // Create a dropdown menu for selecting root notes
-    popupNote = PopUpMenu(~win, 200@30)
+    // Place controls in their respective panels
+    btPlay = Button(ctrlPaneTransp, 100@30)
+        .states_([
+            ["Play", Color.white, Color.gray],
+            ["Stop", Color.white, Color.red]
+        ])
+        .action_({ |bt|
+            var fullMixName = \mix_full;
+            if (~evnts[fullMixName].isNil) {
+                postf("WARNING: No event defined for '%'\n", fullMixName);
+            } {
+                ~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
+                    if (~evnts[fullMixName].value.isPlaying) {
+                        ~evnts[fullMixName].value.stop;
+                    } {
+                        ~evnts[fullMixName].value.play;
+                    };
+                    nil;
+                });
+            };
+        });
+
+    popupNote = PopUpMenu(ctrlPaneNotes, 200@30)
         .items_(~fullNoteList)
         .value_(~defaultIndex)
         .action_({ |menu| ~setRoot.(menu.value) });
 
-    // Check ~root changes twice per second and update dropdown
+    ~win.view.decorator.nextLine;
+
+    // Create two adjacent panels for plots
+    plotPanel1 = View(~win, (winWidth/2-margin)@plotPanelHeight)
+        .background_(colorPane);
+    plotPanel1.decorator = FlowLayout(plotPanel1.bounds, margin@margin, gap@gap);
+    
+    plotPanel2 = View(~win, (winWidth/2-margin)@plotPanelHeight)
+        .background_(colorPane);
+    plotPanel2.decorator = FlowLayout(plotPanel2.bounds, margin@margin, gap@gap);
+
+    // Root watcher setup
     rootWatcher = Routine({
         loop {
             var index = ~midiValues.indexOf(~rootMIDI);
@@ -132,14 +149,29 @@ var createWavetableGUI = {
                     popupNote.value_(index);
                 }
             }.defer;
-            0.5.yield; // Wait 0.5 seconds (twice per second)
+            0.5.yield;
         }
     }).play;
 
+    // Create wavetable GUIs in their respective panels
     createWavetableGUI.(
-        ~win,
-        height: ~win.bounds.height-200-(margin*2),
-        width: ~win.bounds.width-(margin*2)
+        ~wt_sig,
+        ~makeWavetableBufs,
+        plotPanel1,
+        "Wavetables (Osc & VOsc)",
+        signalType: \wavetable,
+        height: plotPanelHeight-(margin*2),
+        width: (winWidth/2)-(margin*3)
+    );
+    
+    createWavetableGUI.(
+        ~tf_sig,
+        ~makeShaperBufs,
+        plotPanel2,
+        "Transfer Functions (Shaper)",
+        signalType: \transfer,
+        height: plotPanelHeight-(margin*2),
+        width: (winWidth/2)-(margin*3)
     );
 
     ~win.front;

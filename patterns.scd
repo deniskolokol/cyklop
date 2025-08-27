@@ -100,19 +100,21 @@ if (pdupClass.notNil) {
 );
 
 // Syn patterns.
+// 1
 ~kickBarSyn_1 = Pbind(
     *~kickBarTemplate.((amp: Pseq([Pwrand([0, 1], [0.2, 0.8], 1), 0, 1, 0, 0, 1, 1, 1, 0, 0])))
 );
 ~snareBarSyn_1 = Pbind(
     *~snareBarTemplate.((amp: Pseq([0, 0, 0, 1, 0, 0, 0, 0, 1, 1])))
 );
-
+// 2
 ~kickBarSyn_2 = Pbind(
     *~kickBarTemplate.((amp: Pseq([0, 1, 0, 0, 1, 0, 0, 1, 0, 0])))
 );
 ~snareBarSyn_2 = Pbind(
     *~snareBarTemplate.((amp: Pseq([1, 0, 0, 1, 0, 0, 1, 0, 1, Prand([0, 1], 1)])))
 );
+// 3
 ~kickBarSyn_3 = Pbind(
     *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 0, 1, 0, 0])))
 );
@@ -129,6 +131,7 @@ if (pdupClass.notNil) {
         amp: Pseq([0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0])
     ))
 );
+// 4
 ~kickBarSyn_4 = Pbind(
     *~kickBarTemplate.((amp: Pseq([0, 0, 1, 0, 1, 0, 0, 1, 0, 0])))
 );
@@ -138,11 +141,21 @@ if (pdupClass.notNil) {
         amp: Pseq([1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0])
         ))
 );
-// Drum roll.
+// 5
 ~kickBarSyn_5 = Pbind(
-    *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 0, 0, 0, 0])))
+    *~kickBarTemplate.((amp:  Pseq([1, 0, 1, 0, 0, 1, 0, 1, 0, 0])))
+);
+~tomBarSyn_5 = Pbind(
+    *~tomBarTemplate.((amp:   Pseq([0, 0, 0, 0, 0, 0, 1, 0, 1, 0])))
 );
 ~snareBarSyn_5 = Pbind(
+    *~snareBarTemplate.((amp: Pseq([0, 0, 0, 1, 0, 0, 0, 1, 0, 1])))
+);
+// 8 - Drum roll
+~kickBarSyn_8 = Pbind(
+    *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 0, 0, 0, 0])))
+);
+~snareBarSyn_8 = Pbind(
     *~snareBarTemplate.((
         dur: Pseq((1 / ~baseQuant ! 26) ++ ~measure[6..], inf),
         amp: Pseq(0 ! 10) ++ Pgeom(0.01, 1.3, 16) ++ Pseries(0.85, 0.05, 4)
@@ -188,9 +201,15 @@ if (pdupClass.notNil) {
     0.0, ~snareBarSyn_4, // SNARE
 ]);
 ~beatBarSyn_x2_5 = Ptpar([
-    0.0, ~hihatBarStraight, // HAT
+    0.0, ~hihatBarStraight_x2, // HAT
     0.0, ~kickBarSyn_5, // KICK
     0.0, ~snareBarSyn_5, // SNARE
+    0.0, ~tomBarSyn_5, // TOM
+]);
+~beatBarSyn_x2_8 = Ptpar([
+    0.0, ~hihatBarStraight, // HAT
+    0.0, ~kickBarSyn_8, // KICK
+    0.0, ~snareBarSyn_8, // SNARE
 ]);
 
 // Base drum line.
@@ -211,7 +230,8 @@ if (pdupClass.notNil) {
                 ~beatBarSyn_x2_2,
                 ~beatBarSyn_x2_3,
                 ~beatBarSyn_x2_4,
-                ~beatBarSyn_x2_5
+                ~beatBarSyn_x2_5,
+                ~beatBarSyn_x2_8
             ], 1)
         ], inf)
     );
