@@ -114,21 +114,16 @@ s.newBusAllocators;
 		).asSignal(1024)
 	});
 
-    // Use fork to create a routine for server operations
-    {
-        // Check if there are buffers already and clean them up
-        ~cleanupWavetableBufs.();
-        s.sync; // Now this will work
+    // Check if there are buffers already and clean them up
+    ~cleanupWavetableBufs.();
 
-        // Load into 10 buffers in wavetable format
-        "> Loading wavetables into buffers...\n".postf;
-        ~wt_buf = Buffer.allocConsecutive(10, s, 2048, 1, {
-            arg buf, index;
-            buf.setnMsg(0, ~wt_sig[index].asWavetable);
-        });
-        s.sync; // Now this will work
-        postf("OK\n");
-    }.fork;
+    // Load into 10 buffers in wavetable format
+    "> Loading wavetables into buffers...\n".postf;
+    ~wt_buf = Buffer.allocConsecutive(10, s, 2048, 1, {
+        arg buf, index;
+        buf.setnMsg(0, ~wt_sig[index].asWavetable);
+    });
+    postf("OK\n");
 };
 
 ~makeShaperBufs = {
@@ -149,20 +144,14 @@ s.newBusAllocators;
         ~tf = ~tf.normalize;
     });
 
-    // Use fork to create a routine for server operations
-    {
-        // Check if there are buffers already and clean them up
-        ~cleanupShaperBufs.();
-        s.sync; // Now this will work
+    // Check if there are buffers already and clean them up
+    ~cleanupShaperBufs.();
 
-        // Load into 6 buffers in wavetable format without wrapping
-        ~tf_buf = Buffer.allocConsecutive(5, s, 2050, 1, {
-            arg buf, index;
-            buf.setnMsg(0, ~tf_sig[index].asWavetableNoWrap);
-        });
-        s.sync; // Now this will work
-        "> OK\n".postf;
-    }.fork;
+    // Load into 6 buffers in wavetable format without wrapping
+    ~tf_buf = Buffer.allocConsecutive(5, s, 2050, 1, {
+        arg buf, index;
+        buf.setnMsg(0, ~tf_sig[index].asWavetableNoWrap);
+    });
 };
 
 ~makeBuffers = {
