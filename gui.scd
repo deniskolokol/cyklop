@@ -68,6 +68,52 @@ var createWavetableGUI = {
 };
 
 
+~makePatternButtons = {
+    arg parent, patterns;
+    var buttonWidth = 59;
+    var buttonHeight = 50;
+    var buttonsPerRow = 8;
+    var margin = 5;
+    var buttonPanel;
+    var counter = 0;
+    var sortedKeys;
+    
+    // Create a panel for the pattern buttons
+    buttonPanel = View(parent, (parent.bounds.width-(margin*4))@60)
+        .background_(colorPane);
+    buttonPanel.decorator = FlowLayout(buttonPanel.bounds, margin@margin, margin@margin);
+
+    // Convert keys to Array and sort them
+    sortedKeys = patterns.keys.asArray.sort;
+
+    // Create buttons for sorted patterns
+    sortedKeys.do({ |key|
+        Button(buttonPanel, buttonWidth@buttonHeight)
+        .states_([
+            [key.asString, Color.white, Color.gray],
+            [key.asString, Color.white, Color.red(0.4)]
+        ])
+        .action_({ |bt|
+            var pattern = patterns[key].value;
+            ~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
+                if (pattern.isPlaying) {
+                    pattern.stop;
+                } {
+                    pattern.play;
+                };
+                nil;
+            });
+        });
+        
+        // Increment counter and check if we need a new line
+        counter = counter + 1;
+        if (counter % buttonsPerRow == 0) {
+            buttonPanel.decorator.nextLine;
+        };
+    });
+};
+
+// Main GUI creation function
 ~makeGUI = {
     var winWidth = 1100;
     var winHeight = Window.screenBounds.height-55;
@@ -75,7 +121,7 @@ var createWavetableGUI = {
     var btPlay, popupNote;
     var rootWatcher;
     var ctrlPaneTransp, ctrlPaneNotes, plotPanel1, plotPanel2;
-    var panelHeight = 50;  // height for control panels
+    var panelHeight = 150;  // height for control panels
     var plotPanelHeight = winHeight-panelHeight-(margin*4);  // remaining height for plot panels
 
     ~win = Window.new(
@@ -103,10 +149,10 @@ var createWavetableGUI = {
     ctrlPaneNotes.decorator = FlowLayout(ctrlPaneNotes.bounds, margin@margin, gap@gap);
 
     // Place controls in their respective panels
-    btPlay = Button(ctrlPaneTransp, 100@30)
+    btPlay = Button(ctrlPaneTransp, 50@50)
         .states_([
-            ["Play", Color.white, Color.gray],
-            ["Stop", Color.white, Color.red]
+            ["MIX", Color.white, Color.gray],
+            ["MIX", Color.white, Color.red(0.4)]
         ])
         .action_({ |bt|
             var fullMixName = \mix_full;
@@ -123,6 +169,10 @@ var createWavetableGUI = {
                 });
             };
         });
+
+    // Create pattern control buttons
+    ctrlPaneTransp.decorator.nextLine;
+    ~makePatternButtons.(ctrlPaneTransp, ~evnts);
 
     popupNote = PopUpMenu(ctrlPaneNotes, 200@30)
         .items_(~fullNoteList)

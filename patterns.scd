@@ -13,6 +13,13 @@ if (pdupClass.notNil) {
 	myPrepeat = Pstutter;
 };
 
+// Routing
+~outDrums = 0;
+~outPads = 2;
+~outBass = 4;
+~outMelody = 6;
+
+// Timing
 ~baseQuant = 16;
 ~stretch = 25/128 * ~baseQuant;
 ~freq = 2;
@@ -66,7 +73,7 @@ if (pdupClass.notNil) {
 };
 ~kickBarTemplate = { |params|
     var baseEvent = (
-        instrument: \kick_acoustic, // \kick_synth
+        instrument: \kick_synth, // \kick_acoustic
         dur: Pseq(~measure * 2, inf),
         out: Pfunc({~outDrums})
     );
@@ -104,20 +111,20 @@ if (pdupClass.notNil) {
     *~kickBarTemplate.((
         instrument: \hihat,
         rel: 0.5,
-        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   0,   0,   0,   0,   0,   1,   0,   0,   0,   1,   0,   0,   0])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([1,   0,   0,   0,   1,   0,   0,   0])
         ))
 );
 ~kickOffBeat_1 = Pbind(
     *~kickBarTemplate.((
-        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   0,   0,   0,   0,   0,   1,   0,   0,   0,   1,   0,   0,   0])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([1,   0,   0,   0,   1,   0,   0,   0])
         ))
 );
 ~tomOffBeat_1 = Pbind(
     *~tomBarTemplate.((
-        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   0,   0,   0,   0,   0,   0,   0.5, 0.8, 1,   0,   0.5, 0.8, 1])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0.5, 0.8, 1,   0,   0.5, 0.8, 1])
         ))
 );
 
@@ -265,19 +272,22 @@ if (pdupClass.notNil) {
     ~beatBase_x2 = Pdef(
         \beat_base_x2,
         Pseq([
-            ~beatBarStraight_x2,
-            // Straight beat at the second bar is a bit more predominant to make
-            // the beat feel more grounded 
-            Pwrand([~beatBarStraight_x2, ~beatBarSyn_x2_1], [0.7, 0.3]),
-            ~beatBarStraight_x2,
-            Pxrand([
-                ~beatBarSyn_x2_2,
-                ~beatBarSyn_x2_3,
-                ~beatBarSyn_x2_4,
-                ~beatBarSyn_x2_5,
-                ~beatBarSyn_x2_8
-            ], 1)
-        ], inf)
+            ~offBeat1,
+            Pseq([
+                ~beatBarStraight_x2,
+                // Straight beat at the second bar is a bit more predominant to make
+                // the beat feel more grounded 
+                Pwrand([~beatBarStraight_x2, ~beatBarSyn_x2_1], [0.7, 0.3]),
+                ~beatBarStraight_x2,
+                Pxrand([
+                    ~beatBarSyn_x2_2,
+                    ~beatBarSyn_x2_3,
+                    ~beatBarSyn_x2_4,
+                    ~beatBarSyn_x2_5,
+                    ~beatBarSyn_x2_8
+                ], 1)
+            ], inf)
+        ])
     );
 });
 
@@ -300,7 +310,7 @@ if (pdupClass.notNil) {
         \degree, Pfunc({ ([0] ++ (Scale.pelog.degrees) ++ [12]).scramble[0..rrand(1, 3)] }),
         \amp, Pexprand(0.07, 0.1),
         \pan, Pwhite(-0.4, 0.4),
-        \out, 0,
+        \out, Pfunc({~outPads}),
         \rout, ~bus[\reverb],
         \rsend, -10,
     )
@@ -324,13 +334,42 @@ if (pdupClass.notNil) {
         \curveMax, Pexprand(1, 5),
         \amp, Pexprand(0.1, 0.3),
         \pan, Pwhite(-0.4, 0.4),
-        \out, 0,
+        \out, Pfunc({~outPads}),
         \rout, ~bus[\reverb],
         \rsend, -20,
     )
 });
 
-// Arpeggiated bass pulse using mid/high complexity wavetables
+// Arpeggiated bass using low complexity wavetables
+~evnts.add(\bass -> {
+    ~bass = Pbindef(\bass,
+        \instrument, "osc__s2",
+        \dur, Pseq([
+            myPrepeat.new(16, Pseq([1/4], 1)),
+            myPrepeat.new(8, Pseq([1/2], 1)),
+            Prand([1, 2, 4], 1)
+        ], inf),
+        \atk, 0.001,
+        \sus, 0.2,
+        \rel, Pexprand(0.4, 1),
+        \cAtk, 0,
+        \cRel, Pwhite(5, 10).neg,
+        \detune, 0.1,
+        \bufnum, Pfunc({ ~wt_buf[0..2].choose }),
+        \scale, Scale.pelog,
+        \degree, Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
+            + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
+        \root, Pfunc({~root}),
+        \octave, Pfunc({~octave - 3}),
+        \amp, Pseq([Pwhite(0.85, 0.95, 25)], inf),
+        \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
+        \out, Pfunc({~outBass}),
+        \rout, ~bus[\reverb],
+        \rsend, -30,
+    )
+});
+
+// Arpeggiated pulse using mid/high complexity wavetables
 ~evnts.add(\pulse -> {
     ~pulse = Pbindef(\pulse,
         \instrument, "osc__s2",
@@ -350,10 +389,10 @@ if (pdupClass.notNil) {
         \degree, Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
             + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
         \root, Pfunc({~root}),
-        \octave, Pfunc({~octave - 2}),
+        \octave, Pfunc({~octave - 3}),
         \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
         \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
-        \out, 0,
+        \out, Pfunc({~outMelody}),
         \rout, ~bus[\reverb],
         \rsend, -10,
     )
@@ -388,7 +427,7 @@ if (pdupClass.notNil) {
             Pseq([8, 12, Prand([7, 8, \]), \], 1)
         ], inf),
         \amp, Pseq([0.18, 0.24, 0.28, 0], inf),
-        \out, 0,
+        \out, Pfunc({~outMelody}),
         \rout, ~bus[\reverb],
         \rsend, -6,
     )
@@ -400,6 +439,7 @@ if (pdupClass.notNil) {
         Ptpar([
             // 0.0, ~evnts[\beat_base_x1].value,
             0.0, ~evnts[\beat_base_x2].value,
+            0.0, ~evnts[\bass].value,
             0.0, ~evnts[\pad].value,
             0.0, ~evnts[\pulse].value,
             0.0, ~evnts[\melody].value,

@@ -29,9 +29,6 @@ ServerTree.removeAll;
 ServerQuit.removeAll;
 
 // Global variables.
-~out = 0;
-~outDrums = 2;
-s.newBusAllocators;
 
 // Root key
 //
@@ -262,8 +259,9 @@ s.newBusAllocators;
         { 37 } { \beat_base_x2 }
         { 38 } { \pad }
         { 39 } { \pad_s }
-        { 40 } { \pulse }
-        { 41 } { \melody };
+        { 40 } { \bass }
+        { 41 } { \pulse }
+        { 42 } { \melody };
 
         try {
             if (~evnts[setParm].isNil) {
@@ -290,9 +288,8 @@ s.newBusAllocators;
 
     // MIDI notes
     MIDIdef.noteOn(\noteOnKeyboard, { |vel, num, chan, src|
-        // ~noteDropdown.valueAction_(~rootMIDI);
-        ~setRoot.(num)
-        // ~postMIDI.(vel, num, chan, src, "ROOT", num);
+        ~setRoot.(num);
+        ~postMIDI.(vel, num, chan, src, "ROOT", num);
     },
     chan:0
     );
