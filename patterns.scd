@@ -99,6 +99,28 @@ if (pdupClass.notNil) {
     *~tomBarTemplate.((amp: Pseq([0, 0, 0, 0, 0, 1, Pwrand([1, 0], [0.7, 0.3], 1), 0, 0, 1])))
 );
 
+// Off-beat
+~hihatOffBeat_1 = Pbind(
+    *~kickBarTemplate.((
+        instrument: \hihat,
+        rel: 0.5,
+        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0,   0,   0,   0,   1,   0,   0,   0,   1,   0,   0,   0])
+        ))
+);
+~kickOffBeat_1 = Pbind(
+    *~kickBarTemplate.((
+        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0,   0,   0,   0,   1,   0,   0,   0,   1,   0,   0,   0])
+        ))
+);
+~tomOffBeat_1 = Pbind(
+    *~tomBarTemplate.((
+        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0,   0,   0,   0,   0,   0.5, 0.8, 1,   0,   0.5, 0.8, 1])
+        ))
+);
+
 // Syn patterns.
 // 1
 ~kickBarSyn_1 = Pbind(
@@ -127,7 +149,7 @@ if (pdupClass.notNil) {
 );
 ~tomBarSyn_3 = Pbind(
     *~tomBarTemplate.((
-        dur: Pseq((~measure * 2)[..4] ++ ~measure[5..8] ++ (~measure[9] * 2 ! 3), inf),
+        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/4, 1/4, 1/4], inf),
         amp: Pseq([0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0])
     ))
 );
@@ -137,20 +159,33 @@ if (pdupClass.notNil) {
 );
 ~snareBarSyn_4 = Pbind(
     *~snareBarTemplate.((
-        dur: Pseq((~measure * 2)[..7] ++ (~measure[8] ! 4), inf),
+        // It is also possible to write like this:
+        // (~measure * 2)[..7] ++ (~measure[8] ! 4)
+        // but the explicit time measure definition is more readable.
+        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8], inf),
         amp: Pseq([1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0])
         ))
 );
 // 5
 ~kickBarSyn_5 = Pbind(
-    *~kickBarTemplate.((amp:  Pseq([1, 0, 1, 0, 0, 1, 0, 1, 0, 0])))
-);
-~tomBarSyn_5 = Pbind(
-    *~tomBarTemplate.((amp:   Pseq([0, 0, 0, 0, 0, 0, 1, 0, 1, 0])))
+    *~kickBarTemplate.((
+        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/4], inf),
+        amp: Pseq([1,   0,   1,   0,   0,   0,   0,   1,   0,   0,   0,   0,   0,   1])
+        ))
 );
 ~snareBarSyn_5 = Pbind(
-    *~snareBarTemplate.((amp: Pseq([0, 0, 0, 1, 0, 0, 0, 1, 0, 1])))
+    *~snareBarTemplate.((
+        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/4], inf),
+        amp: Pseq([0,   0,   0,   1,   0,   0,   0,   0,   0,   1,   0,   0,   1,   0])
+        ))
 );
+~tomBarSyn_5 = Pbind(
+    *~tomBarTemplate.((
+        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/4], inf),
+        amp: Pseq([0,   0,   0,   0,   0,   1,   1,   0.6, 0,   0,   0,   0,   0,   0])
+        ))
+);
+
 // 8 - Drum roll
 ~kickBarSyn_8 = Pbind(
     *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 0, 0, 0, 0])))
@@ -176,6 +211,13 @@ if (pdupClass.notNil) {
     0.0, ~kickBarStraight, // KICK
     0.0, ~snareBarStraight, // SNARE
     0.0, ~tomBarStraight, // TOM
+]);
+
+// Off-beat pattern mix.
+~offBeat1 = Ptpar([
+    0.0, ~hihatOffBeat_1,
+    0.0, ~kickOffBeat_1,
+    0.0, ~tomOffBeat_1,
 ]);
 
 // Mix 1 bar syncopated patterns into one.
@@ -224,7 +266,9 @@ if (pdupClass.notNil) {
         \beat_base_x2,
         Pseq([
             ~beatBarStraight_x2,
-            Pxrand([~beatBarStraight_x2, ~beatBarSyn_x2_1]),
+            // Straight beat at the second bar is a bit more predominant to make
+            // the beat feel more grounded 
+            Pwrand([~beatBarStraight_x2, ~beatBarSyn_x2_1], [0.7, 0.3]),
             ~beatBarStraight_x2,
             Pxrand([
                 ~beatBarSyn_x2_2,
