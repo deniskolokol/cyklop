@@ -262,188 +262,170 @@ if (pdupClass.notNil) {
 ]);
 
 // Base drum line.
-~evnts.add(\beat_base_x1 -> {
-    ~beatBase_x1 = Pdef(
-        \beat_base_x1,
-        Pseq([~beatBarStraight], inf)
-    );
-});
-~evnts.add(\beat_base_x2 -> {
-    ~beatBase_x2 = Pdef(
-        \beat_base_x2,
+~evnts.add(\beat_base_x1 -> Pdef(\beat_base_x1,
+    Pseq([~beatBarStraight], inf)
+));
+
+~evnts.add(\beat_base_x2 -> Pdef(\beat_base_x2,
+    Pseq([
+        ~offBeat1,
         Pseq([
-            ~offBeat1,
-            Pseq([
-                ~beatBarStraight_x2,
-                // Straight beat at the second bar is a bit more predominant to make
-                // the beat feel more grounded 
-                Pwrand([~beatBarStraight_x2, ~beatBarSyn_x2_1], [0.7, 0.3]),
-                ~beatBarStraight_x2,
-                Pxrand([
-                    ~beatBarSyn_x2_2,
-                    ~beatBarSyn_x2_3,
-                    ~beatBarSyn_x2_4,
-                    ~beatBarSyn_x2_5,
-                    ~beatBarSyn_x2_8
-                ], 1)
-            ], inf)
-        ])
-    );
-});
+            ~beatBarStraight_x2,
+            // Straight beat at the second bar is a bit more predominant to make
+            // the beat feel more grounded 
+            Pwrand([~beatBarStraight_x2, ~beatBarSyn_x2_1], [0.7, 0.3]),
+            ~beatBarStraight_x2,
+            Pxrand([
+                ~beatBarSyn_x2_2,
+                ~beatBarSyn_x2_3,
+                ~beatBarSyn_x2_4,
+                ~beatBarSyn_x2_5,
+                ~beatBarSyn_x2_8
+            ], 1)
+        ], inf)
+    ])
+));
 
 // Synths.
 // background pad using simple wavetables
-~evnts.add(\pad -> {
-    ~pad = Pbindef(\pad,
-        \instrument, "osc__s2",
-        \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
-        \atk, Pexprand(0.5, 2),
-        \sus, 0,
-        \rel, Pexprand(5, 10),
-        \cAtk, Pexprand(1, 2),
-        \cRel, Pexprand(1, 2).neg,
-        \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
-        \bufnum, Pfunc({ ~wt_buf[3..6].choose }),
-        \scale, Scale.pelog,
-        \root, Pfunc({~root}),
-        \octave, Pfunc({~octave}),
-        \degree, Pfunc({ ([0] ++ (Scale.pelog.degrees) ++ [12]).scramble[0..rrand(1, 3)] }),
-        \amp, Pexprand(0.07, 0.1),
-        \pan, Pwhite(-0.4, 0.4),
-        \out, Pfunc({~outPads}),
-        \rout, ~bus[\reverb],
-        \rsend, -10,
-    )
-});
+~evnts.add(\pad -> Pbindef(\pad,
+    \instrument, "osc__s2",
+    \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
+    \atk, Pexprand(0.5, 2),
+    \sus, 0,
+    \rel, Pexprand(5, 10),
+    \cAtk, Pexprand(1, 2),
+    \cRel, Pexprand(1, 2).neg,
+    \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
+    \bufnum, Pfunc({ ~wt_buf[3..6].choose }),
+    \scale, Scale.pelog,
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave}),
+    \degree, Pfunc({ ([0] ++ (Scale.pelog.degrees) ++ [12]).scramble[0..rrand(1, 3)] }),
+    \amp, Pexprand(0.07, 0.1),
+    \pan, Pwhite(-0.4, 0.4),
+    \out, Pfunc({~outPads}),
+    \rout, ~bus[\reverb],
+    \rsend, -10,
+));
 
-~evnts.add(\pad_s -> {
-    ~pad_s = Pbindef(\pad_s,
-        \instrument, "shaper__s2",
-        \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
-        \atk, Pexprand(0.5, 2),
-        \sus, 0,
-        \rel, Pexprand(5, 10),
-        \cAtk, Pexprand(0.01, 0.5),
-        \cRel, Pexprand(1, 2).neg,
-        \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
-        \bufnum, Pfunc({ ~tf_buf.choose }),
-        \scale, Scale.pelog,
-        \root, Pfunc({~root}),
-        \octave, Pfunc({~octave}),
-        \degree, Pfunc({ ([0] ++ (Scale.pelog.degrees) ++ [12]).scramble[0..rrand(1, 3)] }),
-        \curveMax, Pexprand(1, 5),
-        \amp, Pexprand(0.1, 0.3),
-        \pan, Pwhite(-0.4, 0.4),
-        \out, Pfunc({~outPads}),
-        \rout, ~bus[\reverb],
-        \rsend, -20,
-    )
-});
+~evnts.add(\pad_s -> Pbindef(\pad_s,
+    \instrument, "shaper__s2",
+    \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
+    \atk, Pexprand(0.5, 2),
+    \sus, 0,
+    \rel, Pexprand(5, 10),
+    \cAtk, Pexprand(0.01, 0.5),
+    \cRel, Pexprand(1, 2).neg,
+    \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
+    \bufnum, Pfunc({ ~tf_buf.choose }),
+    \scale, Scale.pelog,
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave}),
+    \degree, Pfunc({ ([0] ++ (Scale.pelog.degrees) ++ [12]).scramble[0..rrand(1, 3)] }),
+    \curveMax, Pexprand(1, 5),
+    \amp, Pexprand(0.1, 0.3),
+    \pan, Pwhite(-0.4, 0.4),
+    \out, Pfunc({~outPads}),
+    \rout, ~bus[\reverb],
+    \rsend, -20,
+));
 
 // Arpeggiated bass using low complexity wavetables
-~evnts.add(\bass -> {
-    ~bass = Pbindef(\bass,
-        \instrument, "osc__s2",
-        \dur, Pseq([
-            myPrepeat.new(16, Pseq([1/4], 1)),
-            myPrepeat.new(8, Pseq([1/2], 1)),
-            Prand([1, 2, 4], 1)
-        ], inf),
-        \atk, 0.001,
-        \sus, 0.2,
-        \rel, Pexprand(0.4, 1),
-        \cAtk, 0,
-        \cRel, Pwhite(5, 10).neg,
-        \detune, 0.1,
-        \bufnum, Pfunc({ ~wt_buf[0..2].choose }),
-        \scale, Scale.pelog,
-        \degree, Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
-            + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
-        \root, Pfunc({~root}),
-        \octave, Pfunc({~octave - 3}),
-        \amp, Pseq([Pwhite(0.85, 0.95, 25)], inf),
-        \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
-        \out, Pfunc({~outBass}),
-        \rout, ~bus[\reverb],
-        \rsend, -30,
-    )
-});
+~evnts.add(\bass -> Pbindef(\bass,
+    \instrument, "osc__s2",
+    \dur, Pseq([
+        myPrepeat.new(16, Pseq([1/4], 1)),
+        myPrepeat.new(8, Pseq([1/2], 1)),
+        Prand([1, 2, 4], 1)
+    ], inf),
+    \atk, 0.001,
+    \sus, 0.2,
+    \rel, Pexprand(0.4, 1),
+    \cAtk, 0,
+    \cRel, Pwhite(5, 10).neg,
+    \detune, 0.1,
+    \bufnum, Pfunc({ ~wt_buf[0..2].choose }),
+    \scale, Scale.pelog,
+    \degree, Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
+        + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave - 3}),
+    \amp, Pseq([Pwhite(0.85, 0.95, 25)], inf),
+    \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
+    \out, Pfunc({~outBass}),
+    \rout, ~bus[\reverb],
+    \rsend, -30,
+));
 
 // Arpeggiated pulse using mid/high complexity wavetables
-~evnts.add(\pulse -> {
-    ~pulse = Pbindef(\pulse,
-        \instrument, "osc__s2",
-        \dur, Pseq([
-            myPrepeat.new(16, Pseq([1/4], 1)),
-            myPrepeat.new(8, Pseq([1/2], 1)),
-            Prand([1, 2, 4, 6, 12], 1)
-        ], inf),
-        \atk, 0.001,
-        \sus, 0.2,
-        \rel, Pexprand(0.4, 1),
-        \cAtk, 0,
-        \cRel, Pwhite(5, 10).neg,
-        \detune, 0.3,
-        \bufnum, Pfunc({ ~wt_buf[4..9].choose }),
-        \scale, Scale.pelog,
-        \degree, Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
-            + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
-        \root, Pfunc({~root}),
-        \octave, Pfunc({~octave - 3}),
-        \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
-        \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
-        \out, Pfunc({~outMelody}),
-        \rout, ~bus[\reverb],
-        \rsend, -10,
-    )
-});
+~evnts.add(\pulse -> Pbindef(\pulse,
+    \instrument, "osc__s2",
+    \dur, Pseq([
+        myPrepeat.new(16, Pseq([1/4], 1)),
+        myPrepeat.new(8, Pseq([1/2], 1)),
+        Prand([1, 2, 4, 6, 12], 1)
+    ], inf),
+    \atk, 0.001,
+    \sus, 0.2,
+    \rel, Pexprand(0.4, 1),
+    \cAtk, 0,
+    \cRel, Pwhite(5, 10).neg,
+    \detune, 0.3,
+    \bufnum, Pfunc({ ~wt_buf[4..9].choose }),
+    \scale, Scale.pelog,
+    \degree, Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
+        + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave - 3}),
+    \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
+    \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
+    \out, Pfunc({~outMelody}),
+    \rout, ~bus[\reverb],
+    \rsend, -10,
+));
 
 // Minimal melody in the upper regfister using variable wavetable oscillator
-~evnts.add(\melody -> {
-    ~melody = Pbindef(\melody,
-        \instrument, "vosc__s2",
-        \dur, Prand([
-            Pseq([2, 1.5, 0.5, Prand([12, 16, 20])], 1),
-            Pseq([1.5, 1, 1.5, Prand([12, 16, 20])], 1),
-        ], inf),
-        \atk, 0.01,
-        \sus, 0.3,
-        \rel, 1.5,
-        \cAtk, -2,
-        \cRel, -2,
-        \detune, Pexprand(0.18,0.25),
-        \bufnum, Pwrand([
-            Pfunc({ ~wt_buf[0] }),
-            Pfunc({ ~wt_buf[1] }),
-            Pfuncn({ ~wt_buf[2] }, 2),
-        ], [1, 3, 9].normalizeSum, inf),
-        \numBufs, Prand((2..4), inf),
-        \scale, Scale.pelog,
-        \root, Pfunc({~root}),
-        \octave, Pfunc({~octave + 2}),
-        \degree, Pxrand([
-            Pseq([7,  0, Prand([-4, 12, \]), \], 1),
-            Pseq([7, -4, Prand([-5, 3, \]), \], 1),
-            Pseq([8, 12, Prand([7, 8, \]), \], 1)
-        ], inf),
-        \amp, Pseq([0.18, 0.24, 0.28, 0], inf),
-        \out, Pfunc({~outMelody}),
-        \rout, ~bus[\reverb],
-        \rsend, -6,
-    )
-});
+~evnts.add(\melody -> Pbindef(\melody,
+    \instrument, "vosc__s2",
+    \dur, Prand([
+        Pseq([2, 1.5, 0.5, Prand([12, 16, 20])], 1),
+        Pseq([1.5, 1, 1.5, Prand([12, 16, 20])], 1),
+    ], inf),
+    \atk, 0.01,
+    \sus, 0.3,
+    \rel, 1.5,
+    \cAtk, -2,
+    \cRel, -2,
+    \detune, Pexprand(0.18,0.25),
+    \bufnum, Pwrand([
+        Pfunc({ ~wt_buf[0] }),
+        Pfunc({ ~wt_buf[1] }),
+        Pfuncn({ ~wt_buf[2] }, 2),
+    ], [1, 3, 9].normalizeSum, inf),
+    \numBufs, Prand((2..4), inf),
+    \scale, Scale.pelog,
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave + 2}),
+    \degree, Pxrand([
+        Pseq([7,  0, Prand([-4, 12, \]), \], 1),
+        Pseq([7, -4, Prand([-5, 3, \]), \], 1),
+        Pseq([8, 12, Prand([7, 8, \]), \], 1)
+    ], inf),
+    \amp, Pseq([0.18, 0.24, 0.28, 0], inf),
+    \out, Pfunc({~outMelody}),
+    \rout, ~bus[\reverb],
+    \rsend, -6,
+));
 
-~evnts.add(\mix_full -> {
-    ~mixFull = Pdef(
-        \mix_full,
-        Ptpar([
-            // 0.0, ~evnts[\beat_base_x1].value,
-            0.0, ~evnts[\beat_base_x2].value,
-            0.0, ~evnts[\bass].value,
-            0.0, ~evnts[\pad].value,
-            0.0, ~evnts[\pulse].value,
-            0.0, ~evnts[\melody].value,
-        ], inf)
-    );
-});
+~evnts.add(\mix_full -> Pdef(\mix_full,
+    Ptpar([
+        // 0.0, ~evnts[\beat_base_x1].value,
+        0.0, ~evnts[\beat_base_x2].value,
+        0.0, ~evnts[\bass].value,
+        0.0, ~evnts[\pad].value,
+        0.0, ~evnts[\pulse].value,
+        0.0, ~evnts[\melody].value,
+    ], inf)
+))
 )

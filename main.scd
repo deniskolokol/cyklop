@@ -269,10 +269,10 @@ ServerQuit.removeAll;
                 setParm = "Note ON";
             } {
                 ~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
-                    if (~evnts[setParm].value.isPlaying) {
-                        ~evnts[setParm].value.stop;
+                    if (~evnts[setParm].isPlaying) {
+                        ~evnts[setParm].stop;
                     } {
-                        ~evnts[setParm].value.play;
+                        ~evnts[setParm].play;
                     };
                     nil; // Return nil to prevent rescheduling
                 });
