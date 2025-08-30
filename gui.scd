@@ -15,7 +15,7 @@ var createWavetableGUI = {
         height=200,
         width=800;
 
-    var mainView, wavetablePanel, scrollView, plotView;
+    var scrollView, plotView;
     var plotHeight = height - 60 - (margin*4);
 
     // Function to update all plots
@@ -68,15 +68,16 @@ var createWavetableGUI = {
 };
 
 
-~makePatternButtons = {
-    arg parent, patterns;
+var makePatternButtons = {
+    arg parent, patterns, evntKeys=nil;
+
     var buttonWidth = 59;
     var buttonHeight = 50;
     var buttonsPerRow = 8;
     var margin = 5;
     var buttonPanel;
     var counter = 0;
-    var sortedKeys;
+    var buttons = Dictionary.new;
     
     // Create a panel for the pattern buttons
     buttonPanel = View(parent, (parent.bounds.width-(margin*4))@60)
@@ -84,27 +85,34 @@ var createWavetableGUI = {
     buttonPanel.decorator = FlowLayout(buttonPanel.bounds, margin@margin, margin@margin);
 
     // Convert keys to Array and sort them
-    sortedKeys = patterns.keys.asArray.sort;
+    if (evntKeys.isNil) {
+        evntKeys = patterns.keys.asArray.sort;
+    };
 
     // Create buttons for sorted patterns
-    sortedKeys.do({ |key|
-        Button(buttonPanel, buttonWidth@buttonHeight)
+    evntKeys.do({ |key|
+        var button = Button(buttonPanel, buttonWidth@buttonHeight)
         .states_([
             [key.asString, Color.white, Color.gray],
             [key.asString, Color.white, Color.red(0.4)]
         ])
         .action_({ |bt|
-            var pattern = patterns[key].value;
-            ~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
-                if (pattern.isPlaying) {
-                    pattern.stop;
-                } {
-                    pattern.play;
-                };
-                nil;
-            });
+            ~playStopEvent.(key, ~tempo);
         });
-        
+
+        buttons[key] = button; // Store button in dictionary
+
+        // Subscribe to pattern state changes
+        NotificationCenter.register(
+            ~patternStateName, // Watch for pattern state notifications
+            key,               // Only for this pattern
+            button,            // The object to notify (the button)
+            { |state|
+                // Update button state in GUI thread
+                { button.value = state.asInteger }.defer
+            }
+        );
+
         // Increment counter and check if we need a new line
         counter = counter + 1;
         if (counter % buttonsPerRow == 0) {
@@ -123,6 +131,7 @@ var createWavetableGUI = {
     var ctrlPaneTransp, ctrlPaneNotes, plotPanel1, plotPanel2;
     var panelHeight = 150;  // height for control panels
     var plotPanelHeight = winHeight-panelHeight-(margin*4);  // remaining height for plot panels
+    var guiPatternKeys;
 
     ~win = Window.new(
         "Cyklop",
@@ -172,7 +181,12 @@ var createWavetableGUI = {
 
     // Create pattern control buttons
     ctrlPaneTransp.decorator.nextLine;
-    ~makePatternButtons.(ctrlPaneTransp, ~evnts);
+
+    // Not all keys should have buttons, e.g., the full mix button
+    guiPatternKeys = [
+        \beat_x1, \beat_x2, \pad, \pad_s, \bass, \pulse, \melody
+    ].asArray;
+    makePatternButtons.(ctrlPaneTransp, ~evnts, guiPatternKeys);
 
     popupNote = PopUpMenu(ctrlPaneNotes, 200@30)
         .items_(~fullNoteList)

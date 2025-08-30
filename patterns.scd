@@ -1,4 +1,8 @@
-// Cyklop patterns
+// Patterns library.
+//
+// - Paterns are stored in the global dictionary ~evnts.
+// - An event that is supposed be controlled by MIDI and/or GUI
+//   should be defined as Pdef or Pbindef.
 (
 // Backward compatibility for Pstutter and Pdup: starting with version 3.13.0
 // SuperCollider stopped supporting Pstutter in favor of Pdup.
@@ -262,11 +266,11 @@ if (pdupClass.notNil) {
 ]);
 
 // Base drum line.
-~evnts.add(\beat_base_x1 -> Pdef(\beat_base_x1,
+~evnts.add(\beat_x1 -> Pdef(\beat_x1,
     Pseq([~beatBarStraight], inf)
 ));
 
-~evnts.add(\beat_base_x2 -> Pdef(\beat_base_x2,
+~evnts.add(\beat_x2 -> Pdef(\beat_x2,
     Pseq([
         ~offBeat1,
         Pseq([
@@ -420,8 +424,8 @@ if (pdupClass.notNil) {
 
 ~evnts.add(\mix_full -> Pdef(\mix_full,
     Ptpar([
-        // 0.0, ~evnts[\beat_base_x1].value,
-        0.0, ~evnts[\beat_base_x2].value,
+        // 0.0, ~evnts[\beat_x1].value,
+        0.0, ~evnts[\beat_x2].value,
         0.0, ~evnts[\bass].value,
         0.0, ~evnts[\pad].value,
         0.0, ~evnts[\pulse].value,

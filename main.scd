@@ -72,6 +72,40 @@ ServerQuit.removeAll;
 // Find index of middle C (MIDI 60) for default selection
 ~defaultIndex = ~midiValues.indexOf(60);
 
+
+// Timing decorator
+~withTiming = { |func|
+    { |...args|
+        var start = Main.elapsedTime;
+        var result = func.value(*args);
+        postf("[i] Execution time: % seconds\n", (Main.elapsedTime - start).round(0.0001));
+        result
+    }
+};
+
+
+// Error handling decorator
+~withErrorHandling = { |func|
+    { |...args|
+        try {
+            func.value(*args);
+        } { |error|
+            case
+            { error.isKindOf(PrimitiveFailedError) } {
+                postf("% (Operation failed)\n", error.errorString)
+            }
+            { error.isKindOf(DoesNotUnderstandError) } {
+                postf("% (Method not found)\n", error.errorString)
+            }
+            {
+                postf("% (Unknown error)\n", error.errorString)
+            };
+
+            nil
+        }
+    }
+};
+
 // Buffers.
 ~cleanupWavetableBufs = {
     // Cleans up buffers used for wavetables and Shaper.
@@ -89,12 +123,13 @@ ServerQuit.removeAll;
     };
 };
 
-~makeWavetableBufs = {
+
+// Create wavetables and fill buffers
+~makeWavetableBufs = ~withErrorHandling.(~withTiming.({
     // Create 10 wavetables with increasing complexity
-    "> Creating wavetables...\n".postf;
+    "> Creating wavetables...".post;
     ~wt_sig = 10.collect({ |i|
 
-		// Random number of envelope segments
 		var numSegs = i.linexp(0, 9, 4, 40).round;
 
         Env(
@@ -110,20 +145,23 @@ ServerQuit.removeAll;
 			{[\sine, 0, exprand(1,20) * [1,-1].choose].wchoose([9-i, 3, i].normalizeSum)}.dup(numSegs)
 		).asSignal(1024)
 	});
+    postf("OK\n");
 
     // Check if there are buffers already and clean them up
     ~cleanupWavetableBufs.();
 
     // Load into 10 buffers in wavetable format
-    "> Loading wavetables into buffers...\n".postf;
+    "> Loading wavetables into buffers...".post;
     ~wt_buf = Buffer.allocConsecutive(10, s, 2048, 1, {
         arg buf, index;
         buf.setnMsg(0, ~wt_sig[index].asWavetable);
     });
     postf("OK\n");
-};
+}));
 
-~makeShaperBufs = {
+
+// Create Shaper Envs and fill buffers
+~makeShaperBufs = ~withErrorHandling.(~withTiming.({
     // Create 6 Envs and load them into buffers for Shaper.
     "> Loading buffers for Shaper...\n".postf;
     ~tf_sig = 6.collect ({ |i|
@@ -149,24 +187,28 @@ ServerQuit.removeAll;
         arg buf, index;
         buf.setnMsg(0, ~tf_sig[index].asWavetableNoWrap);
     });
-};
+}));
 
+
+// Aggregate buffer creation
 ~makeBuffers = {
-    // Create buffers for wavetables and Shaper.
     ~makeWavetableBufs.();
     ~makeShaperBufs.();
 };
 
 
-~makeBuses = {
+// Create audio buses for FX
+~makeBuses = ~withErrorHandling.(~withTiming.({
     "> Creating buses...".post;
     ~bus = Dictionary[
         \reverb -> Bus.audio(s, 2)
     ];
     postf("OK\n");
-};
+}));
 
-~makeNodes = {
+
+// Create groups and synths for FX
+~makeNodes = ~withErrorHandling.(~withTiming.({
     "> Initiating configuration of groups and synths...".post;
     s.bind({
         ~mainGrp = Group.new;
@@ -199,10 +241,48 @@ ServerQuit.removeAll;
         );
     });
     postf("OK\n");
+}));
+
+
+// Manager to notify listeners about the pattern state change
+~patternStateName = \patternState;
+~patternStateManager = { |pattern, state|
+    NotificationCenter.notify(
+        ~patternStateName,
+        pattern,
+        state
+    );
 };
 
 
-// Post MIDI event
+// Event player transport
+~playStopEvent = { |name, clock|
+    try {
+        if (~evnts[name].isNil) {
+            postf("WARNING: No event defined for %\n", name);
+        } {
+            clock.schedAbs(clock.nextTimeOnGrid(), {
+                if (~evnts[name].isPlaying) {
+                    ~evnts[name].stop;
+
+                    // Notify listeners that the pattern has stopped
+                    ~patternStateManager.(name, false);
+                } {
+                    ~evnts[name].play;
+
+                    // Notify listeners that the pattern has started
+                    ~patternStateManager.(name, true);
+                };
+            });
+        };
+    } {
+        postf("ERROR: Could not play event %\n", name);
+    };
+    nil;
+};
+
+
+// Log MIDI event
 ~postMIDI = { |val, num, chan, src, setParm, setVal|
     var ln = format("src  %\tchan  %\tnum  % ", src, chan, num);
     if (setParm.isNil) {
@@ -215,8 +295,26 @@ ServerQuit.removeAll;
 };
 
 
+// MIDI handler wrapper
+~withMIDILogging = { |func|
+    { |val, num, chan, src|
+        var setParm, setVal;
+        var result = func.value(val, num, chan, src);
+
+        // Unpack the result if the handler returns parameter info
+        if (result.isKindOf(Array)) {
+            #setParm, setVal = result;
+        } {
+            setParm = result;
+            setVal = num;
+        };
+        ~postMIDI.(val, num, chan, src, setParm, setVal);
+    }
+};
+
+
 // MIDI handlers
-~makeMIDI = {
+~makeMIDI = ~withErrorHandling.(~withTiming.({
     "> Initializing MIDI sources...".postln;
     if(MIDIClient.initialized.not) {
         MIDIClient.init;
@@ -226,7 +324,7 @@ ServerQuit.removeAll;
     MIDIIn.connectAll;
 
     // MIDI control messages
-    MIDIdef.cc(\ccHandler, { |val, num, chan, src|
+    MIDIdef.cc(\ccHandler, ~withMIDILogging.({ |val, num, chan, src|
 		var setParm=nil, setVal=nil;
 		switch(num)
 		{ 86 } { // CC 86 (Knob 1) to Dist xFade
@@ -249,52 +347,40 @@ ServerQuit.removeAll;
             setParm = "Dist Amount";
             ~distSynth.set(\amount, setVal);
         };
-		~postMIDI.(val, num, chan, src, setParm, setVal);
-    });
+
+        // Return parameter name and value for logging
+        [setParm, setVal]
+    }));
 
     // triggering events with MIDI
-    MIDIdef.noteOn(\noteOnKeyPad, { |vel, num, chan, src|
+    MIDIdef.noteOn(\noteOnKeyPad, ~withMIDILogging.({ |vel, num, chan, src|
         var setParm = switch(num)
-        { 36 } { \beat_base_x1 }
-        { 37 } { \beat_base_x2 }
+        { 36 } { \beat_x1 }
+        { 37 } { \beat_x2 }
         { 38 } { \pad }
         { 39 } { \pad_s }
         { 40 } { \bass }
         { 41 } { \pulse }
-        { 42 } { \melody };
+        { 42 } { \melody }
+        { "Note ON" }; // Default case
 
-        try {
-            if (~evnts[setParm].isNil) {
-                postf("WARNING: No event defined for %\n", setParm);
-                setParm = "Note ON";
-            } {
-                ~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
-                    if (~evnts[setParm].isPlaying) {
-                        ~evnts[setParm].stop;
-                    } {
-                        ~evnts[setParm].play;
-                    };
-                    nil; // Return nil to prevent rescheduling
-                });
-            };
-        } {
-            postf("ERROR: Could not play event %\n", setParm);
-            setParm = "Note ON";
-        };
-        ~postMIDI.(vel, num, chan, src, setParm, num);
-    },
+        ~playStopEvent.(setParm, ~tempo);
+
+        // Return parameter name for logging
+        setParm
+    }),
     chan:9
     );
 
     // MIDI notes
-    MIDIdef.noteOn(\noteOnKeyboard, { |vel, num, chan, src|
+    MIDIdef.noteOn(\noteOnKeyboard, ~withMIDILogging.({ |vel, num, chan, src|
         ~setRoot.(num);
-        ~postMIDI.(vel, num, chan, src, "ROOT", num);
-    },
+        // Return parameter name for logging
+        "ROOT"
+    }),
     chan:0
     );
-
-};
+}));
 
 
 // Load external file
@@ -330,9 +416,13 @@ ServerQuit.removeAll;
     MIDIdef.freeAll;
     postf("OK\n");
 
-    "> Cleaning up buffers...".post;
+    "> Clearing buffers...".post;
     ~cleanupShaperBufs.();
     ~cleanupWavetableBufs.();
+    postf("OK\n");
+
+    "> Clearing notification centers...".post;
+    NotificationCenter.clear;
     postf("OK\n");
 
     "> Removing all functions...".post;
