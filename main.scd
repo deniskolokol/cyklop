@@ -222,7 +222,7 @@ ServerQuit.removeAll;
                 \lpf, 4500,
                 \mix, 0.35,
                 \in, ~bus[\reverb],
-                \out, ~out
+                \out, ~outMelody
             ],
             ~reverbGrp
         );
@@ -231,9 +231,9 @@ ServerQuit.removeAll;
         ~distSynth = Synth.new(
             \dist, [
                 \xFade, 0.0,
-                \preGain, 75,
-                \postGain, 0.5,
-                \amount, 0.5,
+                \preGain, 35,
+                \postGain, 0.315,
+                \amount, 0.85,
                 \in, ~outDrums, // input from main output will be XOut'ed
                 \out, ~outDrums
             ],
