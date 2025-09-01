@@ -142,10 +142,10 @@ if (pdupClass.notNil) {
 );
 // 2
 ~kickBarSyn_2 = Pbind(
-    *~kickBarTemplate.((amp: Pseq([0, 1, 0, 0, 1, 0, 0, 1, 0, 0])))
+    *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 0, 1, 0, 0])))
 );
 ~snareBarSyn_2 = Pbind(
-    *~snareBarTemplate.((amp: Pseq([1, 0, 0, 1, 0, 0, 1, 0, 1, Prand([0, 1], 1)])))
+    *~snareBarTemplate.((amp: Pseq([0, 0, 0, 1, 0, 0, 1, 0, 1, 1])))
 );
 // 3
 ~kickBarSyn_3 = Pbind(
@@ -232,15 +232,30 @@ if (pdupClass.notNil) {
 ]);
 
 // Mix 1 bar syncopated patterns into one.
+~beatBarSyn_x1_1 = Ptpar([
+    0.0, ~hihatBarStraight, // HAT
+    0.0, ~kickBarSyn_1, // KICK
+    0.0, ~snareBarSyn_1, // SNARE
+]);
 ~beatBarSyn_x2_1 = Ptpar([
     0.0, ~hihatBarStraight_x2, // HAT
     0.0, ~kickBarSyn_1, // KICK
     0.0, ~snareBarSyn_1, // SNARE
 ]);
+~beatBarSyn_x1_2 = Ptpar([
+    0.0, ~hihatBarStraight, // HAT
+    0.0, ~kickBarSyn_2, // KICK
+    0.0, ~snareBarSyn_2, // SNARE
+]);
 ~beatBarSyn_x2_2 = Ptpar([
     0.0, ~hihatBarStraight_x2, // HAT
     0.0, ~kickBarSyn_2, // KICK
     0.0, ~snareBarSyn_2, // SNARE
+]);
+~beatBarSyn_x1_3 = Ptpar([
+    0.0, ~hihatBarStraight, // HAT
+    0.0, ~kickBarSyn_3, // KICK
+    0.0, ~snareBarSyn_3, // SNARE
 ]);
 ~beatBarSyn_x2_3 = Ptpar([
     0.0, ~hihatBarStraight, // HAT
@@ -266,26 +281,34 @@ if (pdupClass.notNil) {
 ]);
 
 // Base drum line.
+// Hihat measures 1/4th
 ~evnts.add(\beat_x1 -> Pdef(\beat_x1,
-    Pseq([~beatBarStraight], inf)
+    Pseq([
+        Pseq([~beatBarStraight], 3),
+        Prand([~beatBarSyn_x1_1, ~beatBarSyn_x1_2], 1),
+    ], inf)
 ));
 
+// Hihat measures 1/8th
 ~evnts.add(\beat_x2 -> Pdef(\beat_x2,
     Pseq([
         ~offBeat1,
         Pseq([
+
+            // 1st four bars: straight beat and simple syncopation
             ~beatBarStraight_x2,
             // Straight beat at the second bar is a bit more predominant to make
             // the beat feel more grounded 
             Pwrand([~beatBarStraight_x2, ~beatBarSyn_x2_1], [0.7, 0.3]),
             ~beatBarStraight_x2,
-            Pxrand([
-                ~beatBarSyn_x2_2,
-                ~beatBarSyn_x2_3,
-                ~beatBarSyn_x2_4,
-                ~beatBarSyn_x2_5,
-                ~beatBarSyn_x2_8
-            ], 1)
+            Prand([~beatBarSyn_x2_2, ~beatBarSyn_x2_3]),
+
+            // 2nd four bars: more complex syncopations
+            ~beatBarStraight_x2,
+            // Slightly biased towards straight beat to keep the groove
+            Pwrand([~beatBarStraight_x2, ~beatBarSyn_x2_1], [0.8, 0.2]),
+            ~beatBarStraight_x2,
+            Pxrand([~beatBarSyn_x2_4, ~beatBarSyn_x2_5, ~beatBarSyn_x2_8], 1)
         ], inf)
     ])
 ));
