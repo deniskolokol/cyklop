@@ -182,7 +182,7 @@ SynthDef(\hihat, {
 // Wavetable synthesis.
 SynthDef("osc__s2", {
     arg bufnum=0, freq=200, detune=0.2,
-        amp=0.2, pan=0, out=0, rout=0, rsend=(-20),
+        amp=0.2, pan=0, out=0,
         atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
 
     var sig, env, detuneCtrl;
@@ -201,12 +201,11 @@ SynthDef("osc__s2", {
     sig = Balance2.ar(sig[0], sig[1], pan, amp); //L/R balance (pan)
     sig = sig * env;
     Out.ar(out, sig);
-    Out.ar(rout, sig * rsend.dbamp); //"post-fader" send to reverb
 }).add;
 
 SynthDef("vosc__s2", {
     arg bufnum=0, numBufs=2, freq=200, detune=0.2,
-        amp=0.2, pan=0, out=0, rout=0, rsend=(-20),
+        amp=0.2, pan=0, out=0,
         atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
 
     var sig, env, bufpos, detuneCtrl;
@@ -226,13 +225,12 @@ SynthDef("vosc__s2", {
     sig = Balance2.ar(sig[0], sig[1], pan, amp); //L/R balance (pan)
     sig = sig * env;
     Out.ar(out, sig);
-    Out.ar(rout, sig * rsend.dbamp); //"post-fader" send to reverb
 }).add;
 
 
 SynthDef("shaper__s2", {
     arg bufnum=0, freq=200, detune=0.2, curveMax=1,
-        amp=0.2, pan=0, out=0, rout=0, rsend=(-20),
+        amp=0.2, pan=0, out=0,
         atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
 
     var input, sig, env, curve, detuneCtrl;
@@ -254,26 +252,26 @@ SynthDef("shaper__s2", {
     sig = Balance2.ar(sig[0], sig[1], pan, amp); //L/R balance (pan)
     sig = sig * env;
     Out.ar(out, sig);
-    Out.ar(rout, sig * rsend.dbamp); //"post-fader" send to reverb
 }).add;
 
 
 // FX.
 SynthDef(\reverb, {
-    arg in, out=0, predelay=0.1, revtime=1.8, lpf=4500, amp=1, mix=0.15;
-    var dry, wet, temp, sig;
-    dry = In.ar(in, 2);
-    temp = In.ar(in, 2);
-    wet = 0; // or `DC.ar(0)!2` or `Silent.ar(2)`
+    arg in, out=0, xFade=1, predelay=0.1, revtime=1.8, lpf=4500, mix=0.15;
+    var signal;
+    var dry = In.ar(in, 2);
+    var temp = In.ar(in, 2);
+    var wet = 0; // or `DC.ar(0)!2` or `Silent.ar(2)`
     temp = DelayN.ar(temp, 0.2, predelay);
     16.do {
         temp = AllpassN.ar(temp, 0.05, {Rand(0.001, 0.05)}!2, revtime);
         temp = LPF.ar(temp, lpf);
         wet = wet + temp
     };
-    sig = XFade2.ar(dry, wet, mix*2-1, amp);
-    Out.ar(out, sig);
+    signal = dry * (1 - mix) + wet * mix;
+    XOut.ar(out, xFade, signal);
 }).add;
+
 
 SynthDef(\dist, {
     arg in, out=0, xFade=1, preGain=75, postGain=0.1, amount=0.5;

@@ -338,8 +338,6 @@ if (pdupClass.notNil) {
     \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
-    \rout, ~bus[\reverb],
-    \rsend, -10,
 ));
 
 ~evnts.add(\pad_s -> Pbindef(\pad_s,
@@ -361,8 +359,6 @@ if (pdupClass.notNil) {
     \amp, Pexprand(0.1, 0.3),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
-    \rout, ~bus[\reverb],
-    \rsend, -20,
 ));
 
 // Arpeggiated bass using low complexity wavetables
@@ -389,8 +385,6 @@ if (pdupClass.notNil) {
     \amp, Pseq([Pwhite(0.85, 0.95, 25)], inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outBass}),
-    \rout, ~bus[\reverb],
-    \rsend, -30,
 ));
 
 // Arpeggiated pulse using mid/high complexity wavetables
@@ -417,8 +411,6 @@ if (pdupClass.notNil) {
     \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outMelody}),
-    \rout, ~bus[\reverb],
-    \rsend, -10,
 ));
 
 // Minimal melody in the upper regfister using variable wavetable oscillator
@@ -451,8 +443,6 @@ if (pdupClass.notNil) {
     ], inf),
     \amp, Pseq([0.18, 0.24, 0.28, 0], inf),
     \out, Pfunc({~outMelody}),
-    \rout, ~bus[\reverb],
-    \rsend, -6,
 ));
 
 ~evnts.add(\mix_full -> Pdef(\mix_full,

@@ -197,16 +197,6 @@ ServerQuit.removeAll;
 };
 
 
-// Create audio buses for FX
-~makeBuses = ~withErrorHandling.(~withTiming.({
-    "> Creating buses...".post;
-    ~bus = Dictionary[
-        \reverb -> Bus.audio(s, 2)
-    ];
-    postf("OK\n");
-}));
-
-
 // Create groups and synths for FX
 ~makeNodes = ~withErrorHandling.(~withTiming.({
     "> Initiating configuration of groups and synths...".post;
@@ -217,11 +207,12 @@ ServerQuit.removeAll;
         ~reverbSynth = Synth.new(
             \reverb, [
                 \amp, 1,
+                \xFade, 0.35,
                 \predelay, 0.1,
                 \revtime, 1.8,
                 \lpf, 4500,
-                \mix, 0.35,
-                \in, ~bus[\reverb],
+                \mix, 0.5,
+                \in, ~outMelody, // input from main output will be XOut'ed
                 \out, ~outMelody
             ],
             ~reverbGrp
@@ -334,7 +325,6 @@ ServerQuit.removeAll;
 // Register functions with ServerBoot/-Quit/-Tree (which control
 // presicely when these functions get evaluated).
 ServerBoot.add(~makeBuffers);
-ServerBoot.add(~makeBuses);
 ServerBoot.add(~makeMIDI);
 ServerQuit.add(~cleanup);
 

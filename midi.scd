@@ -78,6 +78,18 @@
             setVal = val.linlin(0, 127, 0.0001, 0.9999);
             setParm = "Dist Amount";
             ~distSynth.set(\amount, setVal);
+        }
+        { 110 } {
+            // CC 110 (Knob 5) to Reverb xFade
+            setVal = val.linlin(0, 127, 0.0, 1.0);
+            setParm = "Reverb xFade";
+            ~reverbSynth.set(\xFade, setVal);
+        }
+        { 117 } {
+            // CC 117 (Knob ) to Reverb dry/wet mix
+            setVal = val.linlin(0, 127, 0.1, 1.0);
+            setParm = "Reverb mix";
+            ~reverbSynth.set(\mix, setVal);
         };
 
         // Return parameter name and value for logging
