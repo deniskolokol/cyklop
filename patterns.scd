@@ -37,6 +37,7 @@ if (pdupClass.notNil) {
 // 1 bar straignt patterns.
 ~hihatBarStraight = Pbind(
     \instrument, \hihat,
+    \group, Pfunc({~mainGrp}),
     \dur, Pseq(~measure * 2, inf),
     \amp, Pwhite(0.5, 1.0, 10),
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 10),
@@ -45,6 +46,7 @@ if (pdupClass.notNil) {
 );
 ~hihatBarStraight_x2 = Pbind(
     \instrument, \hihat,
+    \group, Pfunc({~mainGrp}),
     \dur, Pseq(~measure, inf),
     \amp, Pwhite(0.5, 1.0, 20),
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 20),
@@ -56,6 +58,8 @@ if (pdupClass.notNil) {
 ~snareBarTemplate = { |params|
     var baseEvent = (
         instrument: \snare,
+        group: Pfunc({~mainGrp}),
+        out: Pfunc({~outDrums}),
         dur: Pseq(~measure * 2, inf),
         pDistPreGain: Pwhite(11, 13).dbamp,
         pDistGain: Pwhite(-8, -10).dbamp,
@@ -63,8 +67,7 @@ if (pdupClass.notNil) {
         bprq1: Pwhite(0.2, 0.5),
         bpfreq2: Pwhite(3800, 4300),
         bprq2: Pwhite(0.5, 0.7),
-        pan: Pwhite(-0.4, -0.7), // Spread snare slightly left of center
-        out: Pfunc({~outDrums})
+        pan: Pwhite(-0.4, -0.7) // Spread snare slightly left of center
     );
 
     // Merge with parameters if provided
@@ -78,8 +81,9 @@ if (pdupClass.notNil) {
 ~kickBarTemplate = { |params|
     var baseEvent = (
         instrument: \kick_synth, // \kick_acoustic
+        group: Pfunc({~mainGrp}),
+        out: Pfunc({~outDrums}),
         dur: Pseq(~measure * 2, inf),
-        out: Pfunc({~outDrums})
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -89,9 +93,10 @@ if (pdupClass.notNil) {
 ~tomBarTemplate = { |params|
     var baseEvent = (
         instrument: \tom,
+        group: Pfunc({~mainGrp}),
+        out: Pfunc({~outDrums}),
         dur: Pseq(~measure * 2, inf),
-        pan: Pwhite(0.2, 0.5), // Spread toms slightly right of center
-        out: Pfunc({~outDrums})
+        pan: Pwhite(0.2, 0.5) // Spread toms slightly right of center
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -317,6 +322,7 @@ if (pdupClass.notNil) {
 // background pad using simple wavetables
 ~evnts.add(\pad -> Pbindef(\pad,
     \instrument, "osc__s2",
+    \group, Pfunc({~mainGrp}),
     \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
     \atk, Pexprand(0.5, 2),
     \sus, 0,
@@ -338,6 +344,7 @@ if (pdupClass.notNil) {
 
 ~evnts.add(\pad_s -> Pbindef(\pad_s,
     \instrument, "shaper__s2",
+    \group, Pfunc({~mainGrp}),
     \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
     \atk, Pexprand(0.5, 2),
     \sus, 0,
@@ -361,6 +368,7 @@ if (pdupClass.notNil) {
 // Arpeggiated bass using low complexity wavetables
 ~evnts.add(\bass -> Pbindef(\bass,
     \instrument, "osc__s2",
+    \group, Pfunc({~mainGrp}),
     \dur, Pseq([
         myPrepeat.new(16, Pseq([1/4], 1)),
         myPrepeat.new(8, Pseq([1/2], 1)),
@@ -388,6 +396,7 @@ if (pdupClass.notNil) {
 // Arpeggiated pulse using mid/high complexity wavetables
 ~evnts.add(\pulse -> Pbindef(\pulse,
     \instrument, "osc__s2",
+    \group, Pfunc({~mainGrp}),
     \dur, Pseq([
         myPrepeat.new(16, Pseq([1/4], 1)),
         myPrepeat.new(8, Pseq([1/2], 1)),
@@ -415,6 +424,7 @@ if (pdupClass.notNil) {
 // Minimal melody in the upper regfister using variable wavetable oscillator
 ~evnts.add(\melody -> Pbindef(\melody,
     \instrument, "vosc__s2",
+    \group, Pfunc({~mainGrp}),
     \dur, Prand([
         Pseq([2, 1.5, 0.5, Prand([12, 16, 20])], 1),
         Pseq([1.5, 1, 1.5, Prand([12, 16, 20])], 1),
