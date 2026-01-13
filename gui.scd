@@ -126,7 +126,7 @@ var makePatternButtons = {
     var winWidth = 1100;
     var winHeight = Window.screenBounds.height-55;
     var palette = QPalette.dark;
-    var btPlay, popupNote;
+    var btPlay, popupNote, btTrack;
     var rootWatcher;
     var ctrlPaneTransp, ctrlPaneNotes, plotPanel1, plotPanel2;
     var panelHeight = 150;  // height for control panels
@@ -184,14 +184,31 @@ var makePatternButtons = {
 
     // Not all keys should have buttons, e.g., the full mix button
     guiPatternKeys = [
-        \beat_x1, \beat_x2, \pad, \pad_s, \bass, \pulse, \melody
+        \beat_x1, \beat_x2, \pad, \pad_s, \bass, \bass_s, \pulse, \melody
     ].asArray;
     makePatternButtons.(ctrlPaneTransp, ~evnts, guiPatternKeys);
 
+    StaticText(ctrlPaneNotes, 100@30)
+        .string_("Root Note:")
+        .font_(Font("Arial", 14))
+        .stringColor_(Color.white)
+        .align_(\right);
     popupNote = PopUpMenu(ctrlPaneNotes, 200@30)
         .items_(~fullNoteList)
         .value_(~defaultIndex)
         .action_({ |menu| ~setRoot.(menu.value) });
+    StaticText(ctrlPaneNotes, 100@30)
+        .string_("Track MIDI:")
+        .font_(Font("Arial", 14))
+        .stringColor_(Color.white)
+        .align_(\right);
+    btTrack = Button(ctrlPaneNotes, 100@30)
+        .states_([
+            ["OFF", Color.white, Color.gray],
+            ["ON", Color.white, Color.red(0.4)]
+        ])
+        .value_(~trackRoot.asInteger)
+        .action_({ |bt| ~trackRoot = bt.value.asBoolean });
 
     ~win.view.decorator.nextLine;
 

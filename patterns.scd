@@ -361,7 +361,28 @@ if (pdupClass.notNil) {
     \out, Pfunc({~outPads}),
 ));
 
-// Arpeggiated bass using low complexity wavetables
+// 5/4 bar bass using low complexity wavetables
+~evnts.add(\bass_s -> Pbindef(\bass_s,
+    \instrument, "osc__s2",
+    \group, Pfunc({~mainGrp}),
+    \dur, Pseq([1/2, 1/4, 1/4, Rest(1/4), 1/2, 1/4, 1/4, Rest(1/4)], inf),
+    \atk, 0.001,
+    \sus, 0.2,
+    \rel, Pexprand(0.4, 1),
+    \cAtk, 0,
+    \cRel, Pwhite(5, 10).neg,
+    \detune, Pwhite(0.05, 0.15, inf),
+    \bufnum, Pfunc({ ~wt_buf[0..1].choose }),
+    \scale, Scale.pelog,
+    \degree, Pseq([0, 0, 0, Rest(), Prand([1, 3, 7], 1), 1, Prand([1, 3], 1), Rest()], inf),
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave}),
+    \amp, Pwhite(0.85, 0.95, inf),
+    \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
+    \out, Pfunc({~outBass}),
+));
+
+// Arpeggiated bass using the first wavetable (low complexity roughly eq to sine)
 ~evnts.add(\bass -> Pbindef(\bass,
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
@@ -376,9 +397,10 @@ if (pdupClass.notNil) {
     \cAtk, 0,
     \cRel, Pwhite(5, 10).neg,
     \detune, 0.1,
-    \bufnum, Pfunc({ ~wt_buf[0..2].choose }),
+    //\bufnum, Pfunc({ ~wt_buf[0..2].choose }),
+    \bufnum, Pfunc({ ~wt_buf[0] }),
     \scale, Scale.pelog,
-    \degree, Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
+    \degree, Pseq([Prand([0, 1, 3], 24), Pseq([\], 1)], inf)
         + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave - 3}),
@@ -386,6 +408,7 @@ if (pdupClass.notNil) {
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outBass}),
 ));
+
 
 // Arpeggiated pulse using mid/high complexity wavetables
 ~evnts.add(\pulse -> Pbindef(\pulse,

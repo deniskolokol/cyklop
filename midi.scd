@@ -106,8 +106,9 @@
             { 38 } { \pad }
             { 39 } { \pad_s }
             { 40 } { \bass }
-            { 41 } { \pulse }
-            { 42 } { \melody }
+            { 41 } { \bass_s }
+            { 42 } { \pulse }
+            { 43 } { \melody }
             { "Note ON" }; // Default case
 
             ~playStopEvent.(setParm, ~tempo);
@@ -123,7 +124,9 @@
     MIDIdef.noteOn(
         \noteOnKeyboard_ArturiaMINILAB3,
         ~withMIDILogging.({ |vel, num, chan, src|
-            ~setRoot.(num);
+            if (~trackRoot) {
+                ~setRoot.(num);
+            };
             // Return parameter name for logging
             "ROOT"
         }),
