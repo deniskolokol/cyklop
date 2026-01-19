@@ -6,6 +6,9 @@
 s.quit;
 
 (
+// Project parent path.
+~projectPath = PathName(thisProcess.nowExecutingPath).parentPath;
+
 // Server config.
 Server.default = s = Server.local;
 
@@ -277,15 +280,11 @@ ServerQuit.removeAll;
 
 
 // Load external file
-~loadExternal = { 
-    arg path,
-        descr,
-        requiresSync=true;
-
-    postf("> Loading %... ", descr);
+~loadExternal = { |path, descr=nil, autoSync=false|
+    postf("> Loading %... ", if(descr.notNil && {descr.notEmpty}) {descr} {path});
     if (this.executeFile(path).isNil.not) {
         "OK".postln;
-        if (requiresSync) {
+        if (autoSync) {
             "[i] Server sync... ".post;
             s.sync; // wait until all asynchronous tasks are finished
             "OK".postln;
@@ -325,6 +324,9 @@ ServerQuit.removeAll;
     postf("OK\n");
 };
 
+// Load external files that don't require server to be booted.
+~loadExternal.(~projectPath +/+ "midi.scd", descr:"MIDI handlers");
+
 // Register functions with ServerBoot/-Quit/-Tree (which control
 // presicely when these functions get evaluated).
 ServerBoot.add(~makeBuffers);
@@ -334,21 +336,10 @@ ServerQuit.add(~cleanup);
 
 // Boot server
 s.waitForBoot({
-    var path = PathName(thisProcess.nowExecutingPath).parentPath;
-
-    // List of external files to load in the order they should be loaded.
-    // Format: [filename <str>, description <str>, requiresSync <bool>]
-    var externals = [
-        ["synthdef.scd", "synth definitions", true],
-        ["patterns.scd", "event definitions", true],
-        ["midi.scd", "MIDI handlers", false],
-        ["gui.scd", "GUI", false]
-    ];
-
-    externals.do({ |elt|
-        elt[0] = path +/+ elt[0];
-        ~loadExternal.(*elt);
-    });
+    // Load external files that does require server to be booted.
+    ~loadExternal.(~projectPath +/+ "synthdef.scd", "synth definitions", autoSync:true);
+    ~loadExternal.(~projectPath +/+ "patterns.scd", "event definitions", autoSync:true);
+    ~loadExternal.(~projectPath +/+ "gui.scd", "GUI");
 
     // Register remaining functions
     ServerTree.add(~makeNodes);

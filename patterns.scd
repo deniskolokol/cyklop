@@ -397,8 +397,7 @@ if (pdupClass.notNil) {
     \cAtk, 0,
     \cRel, Pwhite(5, 10).neg,
     \detune, 0.1,
-    //\bufnum, Pfunc({ ~wt_buf[0..2].choose }),
-    \bufnum, Pfunc({ ~wt_buf[0] }),
+    \bufnum, Pfunc({ ~wt_buf[0..1].choose }),
     \scale, Scale.pelog,
     \degree, Pseq([Prand([0, 1, 3], 24), Pseq([\], 1)], inf)
         + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
