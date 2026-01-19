@@ -7,9 +7,12 @@ A SuperCollider project exploring:
 - **Drum synthesis**  
 - **Pattern-based scheduling**  
 
-This repository contains all the code for a musical piece, structured into two main files:  
+This repository contains all the code for a musical piece, structured into the following files:  
 
+- `main.scd` – Infrastructure setup (buses, synths) and pattern playback
 - `synthdef.scd` – Synth definitions for synthesis  
-- `main.scd` – Infrastructure setup (buses, synths) and pattern playback  
+- `patterns.scd` – Pattern definitions and sequencing logic
+- `midi.scd` – MIDI input handling and controller mapping
+- `gui.scd` – GUI controls and visual interface
 
-A learning-focused project diving into sound design using primarily wavetable synthesis, drum synthesis and rhythmic organization in SuperCollider. 
+A learning-focused project diving into sound design using primarily wavetable synthesis, drum synthesis and rhythmic organization in SuperCollider.

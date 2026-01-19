@@ -119,18 +119,45 @@ if (pdupClass.notNil) {
 ~hihatOffBeat_1 = Pbind(
     *~kickBarTemplate.((
         instrument: \hihat,
-        rel: 0.5,
+        rel: 0.2,
         dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([1,   0,   0,   0,   1,   0,   0,   0])
+        amp: Pseq([0,   0,   0,   0,   1,   0,   0,   0])
         ))
 );
 ~kickOffBeat_1 = Pbind(
     *~kickBarTemplate.((
         dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([1,   0,   0,   0,   1,   0,   0,   0])
+        amp: Pseq([0, 0, 0, 0, 1, 0, 0, 0, 0, 0])
+        ))
+);
+~snareOffBeat_1 = Pbind(
+    *~snareBarTemplate.((
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0, 0, 0, 0, 0, 0, 1, 0, 1, 1])
         ))
 );
 ~tomOffBeat_1 = Pbind(
+    *~tomBarTemplate.((
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0, 0, 0, 0, 0, 0, 0, 0, 1, 1])
+        ))
+);
+
+~hihatOffBeat_2 = Pbind(
+    *~kickBarTemplate.((
+        instrument: \hihat,
+        rel: 0.5,
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([1,   0,   0,   0,   1,   0,   0,   0])
+        ))
+);
+~kickOffBeat_2 = Pbind(
+    *~kickBarTemplate.((
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([1,   0,   0,   0,   1,   0,   0,   0])
+        ))
+);
+~tomOffBeat_2 = Pbind(
     *~tomBarTemplate.((
         dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
         amp: Pseq([0,   0.5, 0.8, 1,   0,   0.5, 0.8, 1])
@@ -229,11 +256,18 @@ if (pdupClass.notNil) {
     0.0, ~tomBarStraight, // TOM
 ]);
 
-// Off-beat pattern mix.
+// Off-beat patterns mix.
 ~offBeat1 = Ptpar([
     0.0, ~hihatOffBeat_1,
     0.0, ~kickOffBeat_1,
+    0.0, ~snareOffBeat_1,
     0.0, ~tomOffBeat_1,
+]);
+
+~offBeat2 = Ptpar([
+    0.0, ~hihatOffBeat_2,
+    0.0, ~kickOffBeat_2,
+    0.0, ~tomOffBeat_2,
 ]);
 
 // Mix 1 bar syncopated patterns into one.
@@ -294,10 +328,23 @@ if (pdupClass.notNil) {
     ], inf)
 ));
 
+~offBeatCurr = ~offBeat2;
+
 // Hihat measures 1/8th
 ~evnts.add(\beat_x2 -> Pdef(\beat_x2,
     Pseq([
-        ~offBeat1,
+        // bookmark: working but randomly switching off-beat patterns
+        Prand([~offBeat1, ~offBeat2], 1),
+
+        // WARNING: doesn't work as expected!
+        // Pfunc({
+        //     if (~offBeatCurr == ~offBeat1) {
+        //         ~offBeatCurr = ~offBeat2;
+        //     } {
+        //         ~offBeatCurr = ~offBeat1;
+        //     };
+        //     ~offBeatCurr
+        // }),
         Pseq([
 
             // 1st four bars: straight beat and simple syncopation

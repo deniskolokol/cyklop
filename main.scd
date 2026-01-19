@@ -326,6 +326,7 @@ ServerQuit.removeAll;
 
 // Load external files that don't require server to be booted.
 ~loadExternal.(~projectPath +/+ "midi.scd", descr:"MIDI handlers");
+~loadExternal.(~projectPath +/+ "gui.scd", "GUI");
 
 // Register functions with ServerBoot/-Quit/-Tree (which control
 // presicely when these functions get evaluated).
@@ -333,16 +334,14 @@ ServerBoot.add(~makeBuffers);
 ServerBoot.add(~makeMIDI);
 ServerQuit.add(~cleanup);
 
-
 // Boot server
 s.waitForBoot({
     // Load external files that does require server to be booted.
     ~loadExternal.(~projectPath +/+ "synthdef.scd", "synth definitions", autoSync:true);
     ~loadExternal.(~projectPath +/+ "patterns.scd", "event definitions", autoSync:true);
-    ~loadExternal.(~projectPath +/+ "gui.scd", "GUI");
 
     // Register remaining functions
-    ServerTree.add(~makeNodes);
+    ServerTree.add(~makeNodes);ł
     ServerTree.add(~makeGUI);
 
 	// Trigger re-instantiating of the FX groups.
@@ -351,7 +350,7 @@ s.waitForBoot({
     // Show server meter and Node Tree.
     // s.meter;
 
-    // ...and again!
+    // Lastly sync server to ensure all async tasks are done.
     s.sync;
 });
 
