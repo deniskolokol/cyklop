@@ -328,23 +328,20 @@ if (pdupClass.notNil) {
     ], inf)
 ));
 
-~offBeatCurr = ~offBeat2;
+// Selection of off-beat patterns for beat_x2.
+~offBeatIndex = -1; // this will ensure the first pattern is ~offBeat1!
+~beat_x2offBeat = [~offBeat1, ~offBeat2];
+// Pdefn to hold the index of beat_x2 offbeat.
+Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 
 // Hihat measures 1/8th
 ~evnts.add(\beat_x2 -> Pdef(\beat_x2,
     Pseq([
-        // bookmark: working but randomly switching off-beat patterns
-        Prand([~offBeat1, ~offBeat2], 1),
+        // // bookmark: working but randomly switching off-beat patterns
+        // Prand([~offBeat1, ~offBeat2], 1),
 
-        // WARNING: doesn't work as expected!
-        // Pfunc({
-        //     if (~offBeatCurr == ~offBeat1) {
-        //         ~offBeatCurr = ~offBeat2;
-        //     } {
-        //         ~offBeatCurr = ~offBeat1;
-        //     };
-        //     ~offBeatCurr
-        // }),
+        Pdefn(\offBeatChoice),
+
         Pseq([
 
             // 1st four bars: straight beat and simple syncopation

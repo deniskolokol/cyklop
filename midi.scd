@@ -102,7 +102,23 @@
         ~withMIDILogging.({ |vel, num, chan, src|
             var setParm = switch(num)
             { 36 } { \beat_x1 }
-            { 37 } { \beat_x2 }
+            { 37 } {
+                // Before playing beat_x2, change off-beat pattern: use either
+                // the next pattern in ~beat_x2offBeat array, or loop back to
+                // first. This will alternate off-beat patterns on each trigger.
+                //
+                // Warning: this solution is necessary because Pdefn does not
+                // allow dynamic indexing directly.
+                if (~evnts[\beat_x2].isPlaying.not) {
+                    ~offBeatIndex = ~offBeatIndex + 1;
+                    if (~offBeatIndex >= ~beat_x2offBeat.size) {
+                        ~offBeatIndex = 0;
+                    };
+                    postf("Off-beat pattern changed to index: %\n", ~offBeatIndex);
+                    Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
+                };
+                \beat_x2
+            }
             { 38 } { \pad }
             { 39 } { \pad_s }
             { 40 } { \bass }
