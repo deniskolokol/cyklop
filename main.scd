@@ -348,7 +348,7 @@ s.waitForBoot({
     s.freeAll;
 
     // Show server meter and Node Tree.
-    // s.meter;
+    s.meter;
 
     // Lastly sync server to ensure all async tasks are done.
     s.sync;

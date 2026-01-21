@@ -7,7 +7,8 @@
 // Synthetic kick drum.
 SynthDef(\kick_synth, {
     arg out=0, att=0.001, rel=0.8, curve=(-8), amp=0.5, pan=0,
-        bpfreq=10120, bprq=0.5;
+        bpfreq=10120, bprq=0.5,
+        attenuate = 0.56234132519035; // -5.dbamp
 
     // Base frequency with a slight downhill (XLine) - to make kick sounding less "tonal".
     var sndfreq = 55 * (1 + (4 * Env.perc(0, 0.13, curve: curve).ar)) * XLine.ar(1, 0.5, 1);
@@ -25,7 +26,7 @@ SynthDef(\kick_synth, {
 
     // Sculpt by percussion env.
     snd = snd * Env.perc(att, rel, curve: curve).ar(Done.freeSelf);
-    snd = snd * amp;
+    snd = snd * amp * attenuate;
     snd = Pan2.ar(snd, pan);
 
     Out.ar(out, snd);
@@ -35,7 +36,8 @@ SynthDef(\kick_synth, {
 // "Acoutsic" kick drum
 SynthDef(\kick_acoustic, {
     arg out=0, att=0.001, rel=1.3, curve=(-6), amp=0.56, pan=0,
-        bpfreq1=7120, bprq1=0.5, bpfreq2=3120, bprq2=0.3;
+        bpfreq1=7120, bprq1=0.5, bpfreq2=3120, bprq2=0.3,
+        attenuate = 1; // no attenuation by default
 
     var snd, sndfreq;
 
@@ -66,17 +68,19 @@ SynthDef(\kick_acoustic, {
 
     // Sculpt by percussion env.
     snd = snd * Env.perc(att, rel, curve: curve).ar(Done.freeSelf);
-    snd = snd * amp;
+    snd = snd * amp * attenuate;
     snd = Pan2.ar(snd, pan);
 
     Out.ar(out, snd);
 }).add;
 
+
 SynthDef(\snare, {
     arg out=0, att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
         bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6,
-        pDistPreGain=4.4668359215096, // 13.dbamp
-        pDistGain=0.31622776601684; // -10.dbamp
+        pDistPreGain=4.4668359215096,  // 13.dbamp
+        pDistGain=0.31622776601684,    // -10.dbamp
+        attenuate = 0.31622776601684; // -10.dbamp
 
     var snd, sndfreq;
     sndfreq = 200 * (1 + (2 * Env.perc(0.001, 0.03).ar)) * [1, 2.3, 3.5, 5.8];
@@ -100,7 +104,6 @@ SynthDef(\snare, {
     // decay times, the sum/diff tones will also have different decay times,
     // which leads to timbral variation, and therefore more realistic (less
     // synthetic) output.
-    // snd = snd + ((snd * 13.dbamp).tanh * -10.dbamp);
     snd = snd + ((snd * pDistPreGain).tanh * pDistGain);
 
     // Add PitchShift for a real clanky snare.
@@ -120,7 +123,7 @@ SynthDef(\snare, {
 
     // Sculpt by percussion env.
     snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
-    snd = snd * amp;
+    snd = snd * amp * attenuate;
 
     Out.ar(out, snd);
 }).add;
@@ -128,7 +131,8 @@ SynthDef(\snare, {
 
 SynthDef(\tom, {
     arg out=0, att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
-        bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6;
+        bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6,
+        attenuate = 0.31622776601684; // -10.dbamp
 
     var snd, sndfreq;
     sndfreq = 130 * (1 + (2 * Env.perc(0.001, 0.03).ar)) * [0.85, 0.82, 0.8, 0.77, 0.74];
@@ -160,20 +164,22 @@ SynthDef(\tom, {
 
     // Sculpt by percussion env.
     snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
-    snd = snd * amp;
+    snd = snd * amp * attenuate;
 
     Out.ar(out, snd);
 }).add;
 
 
 SynthDef(\hihat, {
-    arg out=0, amp=0.5, att=0.01, rel=0.2, ffreq=6000, pan=0;
+    arg out=0, amp=0.5, att=0.01, rel=0.2, ffreq=6000, pan=0,
+        attenuate = 0.56234132519035; // -5.dbamp
     var env = EnvGen.kr(Env.perc(att, rel, amp), doneAction: Done.freeSelf);
     var signal = HPF.ar(
         LPF.ar(WhiteNoise.ar, freq: ffreq),
         Rand(1000, 8000)
     );
-    signal = Pan2.ar(signal * env, pan);
+    signal = signal * env * attenuate;
+    signal = Pan2.ar(signal, pan);
 
     Out.ar(out, signal);
 }).add;

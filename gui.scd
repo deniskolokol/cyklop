@@ -16,7 +16,7 @@ var createWavetableGUI = {
         width=800;
 
     var scrollView, plotView;
-    var plotHeight = height - 60 - (margin*4);
+    var plotHeight = height - 60 - (margin * 4);
 
     // Function to update all plots
     var updateWavetablePlots = { |plotView|

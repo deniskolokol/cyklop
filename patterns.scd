@@ -19,6 +19,13 @@ if (pdupClass.notNil) {
 
 // Routing
 ~outDrums = 0;
+
+// Additional buses for separate recording of drum elements
+~outRecHihat = 0;
+~outRecKick = 0;
+~outRecSnare = 0;
+~outRecTom = 0;
+
 ~outPads = 2;
 ~outBass = 4;
 ~outMelody = 6;
@@ -42,7 +49,8 @@ if (pdupClass.notNil) {
     \amp, Pwhite(0.5, 1.0, 10),
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 10),
     \pan, Pgauss(0, 0.7, 10),
-    \out, Pfunc({~outDrums})
+    \out, Pfunc({~outDrums}),
+    \rOut, Pfunc({~outRecHihat})
 );
 ~hihatBarStraight_x2 = Pbind(
     \instrument, \hihat,
@@ -51,7 +59,8 @@ if (pdupClass.notNil) {
     \amp, Pwhite(0.5, 1.0, 20),
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 20),
     \pan, Pgauss(0, 0.7, 20),
-    \out, Pfunc({~outDrums})
+    \out, Pfunc({~outDrums}),
+    \rOut, Pfunc({~outRecHihat})
 );
 
 // Define templates as Events.
@@ -59,7 +68,6 @@ if (pdupClass.notNil) {
     var baseEvent = (
         instrument: \snare,
         group: Pfunc({~mainGrp}),
-        out: Pfunc({~outDrums}),
         dur: Pseq(~measure * 2, inf),
         pDistPreGain: Pwhite(11, 13).dbamp,
         pDistGain: Pwhite(-8, -10).dbamp,
@@ -67,7 +75,9 @@ if (pdupClass.notNil) {
         bprq1: Pwhite(0.2, 0.5),
         bpfreq2: Pwhite(3800, 4300),
         bprq2: Pwhite(0.5, 0.7),
-        pan: Pwhite(-0.4, -0.7) // Spread snare slightly left of center
+        pan: Pwhite(-0.4, -0.7), // Spread snare slightly left of center
+        out: Pfunc({~outDrums}),
+        rOut: Pfunc({~outRecSnare})
     );
 
     // Merge with parameters if provided
@@ -82,8 +92,9 @@ if (pdupClass.notNil) {
     var baseEvent = (
         instrument: \kick_synth, // \kick_acoustic
         group: Pfunc({~mainGrp}),
-        out: Pfunc({~outDrums}),
         dur: Pseq(~measure * 2, inf),
+        out: Pfunc({~outDrums}),
+        rOut: Pfunc({~outRecKick})
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -94,9 +105,10 @@ if (pdupClass.notNil) {
     var baseEvent = (
         instrument: \tom,
         group: Pfunc({~mainGrp}),
-        out: Pfunc({~outDrums}),
         dur: Pseq(~measure * 2, inf),
-        pan: Pwhite(0.2, 0.5) // Spread toms slightly right of center
+        pan: Pwhite(0.2, 0.5), // Spread toms slightly right of center
+        out: Pfunc({~outDrums}),
+        rOut: Pfunc({~outRecTom})
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -419,7 +431,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \degree, Pseq([0, 0, 0, Rest(), Prand([1, 3, 7], 1), 1, Prand([1, 3], 1), Rest()], inf),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
-    \amp, Pwhite(0.85, 0.95, inf),
+    \amp, Pwhite(0.55, 0.65, inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outBass}),
 ));
@@ -445,7 +457,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
         + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave - 3}),
-    \amp, Pseq([Pwhite(0.85, 0.95, 25)], inf),
+    \amp, Pseq([Pwhite(0.55, 0.65, 25)], inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outBass}),
 ));
