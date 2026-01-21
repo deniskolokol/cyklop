@@ -116,30 +116,32 @@ if (pdupClass.notNil) {
 );
 
 // Off-beat
+// Warning: start off beat in half-bar (10 x 1/8th notes
+// against 10 x 1/4th notes in the main beat).
 ~hihatOffBeat_1 = Pbind(
     *~kickBarTemplate.((
         instrument: \hihat,
         rel: 0.2,
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   0,   0,   1,   0,   0,   0])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0,   0,   0,   1,   0,   0,   0])
         ))
 );
 ~kickOffBeat_1 = Pbind(
     *~kickBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0, 0, 0, 0, 1, 0, 0, 0, 0, 0])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0,   1,   0,   0,   0,   0,   0])
         ))
 );
 ~snareOffBeat_1 = Pbind(
     *~snareBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0, 0, 0, 0, 0, 0, 1, 0, 1, 1])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0,   0,   0,   1,   0,   1,   1])
         ))
 );
 ~tomOffBeat_1 = Pbind(
     *~tomBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0, 0, 0, 0, 0, 0, 0, 0, 1, 1])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0,   0,   0,   0,   0,   1,   1])
         ))
 );
 
@@ -147,20 +149,20 @@ if (pdupClass.notNil) {
     *~kickBarTemplate.((
         instrument: \hihat,
         rel: 0.5,
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([1,   0,   0,   0,   1,   0,   0,   0])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   1,   0,   0,   0,   1,   0,   0,   0])
         ))
 );
 ~kickOffBeat_2 = Pbind(
     *~kickBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([1,   0,   0,   0,   1,   0,   0,   0])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   1,   0,   0,   0,   1,   0,   0,   0])
         ))
 );
 ~tomOffBeat_2 = Pbind(
     *~tomBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0.5, 0.8, 1,   0,   0.5, 0.8, 1])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0.5, 0.8, 1,   0,   0.5, 0.8, 1])
         ))
 );
 
@@ -328,7 +330,7 @@ if (pdupClass.notNil) {
     ], inf)
 ));
 
-// Selection of off-beat patterns for beat_x2.
+// Off-beat pattern selection for beat_x2.
 ~offBeatIndex = -1; // this will ensure the first pattern is ~offBeat1!
 ~beat_x2offBeat = [~offBeat1, ~offBeat2];
 // Pdefn to hold the index of beat_x2 offbeat.
@@ -337,13 +339,9 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 // Hihat measures 1/8th
 ~evnts.add(\beat_x2 -> Pdef(\beat_x2,
     Pseq([
-        // // bookmark: working but randomly switching off-beat patterns
-        // Prand([~offBeat1, ~offBeat2], 1),
-
         Pdefn(\offBeatChoice),
 
         Pseq([
-
             // 1st four bars: straight beat and simple syncopation
             ~beatBarStraight_x2,
             // Straight beat at the second bar is a bit more predominant to make
