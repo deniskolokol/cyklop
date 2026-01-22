@@ -90,6 +90,24 @@
             setVal = val.linlin(0, 127, 0.1, 1.0);
             setParm = "Reverb mix";
             ~reverbSynth.set(\mix, setVal);
+        }
+        { 14 } {
+            // CC 14 (Slider 1) to Pad Env Attack
+            setVal = val.linlin(0, 127, 0.01, 2.0);
+            setParm = "Pad Env Attack";
+            ~padEnvAtk = setVal;
+        }
+        { 30 } {
+            // CC 30 (Slider 3) to Pad Env Sustain
+            setVal = val.linlin(0, 127, 0.01, 5.0);
+            setParm = "Pad Env Sustain";
+            ~padEnvSus = setVal;
+        }
+        { 31 } {
+            // CC 31 (Slider 4) to Pad Env Release
+            setVal = val.linlin(0, 127, 1.0, 10.0);
+            setParm = "Pad Env Release";
+            ~padEnvRel = setVal;
         };
 
         // Return parameter name and value for logging

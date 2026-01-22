@@ -79,6 +79,12 @@ ServerQuit.removeAll;
 ~defaultIndex = ~midiValues.indexOf(60);
 
 
+// Pads env control
+~padEnvAtk = 0.5;
+~padEnvSus = 0.01;
+~padEnvRel = 5;
+
+
 // Timing decorator
 ~withTiming = { |func|
     { |...args|
