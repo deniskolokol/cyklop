@@ -79,6 +79,10 @@ ServerQuit.removeAll;
 ~defaultIndex = ~midiValues.indexOf(60);
 
 
+// Dictionary to store synths played with the keyboard
+~synths = Dictionary.new;
+
+
 // Pads env control
 ~padEnvAtk = 0.5;
 ~padEnvSus = 0.01;

@@ -55,6 +55,7 @@
     postf("Keyboard source: %; Controller source: %\n", srcKeyboard, srcCtlr);
 
     // Arturia MINILAB 3
+    //
     // MIDI control messages
     MIDIdef.cc(\ccHandler_ArturiaMINILAB3, ~withMIDILogging.({ |val, num, chan, src|
 		var setParm=nil, setVal=nil;
@@ -74,7 +75,7 @@
             setParm = "Dist PostGain";
             ~distSynth.set(\postGain, setVal);
         }
-        { 90 } { // CC 90 (Knob 5) to Dist Amountß
+        { 90 } { // CC 90 (Knob 5) to Dist Amount
             setVal = val.linlin(0, 127, 0.0001, 0.9999);
             setParm = "Dist Amount";
             ~distSynth.set(\amount, setVal);
@@ -114,7 +115,7 @@
         [setParm, setVal]
     }));
 
-    // triggering events with pads
+    // Triggering events with pads (channel 9)
     MIDIdef.noteOn(
         \noteOnKeyPad_ArturiaMINILAB3,
         ~withMIDILogging.({ |vel, num, chan, src|
@@ -154,22 +155,48 @@
         srcID: srcKeyboard
     );
 
-    // MIDI notes
+    // Keyboard input (Channel 0)
     MIDIdef.noteOn(
         \noteOnKeyboard_ArturiaMINILAB3,
         ~withMIDILogging.({ |vel, num, chan, src|
+            var result, params;
             if (~trackRoot) {
                 ~setRoot.(num);
+                result = "ROOT"
+            } {
+                params = [
+                    \freq, num.midicps,
+                    \amp, vel.linlin(0, 127, 0.0, 0.5),
+                    \bufnum, ~wt_buf[3..6].choose
+                ];
+                ~synths[num] = Synth.new("osc__s2_adsr", params);
+                result = "NOTE"
             };
             // Return parameter name for logging
-            "ROOT"
+            result
+        }),
+        chan: 0,
+        srcID: srcKeyboard
+    );
+
+    MIDIdef.noteOff(
+        \noteOffKeyboard_ArturiaMINILAB3,
+        ~withMIDILogging.({ |vel, num, chan, src|
+            // If there's a synth playing for this note, release it
+            if (~synths[num].notNil) { ~synths[num].set(\gate, 0) };
+
+            // Remove from tracking dictionary
+            ~synths.removeAt(num);
+
+            // Return parameter name for logging
+            "NOTE OFF"
         }),
         chan: 0,
         srcID: srcKeyboard
     );
 
     // M-Audio XSession Pro
-    // triggering events with knobs
+    // Triggering events with knobs from M-Audio X-Session Pro
     MIDIdef.noteOn(
         \noteOnKeyPad_MAudioXSessionPro,
         ~withMIDILogging.({ |vel, num, chan, src|

@@ -1,4 +1,112 @@
 (
+// Wavetable synthesis.
+
+// Shared core for thin wrappers: client-side helper that builds the oscillator
+// bank (returns a stereo signal).
+var osc_s2_core = { |bufnum=0, freq=200, detune=0.2, amp=0.2, pan=0|
+    var detuneCtrl = LFNoise1.kr(0.1!8).bipolar(detune).midiratio;
+    var sig = Osc.ar(bufnum, freq * detuneCtrl, {Rand(0, 2pi)}!8);
+    sig = Splay.ar(sig);
+    sig = LeakDC.ar(sig);
+    sig = Balance2.ar(sig[0], sig[1], pan, amp);
+    sig;
+};
+
+
+// Simple percussive envelope that frees itself (for use as instrument
+// in patterns).
+SynthDef("osc__s2", {
+    arg bufnum=0, freq=200, detune=0.2,
+        amp=0.2, pan=0, out=0,
+        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
+
+    var sig = osc_s2_core.(bufnum, freq, detune, amp, pan);
+    var env = EnvGen.ar(
+        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
+        doneAction: Done.freeSelf
+    );
+
+    sig = sig * env;
+    Out.ar(out, sig);
+}).add;
+
+
+// Gate-controlled ADSR envelope (for use via MIDI).
+SynthDef("osc__s2_adsr", {
+    arg bufnum=0, freq=200, detune=0.2, gate=1,
+        amp=0.2, pan=0, out=0,
+        atk=0.01, decay=0.3, sus=1, rel=0.01, cAtk=1, cRel=(-3);
+
+    var sig = osc_s2_core.(bufnum, freq, detune, amp, pan);
+    var env = EnvGen.kr(
+        Env.adsr(
+            attackTime: atk,
+            decayTime: decay,
+            sustainLevel: sus,
+            releaseTime: rel,
+            curve: [cAtk, cRel, cRel]
+        ),
+        gate: gate,
+        doneAction: Done.freeSelf
+    );
+
+    sig = sig * env;
+    Out.ar(out, sig);
+}).add;
+
+
+SynthDef("vosc__s2", {
+    arg bufnum=0, numBufs=2, freq=200, detune=0.2,
+        amp=0.2, pan=0, out=0,
+        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
+
+    var sig, env, bufpos, detuneCtrl;
+
+    // This will create a vibrato effect by changing the buffer position
+    bufpos = bufnum + SinOsc.kr(XLine.kr(0.01, numBufs-1, atk+sus)).range(0, 1);
+    env = EnvGen.ar(
+        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
+        doneAction: Done.freeSelf
+    );
+
+    detuneCtrl = LFNoise1.kr(0.1!8).bipolar(detune).midiratio;
+    sig = VOsc.ar(bufpos, freq * detuneCtrl, {Rand(0, 2pi)} ! 8);
+
+    sig = Splay.ar(sig); //spread 8 signals over stereo field
+    sig = LeakDC.ar(sig); //remove DC bias
+    sig = Balance2.ar(sig[0], sig[1], pan, amp); //L/R balance (pan)
+    sig = sig * env;
+    Out.ar(out, sig);
+}).add;
+
+
+SynthDef("shaper__s2", {
+    arg bufnum=0, freq=200, detune=0.2, curveMax=1,
+        amp=0.2, pan=0, out=0,
+        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
+
+    var input, sig, env, curve, detuneCtrl;
+    env = EnvGen.ar(
+        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
+        doneAction: Done.freeSelf
+    );
+
+    curve = LFNoise1.kr(0.5 ! 8).bipolar(curveMax);
+    detuneCtrl = LFNoise1.kr(0.1 ! 8).bipolar(detune).midiratio;
+
+    // Array of eight LFTri slightly detuned
+    input = LFTri.ar(freq * detuneCtrl);
+    input = input.lincurve(-1, 1, -1, 1, curve);
+    sig = Shaper.ar(bufnum, input);
+
+    sig = Splay.ar(sig); //spread 8 signals over stereo field
+    sig = LeakDC.ar(sig); //remove DC bias
+    sig = Balance2.ar(sig[0], sig[1], pan, amp); //L/R balance (pan)
+    sig = sig * env;
+    Out.ar(out, sig);
+}).add;
+
+
 // DRUMS.
 
 // Kick drums and snare are inspired by:
@@ -8,7 +116,7 @@
 SynthDef(\kick_synth, {
     arg out=0, att=0.001, rel=0.8, curve=(-8), amp=0.5, pan=0,
         bpfreq=10120, bprq=0.5,
-        attenuate = 0.56234132519035; // -5.dbamp
+        attenuate=0.56234132519035; // -5.dbamp
 
     // Base frequency with a slight downhill (XLine) - to make kick sounding less "tonal".
     var sndfreq = 55 * (1 + (4 * Env.perc(0, 0.13, curve: curve).ar)) * XLine.ar(1, 0.5, 1);
@@ -37,7 +145,7 @@ SynthDef(\kick_synth, {
 SynthDef(\kick_acoustic, {
     arg out=0, att=0.001, rel=1.3, curve=(-6), amp=0.56, pan=0,
         bpfreq1=7120, bprq1=0.5, bpfreq2=3120, bprq2=0.3,
-        attenuate = 1; // no attenuation by default
+        attenuate=1; // no attenuation by default
 
     var snd, sndfreq;
 
@@ -80,7 +188,7 @@ SynthDef(\snare, {
         bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6,
         pDistPreGain=4.4668359215096,  // 13.dbamp
         pDistGain=0.31622776601684,    // -10.dbamp
-        attenuate = 0.31622776601684; // -10.dbamp
+        attenuate=0.31622776601684; // -10.dbamp
 
     var snd, sndfreq;
     sndfreq = 200 * (1 + (2 * Env.perc(0.001, 0.03).ar)) * [1, 2.3, 3.5, 5.8];
@@ -132,7 +240,7 @@ SynthDef(\snare, {
 SynthDef(\tom, {
     arg out=0, att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
         bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6,
-        attenuate = 0.31622776601684; // -10.dbamp
+        attenuate=0.31622776601684; // -10.dbamp
 
     var snd, sndfreq;
     sndfreq = 130 * (1 + (2 * Env.perc(0.001, 0.03).ar)) * [0.85, 0.82, 0.8, 0.77, 0.74];
@@ -172,7 +280,7 @@ SynthDef(\tom, {
 
 SynthDef(\hihat, {
     arg out=0, amp=0.5, att=0.01, rel=0.2, ffreq=6000, pan=0,
-        attenuate = 0.56234132519035; // -5.dbamp
+        attenuate=0.56234132519035; // -5.dbamp
     var env = EnvGen.kr(Env.perc(att, rel, amp), doneAction: Done.freeSelf);
     var signal = HPF.ar(
         LPF.ar(WhiteNoise.ar, freq: ffreq),
@@ -182,82 +290,6 @@ SynthDef(\hihat, {
     signal = Pan2.ar(signal, pan);
 
     Out.ar(out, signal);
-}).add;
-
-
-// Wavetable synthesis.
-SynthDef("osc__s2", {
-    arg bufnum=0, freq=200, detune=0.2,
-        amp=0.2, pan=0, out=0,
-        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
-
-    var sig, env, detuneCtrl;
-    env = EnvGen.ar(
-        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
-        doneAction: Done.freeSelf
-    );
-
-    // Array of eight Oscs with uniquely detune frequencies
-    // and unique initial phase offsets
-    detuneCtrl = LFNoise1.kr(0.1!8).bipolar(detune).midiratio;
-    sig = Osc.ar(bufnum, freq * detuneCtrl, {Rand(0,2pi)}!8);
-
-    sig = Splay.ar(sig); //spread 8 signals over stereo field
-    sig = LeakDC.ar(sig); //remove DC bias
-    sig = Balance2.ar(sig[0], sig[1], pan, amp); //L/R balance (pan)
-    sig = sig * env;
-    Out.ar(out, sig);
-}).add;
-
-SynthDef("vosc__s2", {
-    arg bufnum=0, numBufs=2, freq=200, detune=0.2,
-        amp=0.2, pan=0, out=0,
-        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
-
-    var sig, env, bufpos, detuneCtrl;
-
-    // This will create a vibrato effect by changing the buffer position
-    bufpos = bufnum + SinOsc.kr(XLine.kr(0.01, numBufs-1, atk+sus)).range(0, 1);
-    env = EnvGen.ar(
-        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
-        doneAction: Done.freeSelf
-    );
-
-    detuneCtrl = LFNoise1.kr(0.1!8).bipolar(detune).midiratio;
-    sig = VOsc.ar(bufpos, freq * detuneCtrl, {Rand(0, 2pi)} ! 8);
-
-    sig = Splay.ar(sig); //spread 8 signals over stereo field
-    sig = LeakDC.ar(sig); //remove DC bias
-    sig = Balance2.ar(sig[0], sig[1], pan, amp); //L/R balance (pan)
-    sig = sig * env;
-    Out.ar(out, sig);
-}).add;
-
-
-SynthDef("shaper__s2", {
-    arg bufnum=0, freq=200, detune=0.2, curveMax=1,
-        amp=0.2, pan=0, out=0,
-        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
-
-    var input, sig, env, curve, detuneCtrl;
-    env = EnvGen.ar(
-        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
-        doneAction: Done.freeSelf
-    );
-
-    curve = LFNoise1.kr(0.5 ! 8).bipolar(curveMax);
-    detuneCtrl = LFNoise1.kr(0.1 ! 8).bipolar(detune).midiratio;
-
-    // Array of eight LFTri slightly detuned
-    input = LFTri.ar(freq * detuneCtrl);
-    input = input.lincurve(-1, 1, -1, 1, curve);
-    sig = Shaper.ar(bufnum, input);
-
-    sig = Splay.ar(sig); //spread 8 signals over stereo field
-    sig = LeakDC.ar(sig); //remove DC bias
-    sig = Balance2.ar(sig[0], sig[1], pan, amp); //L/R balance (pan)
-    sig = sig * env;
-    Out.ar(out, sig);
 }).add;
 
 
