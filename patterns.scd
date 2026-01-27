@@ -21,10 +21,10 @@ if (pdupClass.notNil) {
 ~outDrums = 0;
 
 // Additional buses for separate recording of drum elements
-~outRecHihat = 0;
-~outRecKick = 0;
-~outRecSnare = 0;
-~outRecTom = 0;
+~outRecHihat = 8; // hihat is stereo
+~outRecKick = 10;
+~outRecSnare = 11;
+~outRecTom = 12;
 
 ~outPads = 2;
 ~outBass = 4;
@@ -50,7 +50,7 @@ if (pdupClass.notNil) {
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 10),
     \pan, Pgauss(0, 0.7, 10),
     \out, Pfunc({~outDrums}),
-    \rOut, Pfunc({~outRecHihat})
+    \outRec, Pfunc({~outRecHihat})
 );
 ~hihatBarStraight_x2 = Pbind(
     \instrument, \hihat,
@@ -60,7 +60,7 @@ if (pdupClass.notNil) {
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 20),
     \pan, Pgauss(0, 0.7, 20),
     \out, Pfunc({~outDrums}),
-    \rOut, Pfunc({~outRecHihat})
+    \outRec, Pfunc({~outRecHihat})
 );
 
 // Define templates as Events.
@@ -77,7 +77,7 @@ if (pdupClass.notNil) {
         bprq2: Pwhite(0.5, 0.7),
         pan: Pwhite(-0.4, -0.7), // Spread snare slightly left of center
         out: Pfunc({~outDrums}),
-        rOut: Pfunc({~outRecSnare})
+        outRec: Pfunc({~outRecSnare})
     );
 
     // Merge with parameters if provided
@@ -94,7 +94,7 @@ if (pdupClass.notNil) {
         group: Pfunc({~mainGrp}),
         dur: Pseq(~measure * 2, inf),
         out: Pfunc({~outDrums}),
-        rOut: Pfunc({~outRecKick})
+        outRec: Pfunc({~outRecKick})
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -108,7 +108,7 @@ if (pdupClass.notNil) {
         dur: Pseq(~measure * 2, inf),
         pan: Pwhite(0.2, 0.5), // Spread toms slightly right of center
         out: Pfunc({~outDrums}),
-        rOut: Pfunc({~outRecTom})
+        outRec: Pfunc({~outRecTom})
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);

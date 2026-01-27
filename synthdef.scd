@@ -114,7 +114,7 @@ SynthDef("shaper__s2", {
 
 // Synthetic kick drum.
 SynthDef(\kick_synth, {
-    arg out=0, att=0.001, rel=0.8, curve=(-8), amp=0.5, pan=0,
+    arg out=0, outRec, att=0.001, rel=0.8, curve=(-8), amp=0.5, pan=0,
         bpfreq=10120, bprq=0.5,
         attenuate=0.56234132519035; // -5.dbamp
 
@@ -135,15 +135,18 @@ SynthDef(\kick_synth, {
     // Sculpt by percussion env.
     snd = snd * Env.perc(att, rel, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
-    snd = Pan2.ar(snd, pan);
 
+    // write mono copy to recording bus (if set)
+    Out.ar(outRec, snd);
+
+    snd = Pan2.ar(snd, pan);
     Out.ar(out, snd);
 }).add;
 
 
 // "Acoutsic" kick drum
 SynthDef(\kick_acoustic, {
-    arg out=0, att=0.001, rel=1.3, curve=(-6), amp=0.56, pan=0,
+    arg out=0, outRec, att=0.001, rel=1.3, curve=(-6), amp=0.56, pan=0,
         bpfreq1=7120, bprq1=0.5, bpfreq2=3120, bprq2=0.3,
         attenuate=1; // no attenuation by default
 
@@ -177,14 +180,17 @@ SynthDef(\kick_acoustic, {
     // Sculpt by percussion env.
     snd = snd * Env.perc(att, rel, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
-    snd = Pan2.ar(snd, pan);
 
+    // write mono copy to recording bus
+    Out.ar(outRec, snd);
+
+    snd = Pan2.ar(snd, pan);
     Out.ar(out, snd);
 }).add;
 
 
 SynthDef(\snare, {
-    arg out=0, att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
+    arg out=0, outRec, att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
         bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6,
         pDistPreGain=4.4668359215096,  // 13.dbamp
         pDistGain=0.31622776601684,    // -10.dbamp
@@ -227,18 +233,23 @@ SynthDef(\snare, {
     // Add some reverb and the second env so it can ring out.
     // Important: GVerb is mono-to-stereo, avoiding Pan2!
     snd = snd + (GVerb.ar(snd, 16, 2) * -30.dbamp);
+
     snd = Splay.ar(snd, center: pan);
 
     // Sculpt by percussion env.
     snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
 
+    // write mono copy to recording bus before spreading
+    Out.ar(outRec, Mix.ar(snd));
+
+    // monitoring output
     Out.ar(out, snd);
 }).add;
 
 
 SynthDef(\tom, {
-    arg out=0, att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
+    arg out=0, outRec, att=0.001, rel=0.6, curve=(-4), amp=0.56, pan=0,
         bpfreq1=2120, bprq1=0.3, bpfreq2=4120, bprq2=0.6,
         attenuate=0.31622776601684; // -10.dbamp
 
@@ -268,18 +279,23 @@ SynthDef(\tom, {
     // Add some reverb and the second env so it can ring out.
     // Important: GVerb is mono-to-stereo, avoiding Pan2!
     snd = snd + (GVerb.ar(snd, 16, 2) * -30.dbamp);
+
     snd = Splay.ar(snd, center: pan);
 
     // Sculpt by percussion env.
     snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
 
+    // write mono copy to recording bus before spreading
+    Out.ar(outRec, Mix.ar(snd));
+
+    // monitoring output
     Out.ar(out, snd);
 }).add;
 
 
 SynthDef(\hihat, {
-    arg out=0, amp=0.5, att=0.01, rel=0.2, ffreq=6000, pan=0,
+    arg out=0, outRec, amp=0.5, att=0.01, rel=0.2, ffreq=6000, pan=0,
         attenuate=0.56234132519035; // -5.dbamp
     var env = EnvGen.kr(Env.perc(att, rel, amp), doneAction: Done.freeSelf);
     var signal = HPF.ar(
@@ -289,6 +305,10 @@ SynthDef(\hihat, {
     signal = signal * env * attenuate;
     signal = Pan2.ar(signal, pan);
 
+    // record
+    Out.ar(outRec, signal);
+
+    // monitor
     Out.ar(out, signal);
 }).add;
 
