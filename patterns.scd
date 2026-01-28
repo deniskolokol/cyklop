@@ -19,6 +19,13 @@ if (pdupClass.notNil) {
 
 // Routing
 ~outDrums = 0;
+
+// Additional buses for separate recording of drum elements
+~outRecHihat = 8; // hihat is stereo
+~outRecKick = 10;
+~outRecSnare = 11;
+~outRecTom = 12;
+
 ~outPads = 2;
 ~outBass = 4;
 ~outMelody = 6;
@@ -42,7 +49,8 @@ if (pdupClass.notNil) {
     \amp, Pwhite(0.5, 1.0, 10),
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 10),
     \pan, Pgauss(0, 0.7, 10),
-    \out, Pfunc({~outDrums})
+    \out, Pfunc({~outDrums}),
+    \outRec, Pfunc({~outRecHihat})
 );
 ~hihatBarStraight_x2 = Pbind(
     \instrument, \hihat,
@@ -51,7 +59,8 @@ if (pdupClass.notNil) {
     \amp, Pwhite(0.5, 1.0, 20),
     \rel, Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 20),
     \pan, Pgauss(0, 0.7, 20),
-    \out, Pfunc({~outDrums})
+    \out, Pfunc({~outDrums}),
+    \outRec, Pfunc({~outRecHihat})
 );
 
 // Define templates as Events.
@@ -59,7 +68,6 @@ if (pdupClass.notNil) {
     var baseEvent = (
         instrument: \snare,
         group: Pfunc({~mainGrp}),
-        out: Pfunc({~outDrums}),
         dur: Pseq(~measure * 2, inf),
         pDistPreGain: Pwhite(11, 13).dbamp,
         pDistGain: Pwhite(-8, -10).dbamp,
@@ -67,7 +75,9 @@ if (pdupClass.notNil) {
         bprq1: Pwhite(0.2, 0.5),
         bpfreq2: Pwhite(3800, 4300),
         bprq2: Pwhite(0.5, 0.7),
-        pan: Pwhite(-0.4, -0.7) // Spread snare slightly left of center
+        pan: Pwhite(-0.4, -0.7), // Spread snare slightly left of center
+        out: Pfunc({~outDrums}),
+        outRec: Pfunc({~outRecSnare})
     );
 
     // Merge with parameters if provided
@@ -82,8 +92,9 @@ if (pdupClass.notNil) {
     var baseEvent = (
         instrument: \kick_synth, // \kick_acoustic
         group: Pfunc({~mainGrp}),
-        out: Pfunc({~outDrums}),
         dur: Pseq(~measure * 2, inf),
+        out: Pfunc({~outDrums}),
+        outRec: Pfunc({~outRecKick})
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -94,9 +105,10 @@ if (pdupClass.notNil) {
     var baseEvent = (
         instrument: \tom,
         group: Pfunc({~mainGrp}),
-        out: Pfunc({~outDrums}),
         dur: Pseq(~measure * 2, inf),
-        pan: Pwhite(0.2, 0.5) // Spread toms slightly right of center
+        pan: Pwhite(0.2, 0.5), // Spread toms slightly right of center
+        out: Pfunc({~outDrums}),
+        outRec: Pfunc({~outRecTom})
     );
     if (params.notNil) {
         baseEvent = baseEvent.putAll(params);
@@ -116,30 +128,33 @@ if (pdupClass.notNil) {
 );
 
 // Off-beat
+// Warning: start off beat in half-bar (10 x 1/8th notes
+// against 10 x 1/4th notes in the main beat).
 ~hihatOffBeat_1 = Pbind(
     *~kickBarTemplate.((
         instrument: \hihat,
         rel: 0.2,
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   0,   0,   1,   0,   0,   0])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0,   0,   0,   1,   0,   0,   0]),
+        outRec: Pfunc({~outRecHihat})
         ))
 );
 ~kickOffBeat_1 = Pbind(
     *~kickBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0, 0, 0, 0, 1, 0, 0, 0, 0, 0])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0,   1,   0,   0,   0,   0,   0])
         ))
 );
 ~snareOffBeat_1 = Pbind(
     *~snareBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0, 0, 0, 0, 0, 0, 1, 0, 1, 1])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0,   0,   0,   1,   0,   1,   1])
         ))
 );
 ~tomOffBeat_1 = Pbind(
     *~tomBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0, 0, 0, 0, 0, 0, 0, 0, 1, 1])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0,   0,   0,   0,   0,   1,   1])
         ))
 );
 
@@ -147,20 +162,21 @@ if (pdupClass.notNil) {
     *~kickBarTemplate.((
         instrument: \hihat,
         rel: 0.5,
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([1,   0,   0,   0,   1,   0,   0,   0])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   1,   0,   0,   0,   1,   0,   0,   0]),
+        outRec: Pfunc({~outRecHihat})
         ))
 );
 ~kickOffBeat_2 = Pbind(
     *~kickBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([1,   0,   0,   0,   1,   0,   0,   0])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   1,   0,   0,   0,   1,   0,   0,   0])
         ))
 );
 ~tomOffBeat_2 = Pbind(
     *~tomBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0.5, 0.8, 1,   0,   0.5, 0.8, 1])
+        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
+        amp: Pseq([0,   0,   0,   0.5, 0.8, 1,   0,   0.5, 0.8, 1])
         ))
 );
 
@@ -328,7 +344,7 @@ if (pdupClass.notNil) {
     ], inf)
 ));
 
-// Selection of off-beat patterns for beat_x2.
+// Off-beat pattern selection for beat_x2.
 ~offBeatIndex = -1; // this will ensure the first pattern is ~offBeat1!
 ~beat_x2offBeat = [~offBeat1, ~offBeat2];
 // Pdefn to hold the index of beat_x2 offbeat.
@@ -337,13 +353,9 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 // Hihat measures 1/8th
 ~evnts.add(\beat_x2 -> Pdef(\beat_x2,
     Pseq([
-        // // bookmark: working but randomly switching off-beat patterns
-        // Prand([~offBeat1, ~offBeat2], 1),
-
         Pdefn(\offBeatChoice),
 
         Pseq([
-
             // 1st four bars: straight beat and simple syncopation
             ~beatBarStraight_x2,
             // Straight beat at the second bar is a bit more predominant to make
@@ -368,9 +380,9 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
-    \atk, Pexprand(0.5, 2),
-    \sus, 0,
-    \rel, Pexprand(5, 10),
+    \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 3}),
+    \sus, Pfunc({ ~padEnvSus ! 3 }),
+    \rel, Pfunc({ exprand(~padEnvRel, ~padEnvRel * 1.5) ! 3}),
     \cAtk, Pexprand(1, 2),
     \cRel, Pexprand(1, 2).neg,
     \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
@@ -378,7 +390,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
-    \degree, Pfunc({ ([0] ++ (Scale.pelog.degrees) ++ [12]).scramble[0..rrand(1, 3)] }),
+    \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }),
     \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
@@ -388,9 +400,9 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \instrument, "shaper__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
-    \atk, Pexprand(0.5, 2),
-    \sus, 0,
-    \rel, Pexprand(5, 10),
+    \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 3}),
+    \sus, Pfunc({ ~padEnvSus ! 3 }),
+    \rel, Pfunc({ exprand(~padEnvRel, ~padEnvRel * 1.5) ! 3}),
     \cAtk, Pexprand(0.01, 0.5),
     \cRel, Pexprand(1, 2).neg,
     \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
@@ -398,9 +410,9 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
-    \degree, Pfunc({ ([0] ++ (Scale.pelog.degrees) ++ [12]).scramble[0..rrand(1, 3)] }),
+    \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }),
     \curveMax, Pexprand(1, 5),
-    \amp, Pexprand(0.1, 0.3),
+    \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
 ));
@@ -421,7 +433,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \degree, Pseq([0, 0, 0, Rest(), Prand([1, 3, 7], 1), 1, Prand([1, 3], 1), Rest()], inf),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
-    \amp, Pwhite(0.85, 0.95, inf),
+    \amp, Pwhite(0.55, 0.65, inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outBass}),
 ));
@@ -447,7 +459,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
         + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave - 3}),
-    \amp, Pseq([Pwhite(0.85, 0.95, 25)], inf),
+    \amp, Pseq([Pwhite(0.55, 0.65, 25)], inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outBass}),
 ));

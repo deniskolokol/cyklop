@@ -79,6 +79,16 @@ ServerQuit.removeAll;
 ~defaultIndex = ~midiValues.indexOf(60);
 
 
+// Dictionary to store synths played with the keyboard
+~synths = Dictionary.new;
+
+
+// Pads env control
+~padEnvAtk = 0.5;
+~padEnvSus = 0.01;
+~padEnvRel = 5;
+
+
 // Timing decorator
 ~withTiming = { |func|
     { |...args|
@@ -111,6 +121,7 @@ ServerQuit.removeAll;
         }
     }
 };
+
 
 // Buffers.
 ~cleanupWavetableBufs = {
@@ -348,7 +359,7 @@ s.waitForBoot({
     s.freeAll;
 
     // Show server meter and Node Tree.
-    // s.meter;
+    s.meter;
 
     // Lastly sync server to ensure all async tasks are done.
     s.sync;

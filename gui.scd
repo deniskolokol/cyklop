@@ -2,7 +2,6 @@
 var margin=10, gap=5;
 var colorButton=Color.grey(0.3);
 var colorPane=Color.grey(0.1);
-var colorBg=Color.grey(0.15);
 var transparent=Color.grey(alpha:0.0);
 
 // Wavetable GUI Visualizer
@@ -16,7 +15,7 @@ var createWavetableGUI = {
         width=800;
 
     var scrollView, plotView;
-    var plotHeight = height - 60 - (margin*4);
+    var plotHeight = height - 60 - (margin * 4);
 
     // Function to update all plots
     var updateWavetablePlots = { |plotView|
@@ -68,6 +67,7 @@ var createWavetableGUI = {
 };
 
 
+// Fill panel with buttons for start/stop of patterns
 var makePatternButtons = {
     arg parent, patterns, evntKeys=nil;
 
@@ -82,7 +82,7 @@ var makePatternButtons = {
     // Create a panel for the pattern buttons
     buttonPanel = View(parent, (parent.bounds.width-(margin*4))@60)
         .background_(colorPane);
-    buttonPanel.decorator = FlowLayout(buttonPanel.bounds, margin@margin, margin@margin);
+    buttonPanel.decorator = FlowLayout(buttonPanel.bounds, margin@margin, gap@gap);
 
     // Convert keys to Array and sort them
     if (evntKeys.isNil) {
@@ -121,14 +121,81 @@ var makePatternButtons = {
     });
 };
 
+
+// GUI controls for root note selection and MIDI tracking
+var makeRootNoteCtrl = { |parent|
+    var popupNote;
+
+    StaticText(parent, 100@30)
+        .string_("Root Note:")
+        .font_(Font("Arial", 14))
+        .stringColor_(Color.white)
+        .align_(\right);
+    popupNote = PopUpMenu(parent, 200@30)
+        .items_(~fullNoteList)
+        .value_(~defaultIndex)
+        .action_({ |menu| ~setRoot.(menu.value) });
+};
+
+
+// GUI controls for MIDI tracking toggle
+var makeMIDITrackerCtrl = { |parent|
+    var btTrack;
+
+    StaticText(parent, 100@30)
+        .string_("Track MIDI:")
+        .font_(Font("Arial", 14))
+        .stringColor_(Color.white)
+        .align_(\right);
+    btTrack = Button(parent, 100@30)
+        .states_([
+            ["OFF", Color.white, Color.gray],
+            ["ON", Color.white, Color.red(0.4)]
+        ])
+        .value_(~trackRoot.asInteger)
+        .action_({ |bt| ~trackRoot = bt.value.asBoolean });
+};
+
+
+var makeRecordButton = { |parent|
+    var btRecord;
+
+    btRecord = Button(parent, 100@40)
+        .states_([
+            ["RECORD", Color.white, Color.gray],
+            ["RECORD", Color.white, Color.red(0.4)]
+        ])
+        .value_(0)
+        .action_({ |bt|
+            // var path = ~projectPath +/+ format("recording_%.wav", Date.getDate.stamp);
+
+            if (bt.value == 1) {
+
+                // Omitting the first two buses, as ~outDrums is a stereo bus
+                // for monitoring (there are individual buses for drum recording).
+                var bus = ~outDrums + 2;
+
+                // Assuming contiguous bus allocation, ~outRecTom is the last
+                // bus.
+                var numChannels = ~outRecTom - 1;
+
+                s.record(bus: bus, numChannels: numChannels);
+                postf("Recording started:\n\tbus %\n\tnumChannels %\n", bus, numChannels);
+            } {
+                s.stopRecording;
+            };
+        });
+};
+
+
 // Main GUI creation function
 ~makeGUI = {
     var winWidth = 1100;
     var winHeight = Window.screenBounds.height-55;
     var palette = QPalette.dark;
-    var btPlay, popupNote, btTrack;
+    var btPlay, popupNote;
     var rootWatcher;
-    var ctrlPaneTransp, ctrlPaneNotes, plotPanel1, plotPanel2;
+    var ctrlPaneTransp, ctrlPaneTranspTop, ctrlPaneNotes, plotPanel1, plotPanel2;
     var panelHeight = 150;  // height for control panels
     var plotPanelHeight = winHeight-panelHeight-(margin*4);  // remaining height for plot panels
     var guiPatternKeys;
@@ -158,26 +225,38 @@ var makePatternButtons = {
     ctrlPaneNotes.decorator = FlowLayout(ctrlPaneNotes.bounds, margin@margin, gap@gap);
 
     // Place controls in their respective panels
-    btPlay = Button(ctrlPaneTransp, 50@50)
+    ctrlPaneTranspTop = View(ctrlPaneTransp, ctrlPaneTransp.bounds.width@60)
+        .background_(colorPane);
+    ctrlPaneTranspTop.decorator = FlowLayout(ctrlPaneTranspTop.bounds, margin@margin, gap@gap);
+    btPlay = Button(ctrlPaneTranspTop, 59@40)
         .states_([
             ["MIX", Color.white, Color.gray],
             ["MIX", Color.white, Color.red(0.4)]
         ])
         .action_({ |bt|
             var fullMixName = \mix_full;
-            if (~evnts[fullMixName].isNil) {
-                postf("WARNING: No event defined for '%'\n", fullMixName);
+            
+            // Check if buffers are initialized
+            if (~wt_buf.isNil or: { ~tf_buf.isNil }) {
+                "ERROR: Buffers not initialized. Click 'Generate New' buttons first.".postln;
             } {
-                ~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
-                    if (~evnts[fullMixName].value.isPlaying) {
-                        ~evnts[fullMixName].value.stop;
-                    } {
-                        ~evnts[fullMixName].value.play;
-                    };
-                    nil;
-                });
+                if (~evnts[fullMixName].isNil) {
+                    postf("WARNING: No event defined for '%'\n", fullMixName);
+                } {
+                    ~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
+                        if (~evnts[fullMixName].value.isPlaying) {
+                            ~evnts[fullMixName].value.stop;
+                        } {
+                            ~evnts[fullMixName].value.play;
+                        };
+                        nil;
+                    });
+                };
             };
         });
+
+    // Recording button setup
+    makeRecordButton.(ctrlPaneTranspTop);
 
     // Create pattern control buttons
     ctrlPaneTransp.decorator.nextLine;
@@ -188,38 +267,8 @@ var makePatternButtons = {
     ].asArray;
     makePatternButtons.(ctrlPaneTransp, ~evnts, guiPatternKeys);
 
-    StaticText(ctrlPaneNotes, 100@30)
-        .string_("Root Note:")
-        .font_(Font("Arial", 14))
-        .stringColor_(Color.white)
-        .align_(\right);
-    popupNote = PopUpMenu(ctrlPaneNotes, 200@30)
-        .items_(~fullNoteList)
-        .value_(~defaultIndex)
-        .action_({ |menu| ~setRoot.(menu.value) });
-    StaticText(ctrlPaneNotes, 100@30)
-        .string_("Track MIDI:")
-        .font_(Font("Arial", 14))
-        .stringColor_(Color.white)
-        .align_(\right);
-    btTrack = Button(ctrlPaneNotes, 100@30)
-        .states_([
-            ["OFF", Color.white, Color.gray],
-            ["ON", Color.white, Color.red(0.4)]
-        ])
-        .value_(~trackRoot.asInteger)
-        .action_({ |bt| ~trackRoot = bt.value.asBoolean });
-
-    ~win.view.decorator.nextLine;
-
-    // Create two adjacent panels for plots
-    plotPanel1 = View(~win, (winWidth/2-margin)@plotPanelHeight)
-        .background_(colorPane);
-    plotPanel1.decorator = FlowLayout(plotPanel1.bounds, margin@margin, gap@gap);
-    
-    plotPanel2 = View(~win, (winWidth/2-margin)@plotPanelHeight)
-        .background_(colorPane);
-    plotPanel2.decorator = FlowLayout(plotPanel2.bounds, margin@margin, gap@gap);
+    // Root note selection setup
+    popupNote = makeRootNoteCtrl.(ctrlPaneNotes);
 
     // Root watcher setup
     rootWatcher = Routine({
@@ -233,6 +282,20 @@ var makePatternButtons = {
             0.5.yield;
         }
     }).play;
+
+    // MIDI tracking toggle setup
+    makeMIDITrackerCtrl.(ctrlPaneNotes);
+
+    ~win.view.decorator.nextLine;
+
+    // Create two adjacent panels for plots
+    plotPanel1 = View(~win, (winWidth/2-margin)@plotPanelHeight)
+        .background_(colorPane);
+    plotPanel1.decorator = FlowLayout(plotPanel1.bounds, margin@margin, gap@gap);
+    
+    plotPanel2 = View(~win, (winWidth/2-margin)@plotPanelHeight)
+        .background_(colorPane);
+    plotPanel2.decorator = FlowLayout(plotPanel2.bounds, margin@margin, gap@gap);
 
     // Create wavetable GUIs in their respective panels
     createWavetableGUI.(
