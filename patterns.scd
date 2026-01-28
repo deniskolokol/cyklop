@@ -135,7 +135,8 @@ if (pdupClass.notNil) {
         instrument: \hihat,
         rel: 0.2,
         dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   0,   0,   0,   0,   1,   0,   0,   0])
+        amp: Pseq([0,   0,   0,   0,   0,   0,   1,   0,   0,   0]),
+        outRec: Pfunc({~outRecHihat})
         ))
 );
 ~kickOffBeat_1 = Pbind(
@@ -162,7 +163,8 @@ if (pdupClass.notNil) {
         instrument: \hihat,
         rel: 0.5,
         dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   1,   0,   0,   0,   1,   0,   0,   0])
+        amp: Pseq([0,   0,   1,   0,   0,   0,   1,   0,   0,   0]),
+        outRec: Pfunc({~outRecHihat})
         ))
 );
 ~kickOffBeat_2 = Pbind(
@@ -410,7 +412,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \octave, Pfunc({~octave}),
     \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }),
     \curveMax, Pexprand(1, 5),
-    \amp, Pexprand(0.1, 0.3),
+    \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
 ));
