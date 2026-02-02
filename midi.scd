@@ -166,8 +166,8 @@
             } {
                 params = [
                     \freq, num.midicps,
-                    \amp, vel.linlin(0, 127, 0.0, 0.5),
-                    \bufnum, ~wt_buf[3..6].choose
+                    \amp, vel.linlin(0, 127, 0.0, 1.0),
+                    \bufnum, ~wt_buf[0..2].choose
                 ];
                 ~synths[num] = Synth.new("osc__s2_adsr", params);
                 result = "NOTE"

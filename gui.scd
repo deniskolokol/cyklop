@@ -158,9 +158,7 @@ var makeMIDITrackerCtrl = { |parent|
 
 
 var makeRecordButton = { |parent|
-    var btRecord;
-
-    btRecord = Button(parent, 100@40)
+    Button(parent, 100@40)
         .states_([
             ["RECORD", Color.white, Color.gray],
             ["RECORD", Color.white, Color.red(0.4)]
