@@ -118,6 +118,9 @@ if (pdupClass.notNil) {
 
 // Straight patterns.
 ~kickBarStraight = Pbind(
+    *~kickBarTemplate.((amp: Pseq([1, 0, 0, 0, 0, 0, 1, 1, 0, 0])))
+);
+~kickBarStraight_x2 = Pbind(
     *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 1, 1, 0, 0])))
 );
 ~snareBarStraight = Pbind(
@@ -267,7 +270,7 @@ if (pdupClass.notNil) {
 ]);
 ~beatBarStraight_x2 = Ptpar([
     0.0, ~hihatBarStraight_x2, // HAT
-    0.0, ~kickBarStraight, // KICK
+    0.0, ~kickBarStraight_x2, // KICK
     0.0, ~snareBarStraight, // SNARE
     0.0, ~tomBarStraight, // TOM
 ]);
@@ -337,12 +340,12 @@ if (pdupClass.notNil) {
 
 // Base drum line.
 // Hihat measures 1/4th
-~evnts.add(\beat_x1 -> Pdef(\beat_x1,
+~evnts[\beat_x1] = Pdef(\beat_x1,
     Pseq([
         Pseq([~beatBarStraight], 3),
         Prand([~beatBarSyn_x1_1, ~beatBarSyn_x1_2], 1),
     ], inf)
-));
+);
 
 // Off-beat pattern selection for beat_x2.
 ~offBeatIndex = -1; // this will ensure the first pattern is ~offBeat1!
@@ -351,7 +354,7 @@ if (pdupClass.notNil) {
 Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 
 // Hihat measures 1/8th
-~evnts.add(\beat_x2 -> Pdef(\beat_x2,
+~evnts[\beat_x2] = Pdef(\beat_x2,
     Pseq([
         Pdefn(\offBeatChoice),
 
@@ -372,11 +375,11 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
             Pxrand([~beatBarSyn_x2_4, ~beatBarSyn_x2_5, ~beatBarSyn_x2_8], 1)
         ], inf)
     ])
-));
+);
 
 // Synths.
 // background pad using simple wavetables
-~evnts.add(\pad -> Pbindef(\pad,
+~evnts[\pad] = Pbindef(\pad,
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
@@ -394,9 +397,9 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
-));
+);
 
-~evnts.add(\pad_s -> Pbindef(\pad_s,
+~evnts[\pad_s] = Pbindef(\pad_s,
     \instrument, "shaper__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
@@ -415,10 +418,10 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
-));
+);
 
 // 5/4 bar bass using low complexity wavetables
-~evnts.add(\bass_s -> Pbindef(\bass_s,
+~evnts[\bass_s] = Pbindef(\bass_s,
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Pseq([1/2, 1/4, 1/4, Rest(1/4), 1/2, 1/4, 1/4, Rest(1/4)], inf),
@@ -436,10 +439,10 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \amp, Pwhite(0.55, 0.65, inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outBass}),
-));
+);
 
 // Arpeggiated bass using the first wavetable (low complexity roughly eq to sine)
-~evnts.add(\bass -> Pbindef(\bass,
+~evnts[\bass] = Pbindef(\bass,
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Pseq([
@@ -462,11 +465,11 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \amp, Pseq([Pwhite(0.55, 0.65, 25)], inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outBass}),
-));
+);
 
 
 // Arpeggiated pulse using mid/high complexity wavetables
-~evnts.add(\pulse -> Pbindef(\pulse,
+~evnts[\pulse] = Pbindef(\pulse,
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Pseq([
@@ -489,10 +492,10 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outMelody}),
-));
+);
 
 // Minimal melody in the upper regfister using variable wavetable oscillator
-~evnts.add(\melody -> Pbindef(\melody,
+~evnts[\melody] = Pbindef(\melody,
     \instrument, "vosc__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Prand([
@@ -521,9 +524,9 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     ], inf),
     \amp, Pseq([0.18, 0.24, 0.28, 0], inf),
     \out, Pfunc({~outMelody}),
-));
+);
 
-~evnts.add(\mix_full -> Pdef(\mix_full,
+~evnts[\mix_full] = Pdef(\mix_full,
     Ptpar([
         // 0.0, ~evnts[\beat_x1].value,
         0.0, ~evnts[\beat_x2].value,
@@ -532,5 +535,5 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
         0.0, ~evnts[\pulse].value,
         0.0, ~evnts[\melody].value,
     ], inf)
-))
+);
 )
