@@ -378,14 +378,15 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 );
 
 // Synths.
-// background pad using simple wavetables
+//
+// Background pad using simple wavetables
 ~evnts[\pad] = Pbindef(\pad,
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
-    \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
+    \dur, Pwrand([1.25, 2.5, 5, 7.5], [0.05, 0.15, 0.35, 0.45], inf),
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 3}),
     \sus, Pfunc({ ~padEnvSus ! 3 }),
-    \rel, Pfunc({ exprand(~padEnvRel, ~padEnvRel * 1.5) ! 3}),
+    \rel, (Pkey(\dur) * Pwhite(1.01, 1.15)),
     \cAtk, Pexprand(1, 2),
     \cRel, Pexprand(1, 2).neg,
     \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
@@ -399,13 +400,14 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \out, Pfunc({~outPads}),
 );
 
+
 ~evnts[\pad_s] = Pbindef(\pad_s,
     \instrument, "shaper__s2",
     \group, Pfunc({~mainGrp}),
-    \dur, Pwrand([1, 4, 6, 9, 12], [0.35, 0.25, 0.2, 0.15, 0.05], inf),
+    \dur, Pwrand([1.25, 2.5, 5, 7.5], [0.05, 0.15, 0.35, 0.45], inf),
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 3}),
     \sus, Pfunc({ ~padEnvSus ! 3 }),
-    \rel, Pfunc({ exprand(~padEnvRel, ~padEnvRel * 1.5) ! 3}),
+    \rel, (Pkey(\dur) * Pwhite(1.01, 1.15)),
     \cAtk, Pexprand(0.01, 0.5),
     \cRel, Pexprand(1, 2).neg,
     \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
@@ -476,7 +478,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
         myPrepeat.new(16, Pseq([1/4], 1)),
         myPrepeat.new(8, Pseq([1/2], 1)),
         Prand([1, 2, 4, 6, 12], 1)
-    ], inf),
+    ], inf).trace(prefix: "dur: "),
     \atk, 0.001,
     \sus, 0.2,
     \rel, Pexprand(0.4, 1),
@@ -485,8 +487,10 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \detune, 0.3,
     \bufnum, Pfunc({ ~wt_buf[4..9].choose }),
     \scale, Scale.pelog,
-    \degree, Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
-        + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
+    \degree, (
+        Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
+        + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf))
+    ).trace(prefix: "degree: "),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave - 3}),
     \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),

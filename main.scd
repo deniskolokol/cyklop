@@ -352,7 +352,7 @@ s.waitForBoot({
     ~loadExternal.(~projectPath +/+ "patterns.scd", "event definitions", autoSync:true);
 
     // Register remaining functions
-    ServerTree.add(~makeNodes);ł
+    ServerTree.add(~makeNodes);
     ServerTree.add(~makeGUI);
 
 	// Trigger re-instantiating of the FX groups.
