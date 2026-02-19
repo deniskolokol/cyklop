@@ -74,20 +74,22 @@ var makePatternButtons = {
     var buttonWidth = 59;
     var buttonHeight = 50;
     var buttonsPerRow = 8;
+    var panelHeight;
     var margin = 5;
     var buttonPanel;
     var counter = 0;
     var buttons = Dictionary.new;
-    
-    // Create a panel for the pattern buttons
-    buttonPanel = View(parent, (parent.bounds.width-(margin*4))@60)
-        .background_(colorPane);
-    buttonPanel.decorator = FlowLayout(buttonPanel.bounds, margin@margin, gap@gap);
 
     // Convert keys to Array and sort them
     if (evntKeys.isNil) {
         evntKeys = patterns.keys.asArray.sort;
     };
+
+    // Create a panel for the pattern buttons
+    panelHeight = (evntKeys.size / buttonsPerRow).ceil * (buttonHeight + margin) + margin;
+    buttonPanel = View(parent, (parent.bounds.width-(margin*4))@panelHeight)
+        .background_(colorPane);
+    buttonPanel.decorator = FlowLayout(buttonPanel.bounds, margin@margin, gap@gap);
 
     // Create buttons for sorted patterns
     evntKeys.do({ |key|
@@ -194,7 +196,7 @@ var makeRecordButton = { |parent|
     var btPlay, popupNote;
     var rootWatcher;
     var ctrlPaneTransp, ctrlPaneTranspTop, ctrlPaneNotes, plotPanel1, plotPanel2;
-    var panelHeight = 150;  // height for control panels
+    var panelHeight = 200;  // height for control panels
     var plotPanelHeight = winHeight-panelHeight-(margin*4);  // remaining height for plot panels
     var guiPatternKeys;
 
@@ -261,7 +263,7 @@ var makeRecordButton = { |parent|
 
     // Not all keys should have buttons, e.g., the full mix button
     guiPatternKeys = [
-        \beat_x1, \beat_x2, \pad, \pad_s, \bass, \bass_s, \pulse, \melody
+        \beat_x1, \beat_x2, \pad, \pad_s, \bass, \bass_s, \pulse, \melody, \arpg
     ].asArray;
     makePatternButtons.(ctrlPaneTransp, ~evnts, guiPatternKeys);
 

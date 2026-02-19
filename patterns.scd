@@ -478,19 +478,26 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
         myPrepeat.new(16, Pseq([1/4], 1)),
         myPrepeat.new(8, Pseq([1/2], 1)),
         Prand([1, 2, 4, 6, 12], 1)
-    ], inf).trace(prefix: "dur: "),
+    ], inf),
     \atk, 0.001,
     \sus, 0.2,
     \rel, Pexprand(0.4, 1),
     \cAtk, 0,
     \cRel, Pwhite(5, 10).neg,
     \detune, 0.3,
-    \bufnum, Pfunc({ ~wt_buf[4..9].choose }),
+    // Higher complexity wavetables for the first 8 bars to make the pulse more prominent in the mix
+    // Next 8 bars - mid complexity to give the pulse a bit more space and avoid masking the bass
+    // Last 8 bars (plus one extra-note) - low complexity to make the pulse more subdued
+    \bufnum, Pseq([
+        Pfuncn({~wt_buf[7..9].choose}, 8),
+        Pfuncn({~wt_buf[5..7].choose}, 8),
+        Pfuncn({~wt_buf[4..5].choose}, 9)
+    ], inf).trace,
     \scale, Scale.pelog,
     \degree, (
         Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
         + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf))
-    ).trace(prefix: "degree: "),
+    ),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave - 3}),
     \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
@@ -498,7 +505,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \out, Pfunc({~outMelody}),
 );
 
-// Minimal melody in the upper regfister using variable wavetable oscillator
+// Minimal melody in the upper register using variable wavetable oscillator
 ~evnts[\melody] = Pbindef(\melody,
     \instrument, "vosc__s2",
     \group, Pfunc({~mainGrp}),
@@ -529,6 +536,35 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \amp, Pseq([0.18, 0.24, 0.28, 0], inf),
     \out, Pfunc({~outMelody}),
 );
+
+// More complex melody using variable wavetable oscillator and more rhythmic variation.
+~evnts[\arpg] = Pbindef(\arpg,
+    \instrument, "osc__s2",
+    \group, Pfunc({~mainGrp}),
+    \dur, Pseq((1/4) ! 8, inf),
+    \atk, 0.001,
+    \sus, 0.2,
+    \rel, Pexprand(0.4, 1),
+    \cAtk, 0,
+    \cRel, Pwhite(5, 10).neg,
+    \detune, 0.3,
+    \bufnum, Pseq([
+        Pfuncn({~wt_buf[7..9].choose}, 2),
+        Pfuncn({~wt_buf[5..7].choose}, 2),
+        Pfuncn({~wt_buf[4..5].choose}, 4)
+    ], inf),
+    \scale, Scale.pelog,
+    // The following creates a repeating pattern:
+    // c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  c#3 -  d#3 -  c 4 -  c 4 -  § -  c#3 -  c#3 -  c 4 -  c 4 -  § -  c 3
+    // which is 24 notes long, and thus fits nicely into the 5/4 time signature (24 x 1/4 = 6 bars).
+    \degree, Place(#[12, 12, \, [7, 7, 1, 1, 0], [8, 8, 3, 1, \]], inf).trace,
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave}),
+    \amp, Pseq([Pgeom(0.45, -1.dbamp, 8)], inf),
+    \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
+    \out, Pfunc({~outMelody}),
+);
+
 
 ~evnts[\mix_full] = Pdef(\mix_full,
     Ptpar([
