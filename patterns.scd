@@ -492,7 +492,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
         Pfuncn({~wt_buf[7..9].choose}, 8),
         Pfuncn({~wt_buf[5..7].choose}, 8),
         Pfuncn({~wt_buf[4..5].choose}, 9)
-    ], inf).trace,
+    ], inf),
     \scale, Scale.pelog,
     \degree, (
         Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
