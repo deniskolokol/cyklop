@@ -556,8 +556,8 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \scale, Scale.pelog,
     // The following creates a repeating pattern:
     // c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  c#3 -  d#3 -  c 4 -  c 4 -  § -  c#3 -  c#3 -  c 4 -  c 4 -  § -  c 3
-    // which is 24 notes long, and thus fits nicely into the 5/4 time signature (24 x 1/4 = 6 bars).
-    \degree, Place(#[12, 12, \, [7, 7, 1, 1, 0], [8, 8, 3, 1, \]], inf).trace,
+    // which is 24 of the 4ths notes long, and thus fits nicely into the 5/4 time signature (24 x 1/4 = 6 bars).
+    \degree, Place(#[12, 12, \, [7, 7, 1, 1, 0], [8, 8, 3, 1, \]], inf),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
     \amp, Pseq([Pgeom(0.45, -1.dbamp, 8)], inf),
