@@ -85,6 +85,7 @@ ServerQuit.removeAll;
 
 // Pads env control
 ~padEnvAtk = 0.5;
+~padEnvDec = 0.5;
 ~padEnvSus = 0.01;
 ~padEnvRel = 5;
 

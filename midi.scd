@@ -98,6 +98,12 @@
             setParm = "Pad Env Attack";
             ~padEnvAtk = setVal;
         }
+        { 15 } {
+            // CC 15 (Slider 2) to Pad Env Decay
+            setVal = val.linlin(0, 127, 0.01, 5.0);
+            setParm = "Pad Env Decay";
+            ~padEnvDec = setVal;
+        }
         { 30 } {
             // CC 30 (Slider 3) to Pad Env Sustain
             setVal = val.linlin(0, 127, 0.01, 5.0);
@@ -167,7 +173,12 @@
                 params = [
                     \freq, num.midicps,
                     \amp, vel.linlin(0, 127, 0.0, 1.0),
-                    \bufnum, ~wt_buf[0..2].choose
+                    \bufnum, ~wt_buf[3..6].choose,
+                    \out, ~outPads,
+                    \atk, ~padEnvAtk,
+                    \sus, ~padEnvSus,
+                    \dec, ~padEnvDec,
+                    \rel, ~padEnvRel
                 ];
                 ~synths[num] = Synth.new("osc__s2_adsr", params);
                 result = "NOTE"

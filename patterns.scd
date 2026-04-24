@@ -19,16 +19,15 @@ if (pdupClass.notNil) {
 
 // Routing
 ~outDrums = 0;
+~outPads = 2;
+~outBass = 4;
+~outMelody = 6;
 
 // Additional buses for separate recording of drum elements
 ~outRecHihat = 8; // hihat is stereo
 ~outRecKick = 10;
 ~outRecSnare = 11;
 ~outRecTom = 12;
-
-~outPads = 2;
-~outBass = 4;
-~outMelody = 6;
 
 // Timing
 ~baseQuant = 16;
@@ -400,7 +399,6 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \out, Pfunc({~outPads}),
 );
 
-
 ~evnts[\pad_s] = Pbindef(\pad_s,
     \instrument, "shaper__s2",
     \group, Pfunc({~mainGrp}),
@@ -518,7 +516,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \rel, 1.5,
     \cAtk, -2,
     \cRel, -2,
-    \detune, Pexprand(0.18,0.25),
+    \detune, Pexprand(0.18, 0.25),
     \bufnum, Pwrand([
         Pfunc({ ~wt_buf[0] }),
         Pfunc({ ~wt_buf[1] }),
@@ -540,6 +538,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 // More complex melody using variable wavetable oscillator and more rhythmic variation.
 ~evnts[\arpg] = Pbindef(\arpg,
     \instrument, "osc__s2",
+    \bufnum, Pfunc({~wt_buf[2..4].choose}),
     \group, Pfunc({~mainGrp}),
     \dur, Pseq((1/4) ! 8, inf),
     \atk, 0.001,
@@ -547,12 +546,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \rel, Pexprand(0.4, 1),
     \cAtk, 0,
     \cRel, Pwhite(5, 10).neg,
-    \detune, 0.3,
-    \bufnum, Pseq([
-        Pfuncn({~wt_buf[7..9].choose}, 2),
-        Pfuncn({~wt_buf[5..7].choose}, 2),
-        Pfuncn({~wt_buf[4..5].choose}, 4)
-    ], inf),
+    \detune, Pexprand(0.18, 0.25),
     \scale, Scale.pelog,
     // The following creates a repeating pattern:
     // c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  c#3 -  d#3 -  c 4 -  c 4 -  § -  c#3 -  c#3 -  c 4 -  c 4 -  § -  c 3
