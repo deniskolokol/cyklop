@@ -166,10 +166,12 @@
         \noteOnKeyboard_ArturiaMINILAB3,
         ~withMIDILogging.({ |vel, num, chan, src|
             var result, params;
-            if (~trackRoot) {
+            switch (~midiTrack)
+            { \root} {
                 ~setRoot.(num);
                 result = "ROOT"
-            } {
+            }
+            { \synth } {
                 params = [
                     \freq, num.midicps,
                     \amp, vel.linlin(0, 127, 0.0, 1.0),
@@ -181,6 +183,10 @@
                     \rel, ~padEnvRel
                 ];
                 ~synths[num] = Synth.new("osc__s2_adsr", params);
+                result = "NOTE"
+            }
+            {
+                // Default case
                 result = "NOTE"
             };
             // Return parameter name for logging

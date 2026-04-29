@@ -55,9 +55,13 @@ ServerQuit.removeAll;
     };
 };
 
-~trackRoot = false; // Whether to track root note changes from MIDI input
-                    // false by default for possibility of live playing without
-                    // changing the root note.
+// The value of this indicates, whether:
+// - to track root note changes from MIDI input ('root' mode)
+// - to play live a selected synth without changing the root note ('synth' mode)
+// - to not track MIDI input at all ('off' mode, DEFAULT).
+~midiTrackMode = [\off, \root, \synth];
+~midiTrack = ~midiTrackMode[0]; // Default to 'off' mode
+
 ~getRoot = { |midinote| midinote % 12 }; // Note in 12-tone chromatic scale (0-11)
 ~getOctave = { |midinote| (midinote / 12).floor - 2 }; // Octave number (0-8)
 ~setRoot = { |midinum|

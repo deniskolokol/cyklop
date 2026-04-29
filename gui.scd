@@ -151,11 +151,12 @@ var makeMIDITrackerCtrl = { |parent|
         .align_(\right);
     btTrack = Button(parent, 100@30)
         .states_([
-            ["OFF", Color.white, Color.gray],
-            ["ON", Color.white, Color.red(0.4)]
+            [~midiTrackMode[0].asString.toUpper(), Color.white, Color.gray],
+            [~midiTrackMode[1].asString.toUpper(), Color.white, Color.red(0.4)],
+            [~midiTrackMode[2].asString.toUpper(), Color.white, Color.blue(0.4)],
         ])
-        .value_(~trackRoot.asInteger)
-        .action_({ |bt| ~trackRoot = bt.value.asBoolean });
+        .value_(~midiTrackMode.indexOf(~midiTrack))
+        .action_({ |bt| ~midiTrack = ~midiTrackMode[bt.value] });
 };
 
 
