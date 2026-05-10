@@ -14,13 +14,13 @@ Server.default = s = Server.local;
 
 // Behringer U-Foria: 2
 // Focusrite Saffire: 4
-// PreSonus Studio: 18
-s.options.numInputBusChannels = 18;
+// PreSonus Studio: 8 (18 in total, but only 8 is used)
+s.options.numInputBusChannels = 8;
 
 // Behringer U-Foria: 2
 // Focusrite Saffire: 10
-// PreSonus Studio: 18
-s.options.numOutputBusChannels = 18;
+// PreSonus Studio: 16 (18 in total but in this project we use only 16)
+s.options.numOutputBusChannels = 16;
 
 s.options.blockSize = 512;
 s.options.memSize = 2097152; // 2Gb
