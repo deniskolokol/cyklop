@@ -417,7 +417,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
-    \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }).trace,
+    \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }),
     \curveMax, Pexprand(1, 5),
     \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
@@ -545,6 +545,15 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \instrument, "osc__s2",
     \bufnum, Pfunc({~wt_buf[2..4].choose}),
     \group, Pfunc({~mainGrp}),
+
+    // Instead of the instructions above, use the following for sending the
+    // arpeggiated melody to the external synth via MIDI:
+    //
+    // \type, \midi,       // This is a MIDI event
+    // \midiout, ~midiOut, // Send it to your Neutron
+    // \midicmd, \noteOn,  // The command is a note (default)
+    // \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
+
     \dur, Pseq((1/2) ! 8, inf),
     \atk, 0.001,
     \sus, 0.2,
@@ -553,6 +562,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \cRel, Pwhite(5, 10).neg,
     \detune, Pexprand(0.18, 0.25),
     \scale, Scale.pelog,
+
     // The following creates a repeating pattern:
     // c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  c#3 -  d#3 -  c 4 -  c 4 -  § -  c#3 -  c#3 -  c 4 -  c 4 -  § -  c 3
     // which is 24 of the 4ths notes long, and thus fits nicely into the 5/4 time signature (24 x 1/4 = 6 bars).

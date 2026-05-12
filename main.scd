@@ -274,7 +274,6 @@ ServerQuit.removeAll;
         if (~evnts[name].isNil) {
             postf("WARNING: No event defined for %\n", name);
         } {
-            clock.nextTimeOnGrid.postln;
             clock.schedAbs(clock.nextTimeOnGrid, {
                 if (~evnts[name].isPlaying) {
                     ~evnts[name].stop;

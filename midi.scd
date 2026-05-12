@@ -54,6 +54,9 @@
     };
     postf("Keyboard source: %; Controller source: %\n", srcKeyboard, srcCtlr);
 
+    // MIDIOut object for sending messages to external synth
+    ~midiOut = MIDIOut.newByName("Studio 1824c", "Studio 1824c");
+
     // Arturia MINILAB 3
     //
     // MIDI control messages
