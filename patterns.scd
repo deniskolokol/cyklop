@@ -30,11 +30,14 @@ if (pdupClass.notNil) {
 ~outRecTom = 12;
 
 // Timing
-~baseQuant = 16;
+~bpm = 120;
+~beatsPerBar = 5; // 5/8 time signature
+~baseQuant = 8;
 ~stretch = 25/128 * ~baseQuant;
-~freq = 2;
-~measure = 1 / ~baseQuant ! 10 * ~freq;
-~tempo = TempoClock.new(120/60).schedAbs(0, { ~tempo.beatsPerBar_(5) });
+~clicksPerBeat = 2;
+~measure = (1 / ~baseQuant * ~clicksPerBeat) ! 10;
+~scheduler = TempoClock.new(~bpm/60)
+    .schedAbs(0, { ~scheduler.beatsPerBar_(~beatsPerBar) });
 
 // Warning: every event that should be controlled by MIDI
 // should be defined as Pdef!
@@ -136,27 +139,27 @@ if (pdupClass.notNil) {
     *~kickBarTemplate.((
         instrument: \hihat,
         rel: 0.2,
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   0,   0,   0,   0,   1,   0,   0,   0]),
+        dur: Pseq(~measure, inf),
+        amp: Pseq([0, 0, 0, 0, 0, 0, 1, 0, 0, 0]),
         outRec: Pfunc({~outRecHihat})
         ))
 );
 ~kickOffBeat_1 = Pbind(
     *~kickBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   0,   0,   1,   0,   0,   0,   0,   0])
+        dur: Pseq(~measure, inf),
+        amp: Pseq([0, 0, 0, 0, 1, 0, 0, 0, 0, 0])
         ))
 );
 ~snareOffBeat_1 = Pbind(
     *~snareBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   0,   0,   0,   0,   1,   0,   1,   1])
+        dur: Pseq(~measure, inf),
+        amp: Pseq([0, 0, 0, 0, 0, 0, 1, 0, 1, 1])
         ))
 );
 ~tomOffBeat_1 = Pbind(
     *~tomBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   0,   0,   0,   0,   0,   0,   1,   1])
+        dur: Pseq(~measure, inf),
+        amp: Pseq([0, 0, 0, 0, 0, 0, 0, 0, 1, 1])
         ))
 );
 
@@ -164,100 +167,100 @@ if (pdupClass.notNil) {
     *~kickBarTemplate.((
         instrument: \hihat,
         rel: 0.5,
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   1,   0,   0,   0,   1,   0,   0,   0]),
+        dur: Pseq(~measure, inf),
+        amp: Pseq([0, 0, 1, 0, 0, 0, 1, 0, 0, 0]),
         outRec: Pfunc({~outRecHihat})
         ))
 );
 ~kickOffBeat_2 = Pbind(
     *~kickBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   1,   0,   0,   0,   1,   0,   0,   0])
+        dur: Pseq(~measure, inf),
+        amp: Pseq([0, 0, 1, 0, 0, 0, 1, 0, 0, 0])
         ))
 );
 ~tomOffBeat_2 = Pbind(
     *~tomBarTemplate.((
-        dur: Pseq([1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8], inf),
-        amp: Pseq([0,   0,   0,   0.5, 0.8, 1,   0,   0.5, 0.8, 1])
+        dur: Pseq(~measure, inf),
+        amp: Pseq([0, 0, 0, 0.5, 0.8, 1, 0, 0.5, 0.8, 1])
         ))
 );
 
-// Syn patterns.
+// Drum fill patterns.
 // 1
-~kickBarSyn_1 = Pbind(
+~kickBarFill_1 = Pbind(
     *~kickBarTemplate.((amp: Pseq([Pwrand([0, 1], [0.2, 0.8], 1), 0, 1, 0, 0, 1, 1, 1, 0, 0])))
 );
-~snareBarSyn_1 = Pbind(
+~snareBarFill_1 = Pbind(
     *~snareBarTemplate.((amp: Pseq([0, 0, 0, 1, 0, 0, 0, 0, 1, 1])))
 );
 // 2
-~kickBarSyn_2 = Pbind(
+~kickBarFill_2 = Pbind(
     *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 0, 1, 0, 0])))
 );
-~snareBarSyn_2 = Pbind(
+~snareBarFill_2 = Pbind(
     *~snareBarTemplate.((amp: Pseq([0, 0, 0, 1, 0, 0, 1, 0, 1, 1])))
 );
 // 3
-~kickBarSyn_3 = Pbind(
+~kickBarFill_3 = Pbind(
     *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 0, 1, 0, 0])))
 );
-~snareBarSyn_3 = Pbind(
+~snareBarFill_3 = Pbind(
     *~snareBarTemplate.((
         pDistPreGain: Pwhite(8, 10).dbamp,
         bpfreq1: Pwhite(1800, 2100),
         amp: Pseq([0, 1, 0, 1, 1, 0, 0, 0, 1, 1])
     ))
 );
-~tomBarSyn_3 = Pbind(
+~tomBarFill_3 = Pbind(
     *~tomBarTemplate.((
-        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/4, 1/4, 1/4], inf),
+        dur: Pseq([1/2, 1/2, 1/2, 1/2, 1/2, 1/4, 1/4, 1/4, 1/4, 1/2, 1/2, 1/2], inf),
         amp: Pseq([0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0])
     ))
 );
 // 4
-~kickBarSyn_4 = Pbind(
+~kickBarFill_4 = Pbind(
     *~kickBarTemplate.((amp: Pseq([0, 0, 1, 0, 1, 0, 0, 1, 0, 0])))
 );
-~snareBarSyn_4 = Pbind(
+~snareBarFill_4 = Pbind(
     *~snareBarTemplate.((
         // It is also possible to write like this:
         // (~measure * 2)[..7] ++ (~measure[8] ! 4)
         // but the explicit time measure definition is more readable.
-        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8], inf),
+        dur: Pseq([1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/4, 1/4, 1/4, 1/4], inf),
         amp: Pseq([1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0])
         ))
 );
 // 5
-~kickBarSyn_5 = Pbind(
+~kickBarFill_5 = Pbind(
     *~kickBarTemplate.((
-        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/4], inf),
+        dur: Pseq([1/2, 1/2, 1/2, 1/2, 1/2, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/2], inf),
         amp: Pseq([1,   0,   1,   0,   0,   0,   0,   1,   0,   0,   0,   0,   0,   1])
         ))
 );
-~snareBarSyn_5 = Pbind(
+~snareBarFill_5 = Pbind(
     *~snareBarTemplate.((
-        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/4], inf),
+        dur: Pseq([1/2, 1/2, 1/2, 1/2, 1/2, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/2], inf),
         amp: Pseq([0,   0,   0,   1,   0,   0,   0,   0,   0,   1,   0,   0,   1,   0])
         ))
 );
-~tomBarSyn_5 = Pbind(
+~tomBarFill_5 = Pbind(
     *~tomBarTemplate.((
-        dur: Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/4], inf),
+        dur: Pseq([1/2, 1/2, 1/2, 1/2, 1/2, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/2], inf),
         amp: Pseq([0,   0,   0,   0,   0,   1,   1,   0.6, 0,   0,   0,   0,   0,   0])
         ))
 );
 
 // 8 - Drum roll
-~kickBarSyn_8 = Pbind(
+~kickBarFill_8 = Pbind(
     *~kickBarTemplate.((amp: Pseq([1, 0, 1, 0, 0, 0, 0, 0, 0, 0])))
 );
-~snareBarSyn_8 = Pbind(
+~snareBarFill_8 = Pbind(
     *~snareBarTemplate.((
         dur: Pseq((1 / ~baseQuant ! 26) ++ ~measure[6..], inf),
         amp: Pseq(0 ! 10) ++ Pgeom(0.01, 1.3, 16) ++ Pseries(0.85, 0.05, 4)
         ))
 );
-~tomBarSyn_1 = Pbind( // TODO, silent at the moment
+~tomBarFill_1 = Pbind( // TODO, silent at the moment
     *~tomBarTemplate.((amp: Pseq(0 ! 10)))
 );
 
@@ -289,60 +292,60 @@ if (pdupClass.notNil) {
 ]);
 
 // Mix 1 bar syncopated patterns into one.
-~beatBarSyn_x1_1 = Ptpar([
+~beatBarFill_x1_1 = Ptpar([
     0.0, ~hihatBarStraight, // HAT
-    0.0, ~kickBarSyn_1, // KICK
-    0.0, ~snareBarSyn_1, // SNARE
+    0.0, ~kickBarFill_1, // KICK
+    0.0, ~snareBarFill_1, // SNARE
 ]);
-~beatBarSyn_x2_1 = Ptpar([
+~beatBarFill_x2_1 = Ptpar([
     0.0, ~hihatBarStraight_x2, // HAT
-    0.0, ~kickBarSyn_1, // KICK
-    0.0, ~snareBarSyn_1, // SNARE
+    0.0, ~kickBarFill_1, // KICK
+    0.0, ~snareBarFill_1, // SNARE
 ]);
-~beatBarSyn_x1_2 = Ptpar([
+~beatBarFill_x1_2 = Ptpar([
     0.0, ~hihatBarStraight, // HAT
-    0.0, ~kickBarSyn_2, // KICK
-    0.0, ~snareBarSyn_2, // SNARE
+    0.0, ~kickBarFill_2, // KICK
+    0.0, ~snareBarFill_2, // SNARE
 ]);
-~beatBarSyn_x2_2 = Ptpar([
+~beatBarFill_x2_2 = Ptpar([
     0.0, ~hihatBarStraight_x2, // HAT
-    0.0, ~kickBarSyn_2, // KICK
-    0.0, ~snareBarSyn_2, // SNARE
+    0.0, ~kickBarFill_2, // KICK
+    0.0, ~snareBarFill_2, // SNARE
 ]);
-~beatBarSyn_x1_3 = Ptpar([
+~beatBarFill_x1_3 = Ptpar([
     0.0, ~hihatBarStraight, // HAT
-    0.0, ~kickBarSyn_3, // KICK
-    0.0, ~snareBarSyn_3, // SNARE
+    0.0, ~kickBarFill_3, // KICK
+    0.0, ~snareBarFill_3, // SNARE
 ]);
-~beatBarSyn_x2_3 = Ptpar([
+~beatBarFill_x2_3 = Ptpar([
     0.0, ~hihatBarStraight, // HAT
-    0.0, ~kickBarSyn_3, // KICK
-    0.0, ~snareBarSyn_3, // SNARE
-    0.0, ~tomBarSyn_3, // TOM
+    0.0, ~kickBarFill_3, // KICK
+    0.0, ~snareBarFill_3, // SNARE
+    0.0, ~tomBarFill_3, // TOM
 ]);
-~beatBarSyn_x2_4 = Ptpar([
+~beatBarFill_x2_4 = Ptpar([
     0.0, ~hihatBarStraight_x2, // HAT
-    0.0, ~kickBarSyn_4, // KICK
-    0.0, ~snareBarSyn_4, // SNARE
+    0.0, ~kickBarFill_4, // KICK
+    0.0, ~snareBarFill_4, // SNARE
 ]);
-~beatBarSyn_x2_5 = Ptpar([
+~beatBarFill_x2_5 = Ptpar([
     0.0, ~hihatBarStraight_x2, // HAT
-    0.0, ~kickBarSyn_5, // KICK
-    0.0, ~snareBarSyn_5, // SNARE
-    0.0, ~tomBarSyn_5, // TOM
+    0.0, ~kickBarFill_5, // KICK
+    0.0, ~snareBarFill_5, // SNARE
+    0.0, ~tomBarFill_5, // TOM
 ]);
-~beatBarSyn_x2_8 = Ptpar([
+~beatBarFill_x2_8 = Ptpar([
     0.0, ~hihatBarStraight, // HAT
-    0.0, ~kickBarSyn_8, // KICK
-    0.0, ~snareBarSyn_8, // SNARE
+    0.0, ~kickBarFill_8, // KICK
+    0.0, ~snareBarFill_8, // SNARE
 ]);
 
 // Base drum line.
-// Hihat measures 1/4th
+// Hihat measures 1/8th
 ~evnts[\beat_x1] = Pdef(\beat_x1,
     Pseq([
         Pseq([~beatBarStraight], 3),
-        Prand([~beatBarSyn_x1_1, ~beatBarSyn_x1_2], 1),
+        Prand([~beatBarFill_x1_1, ~beatBarFill_x1_2], 1),
     ], inf)
 );
 
@@ -352,7 +355,7 @@ if (pdupClass.notNil) {
 // Pdefn to hold the index of beat_x2 offbeat.
 Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 
-// Hihat measures 1/8th
+// Hihat measures 1/16th
 ~evnts[\beat_x2] = Pdef(\beat_x2,
     Pseq([
         Pdefn(\offBeatChoice),
@@ -362,19 +365,20 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
             ~beatBarStraight_x2,
             // Straight beat at the second bar is a bit more predominant to make
             // the beat feel more grounded 
-            Pwrand([~beatBarStraight_x2, ~beatBarSyn_x2_1], [0.7, 0.3]),
+            Pwrand([~beatBarStraight_x2, ~beatBarFill_x2_1], [0.7, 0.3]),
             ~beatBarStraight_x2,
-            Prand([~beatBarSyn_x2_2, ~beatBarSyn_x2_3]),
+            Prand([~beatBarFill_x2_2, ~beatBarFill_x2_3]),
 
             // 2nd four bars: more complex syncopations
             ~beatBarStraight_x2,
             // Slightly biased towards straight beat to keep the groove
-            Pwrand([~beatBarStraight_x2, ~beatBarSyn_x2_1], [0.8, 0.2]),
+            Pwrand([~beatBarStraight_x2, ~beatBarFill_x2_1], [0.8, 0.2]),
             ~beatBarStraight_x2,
-            Pxrand([~beatBarSyn_x2_4, ~beatBarSyn_x2_5, ~beatBarSyn_x2_8], 1)
+            Pxrand([~beatBarFill_x2_4, ~beatBarFill_x2_5, ~beatBarFill_x2_8], 1)
         ], inf)
     ])
 );
+
 
 // Synths.
 //
@@ -382,7 +386,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 ~evnts[\pad] = Pbindef(\pad,
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
-    \dur, Pwrand([1.25, 2.5, 5, 7.5], [0.05, 0.15, 0.35, 0.45], inf),
+    \dur, Pwrand([2.5, 5, 10, 15], [0.05, 0.15, 0.35, 0.45], inf),
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 3}),
     \sus, Pfunc({ ~padEnvSus ! 3 }),
     \rel, (Pkey(\dur) * Pwhite(1.01, 1.15)),
@@ -402,7 +406,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 ~evnts[\pad_s] = Pbindef(\pad_s,
     \instrument, "shaper__s2",
     \group, Pfunc({~mainGrp}),
-    \dur, Pwrand([1.25, 2.5, 5, 7.5], [0.05, 0.15, 0.35, 0.45], inf),
+    \dur, Pwrand([2.5, 5, 10, 15], [0.05, 0.15, 0.35, 0.45], inf),
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 3}),
     \sus, Pfunc({ ~padEnvSus ! 3 }),
     \rel, (Pkey(\dur) * Pwhite(1.01, 1.15)),
@@ -413,7 +417,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
-    \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }),
+    \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }).trace,
     \curveMax, Pexprand(1, 5),
     \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
@@ -424,7 +428,8 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 ~evnts[\bass_s] = Pbindef(\bass_s,
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
-    \dur, Pseq([1/2, 1/4, 1/4, Rest(1/4), 1/2, 1/4, 1/4, Rest(1/4)], inf),
+    // \dur, Pseq([1/2, 1/4, 1/4, Rest(1/4), 1/2, 1/4, 1/4, Rest(1/4)], inf),
+    \dur, Pseq([1, 1/2, 1/2, 1/2, 1, 1/2, 1/2, 1/2], inf),
     \atk, 0.001,
     \sus, 0.2,
     \rel, Pexprand(0.4, 1),
@@ -446,9 +451,9 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Pseq([
-        myPrepeat.new(16, Pseq([1/4], 1)),
-        myPrepeat.new(8, Pseq([1/2], 1)),
-        Prand([1, 2, 4], 1)
+        myPrepeat.new(16, Pseq([1/2], 1)),
+        myPrepeat.new(8, Pseq([1], 1)),
+        Prand([2, 4, 8], 1)
     ], inf),
     \atk, 0.001,
     \sus, 0.2,
@@ -473,9 +478,9 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Pseq([
-        myPrepeat.new(16, Pseq([1/4], 1)),
-        myPrepeat.new(8, Pseq([1/2], 1)),
-        Prand([1, 2, 4, 6, 12], 1)
+        myPrepeat.new(16, Pseq([1/2], 1)),
+        myPrepeat.new(8, Pseq([1], 1)),
+        Prand([2, 4, 8, 12, 24], 1)
     ], inf),
     \atk, 0.001,
     \sus, 0.2,
@@ -508,8 +513,8 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \instrument, "vosc__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Prand([
-        Pseq([2, 1.5, 0.5, Prand([12, 16, 20])], 1),
-        Pseq([1.5, 1, 1.5, Prand([12, 16, 20])], 1),
+        Pseq([4, 3, 1, Prand([24, 32, 40])], 1),
+        Pseq([3, 2, 3, Prand([24, 32, 40])], 1),
     ], inf),
     \atk, 0.01,
     \sus, 0.3,
@@ -540,7 +545,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \instrument, "osc__s2",
     \bufnum, Pfunc({~wt_buf[2..4].choose}),
     \group, Pfunc({~mainGrp}),
-    \dur, Pseq((1/4) ! 8, inf),
+    \dur, Pseq((1/2) ! 8, inf),
     \atk, 0.001,
     \sus, 0.2,
     \rel, Pexprand(0.4, 1),

@@ -99,7 +99,7 @@ var makePatternButtons = {
             [key.asString, Color.white, Color.red(0.4)]
         ])
         .action_({ |bt|
-            ~playStopEvent.(key, ~tempo);
+            ~playStopEvent.(key, ~scheduler);
         });
 
         buttons[key] = button; // Store button in dictionary
@@ -244,7 +244,7 @@ var makeRecordButton = { |parent|
                 if (~evnts[fullMixName].isNil) {
                     postf("WARNING: No event defined for '%'\n", fullMixName);
                 } {
-                    ~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
+                    ~scheduler.schedAbs(~tempo.nextTimeOnGrid(), {
                         if (~evnts[fullMixName].value.isPlaying) {
                             ~evnts[fullMixName].value.stop;
                         } {

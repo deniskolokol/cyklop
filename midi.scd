@@ -152,7 +152,7 @@
             { 43 } { \melody }
             { "Note ON" }; // Default case
 
-            ~playStopEvent.(setParm, ~tempo);
+            ~playStopEvent.(setParm, ~scheduler);
 
             // Return parameter name for logging
             setParm

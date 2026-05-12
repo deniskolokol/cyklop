@@ -274,6 +274,7 @@ ServerQuit.removeAll;
         if (~evnts[name].isNil) {
             postf("WARNING: No event defined for %\n", name);
         } {
+            clock.nextTimeOnGrid.postln;
             clock.schedAbs(clock.nextTimeOnGrid, {
                 if (~evnts[name].isPlaying) {
                     ~evnts[name].stop;
@@ -281,7 +282,7 @@ ServerQuit.removeAll;
                     // Notify listeners that the pattern has stopped
                     ~patternStateManager.(name, false);
                 } {
-                    ~evnts[name].play;
+                    ~evnts[name].play(clock, quant: ~baseQuant);
 
                     // Notify listeners that the pattern has started
                     ~patternStateManager.(name, true);
