@@ -3,6 +3,13 @@ var margin=10, gap=5;
 var colorButton=Color.grey(0.3);
 var colorPane=Color.grey(0.1);
 var transparent=Color.grey(alpha:0.0);
+var fontLabel = Font("Menlo", 12);
+var beatColors = (
+    \beat: Color.gray(0.2),
+    \click: Color.gray(0.3),
+    \accent: Color.gray(0.8)
+);
+
 
 // Wavetable GUI Visualizer
 var createWavetableGUI = {
@@ -160,6 +167,75 @@ var makeMIDITrackerCtrl = { |parent|
 };
 
 
+var makeBeatVisualizer = { |parent, tempoClock, beatsPerBar=4, clicksPerBeat=2|
+    var beatView;
+
+    StaticText(parent, 100@30)
+        .string_("Beat:")
+        .font_(Font("Arial", 14))
+        .stringColor_(Color.white)
+        .align_(\right);
+    beatView = UserView(parent, Rect(0, 0, parent.bounds.width, parent.bounds.height))
+        .background_(Color.clear)
+        .drawFunc_({ |view|
+            var left;
+            var top;
+            var widthBeat = ((view.bounds.width - (margin * 2)) / beatsPerBar) - (gap * 2);
+            var width = widthBeat / clicksPerBeat - gap;
+            var height = view.bounds.height - 100 - (margin * 4);
+
+            Pen.font = fontLabel;
+            if (tempoClock.isRunning) {
+                Pen.fillColor = Color.white(0.8);
+                Pen.stringAtPoint(
+                    format("Bar: %, Beat: %", tempoClock.bar, tempoClock.beatInBar),
+                    Point(margin*4, margin)
+                );
+
+                Pen.strokeColor_(Color.gray(alpha: 0.5));
+                beatsPerBar.do { |beat|
+                    left = margin + (beat * (widthBeat + (2 * gap)));
+                    top = margin + 20; // Leave space for the label
+
+                    // Draw the beat rectangles.
+                    Pen.strokeColor_(beatColors[\beat]);
+                    Pen.strokeRect(Rect(left, top, widthBeat, height));
+
+                    // Draw the click rectangles within each beat.
+                    Pen.strokeColor_(beatColors[\click]);
+                    clicksPerBeat.do { |click|
+                        left = margin + (beat * (widthBeat + (2 * gap))) + (click * width) + (gap * (click + 1));
+                        top = margin + 20 + gap;
+                        if (beat > tempoClock.beatInBar.floor or:
+                                (beat == tempoClock.beatInBar.floor and: 
+                                    (click > ((tempoClock.beatInBar - tempoClock.beatInBar.floor) * clicksPerBeat).floor)
+                                )
+                            ) {
+                            Pen.strokeRect(Rect(left, top, width - gap, height - (gap * 2)));
+                        } {
+                            if (~accents[beat][click] == 1) {
+                                Pen.fillColor = beatColors[\accent];
+                                Pen.fillRect(Rect(left, top, width, height - (gap * 2)));
+                            } {
+                                // Non-accented clicks are dimmer and smaller.
+                                Pen.fillColor = beatColors[\click];
+                                Pen.fillRect(Rect(left + (gap/2), top + (gap/2.5), width - (gap * 1.5), height - (gap * 2.5)));
+                            };
+                        };
+                    };
+                };
+            } {
+                Pen.fillColor = Color.red(0.8);
+                Pen.stringAtPoint(
+                    "Press [R] to start, [S] to stop, [ESC] to clear and close.",
+                    Point(margin*4, margin*4)
+                );
+            };
+        });
+    beatView.animate = true;
+};  
+
+
 var makeRecordButton = { |parent|
     Button(parent, 100@40)
         .states_([
@@ -244,7 +320,7 @@ var makeRecordButton = { |parent|
                 if (~evnts[fullMixName].isNil) {
                     postf("WARNING: No event defined for '%'\n", fullMixName);
                 } {
-                    ~scheduler.schedAbs(~tempo.nextTimeOnGrid(), {
+                    ~scheduler.schedAbs(~scheduler.nextTimeOnGrid(), {
                         if (~evnts[fullMixName].value.isPlaying) {
                             ~evnts[fullMixName].value.stop;
                         } {
@@ -286,6 +362,14 @@ var makeRecordButton = { |parent|
 
     // MIDI tracking toggle setup
     makeMIDITrackerCtrl.(ctrlPaneNotes);
+
+    // Beat visualizer setup
+    makeBeatVisualizer.(
+        ctrlPaneNotes,
+        tempoClock: ~scheduler,
+        beatsPerBar: ~beatsPerBar,
+        clicksPerBeat: ~clicksPerBeat
+    );
 
     ~win.view.decorator.nextLine;
 
