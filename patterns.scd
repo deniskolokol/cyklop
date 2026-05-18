@@ -35,6 +35,8 @@ if (pdupClass.notNil) {
 ~baseQuant = 8;
 ~stretch = 25/128 * ~baseQuant;
 ~clicksPerBeat = 2;
+~accentOn = 1; // Accent on the first click of each beat
+~accents = ~fillAccents.(~beatsPerBar, ~clicksPerBeat, ~accentOn).postln;
 ~measure = (1 / ~baseQuant * ~clicksPerBeat) ! 10;
 ~scheduler = TempoClock.new(~bpm/60)
     .schedAbs(0, { ~scheduler.beatsPerBar_(~beatsPerBar) });

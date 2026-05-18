@@ -7,7 +7,7 @@ var fontLabel = Font("Menlo", 12);
 var beatColors = (
     \beat: Color.gray(0.2),
     \click: Color.gray(0.3),
-    \accent: Color.gray(0.8)
+    \accent: Color.gray
 );
 
 
@@ -167,60 +167,86 @@ var makeMIDITrackerCtrl = { |parent|
 };
 
 
-var makeBeatVisualizer = { |parent, tempoClock, beatsPerBar=4, clicksPerBeat=2|
-    var beatView;
-
-    StaticText(parent, 100@30)
-        .string_("Beat:")
-        .font_(Font("Arial", 14))
-        .stringColor_(Color.white)
-        .align_(\right);
-    beatView = UserView(parent, Rect(0, 0, parent.bounds.width, parent.bounds.height))
+var makeBeatVisualizer = { |parent|
+    var beatView = UserView(parent, Rect(0, 0, parent.bounds.width, parent.bounds.height-80))
         .background_(Color.clear)
         .drawFunc_({ |view|
             var left;
             var top;
-            var widthBeat = ((view.bounds.width - (margin * 2)) / beatsPerBar) - (gap * 2);
-            var width = widthBeat / clicksPerBeat - gap;
-            var height = view.bounds.height - 100 - (margin * 4);
+            var widthBeat = ((view.bounds.width - (margin * 2)) / ~beatsPerBar) - (gap * 2);
+            var width = widthBeat / ~clicksPerBeat - gap;
+            var height = view.bounds.height - 20 - (margin * 4);
+            var currColor = Color.new255(24, 24, 24);
+            var colors = (
+                \beat: Color.gray(0.2),
+                \click: Color.gray(0.6),
+                \accent: Color.gray(0.8)
+            );
+            var localRect;
+
+            var getLocalRect = { |left, top, height, width, gap|
+                var localLeft, localTop, localWidth, localHeight;
+
+                localHeight = height - (gap * 2);
+                localWidth = width - gap;
+                localHeight = min(localHeight, localWidth); // Make it a square
+                localWidth = localHeight; // Make it a square
+                localLeft = left + ((width - localWidth) / 2); // Center horizontally
+                localTop = top + ((height - (gap * 2) - localHeight) / 2); // Center vertically
+
+                Rect(localLeft, localTop, localWidth, localHeight)
+            };
 
             Pen.font = fontLabel;
-            if (tempoClock.isRunning) {
-                Pen.fillColor = Color.white(0.8);
+            if (~scheduler.isRunning) {
+                Pen.fillColor = colors[\accent];
                 Pen.stringAtPoint(
-                    format("Bar: %, Beat: %", tempoClock.bar, tempoClock.beatInBar),
+                    format(
+                        "Bar: %, Beat: %",
+                        ~scheduler.bar, ~scheduler.beatInBar.round(0.001)
+                    ),
                     Point(margin*4, margin)
                 );
 
                 Pen.strokeColor_(Color.gray(alpha: 0.5));
-                beatsPerBar.do { |beat|
+                ~beatsPerBar.do { |beat|
                     left = margin + (beat * (widthBeat + (2 * gap)));
                     top = margin + 20; // Leave space for the label
 
                     // Draw the beat rectangles.
-                    Pen.strokeColor_(beatColors[\beat]);
+                    Pen.width = 1;
+                    Pen.strokeColor_(colors[\beat]);
                     Pen.strokeRect(Rect(left, top, widthBeat, height));
 
-                    // Draw the click rectangles within each beat.
-                    Pen.strokeColor_(beatColors[\click]);
-                    clicksPerBeat.do { |click|
+                    // Draw the click circles within each beat.
+                    Pen.strokeColor_(colors[\click]);
+                    Pen.width = 4;
+
+                    ~clicksPerBeat.do { |click|
                         left = margin + (beat * (widthBeat + (2 * gap))) + (click * width) + (gap * (click + 1));
                         top = margin + 20 + gap;
-                        if (beat > tempoClock.beatInBar.floor or:
-                                (beat == tempoClock.beatInBar.floor and: 
-                                    (click > ((tempoClock.beatInBar - tempoClock.beatInBar.floor) * clicksPerBeat).floor)
+
+                        localRect = getLocalRect.(left, top, height, width, gap);
+
+                        if (beat > ~scheduler.beatInBar.floor or:
+                                (beat == ~scheduler.beatInBar.floor and: 
+                                    (click > ((~scheduler.beatInBar - ~scheduler.beatInBar.floor) * ~clicksPerBeat).floor)
                                 )
                             ) {
-                            Pen.strokeRect(Rect(left, top, width - gap, height - (gap * 2)));
+                            Pen.addOval(localRect);
+                            Pen.stroke;
                         } {
                             if (~accents[beat][click] == 1) {
-                                Pen.fillColor = beatColors[\accent];
-                                Pen.fillRect(Rect(left, top, width, height - (gap * 2)));
+                                currColor = Color.gray((beat+1)/(~scheduler.beatInBar+1));
+                                Pen.fillColor = currColor;
+                                Pen.addOval(localRect);
                             } {
-                                // Non-accented clicks are dimmer and smaller.
-                                Pen.fillColor = beatColors[\click];
-                                Pen.fillRect(Rect(left + (gap/2), top + (gap/2.5), width - (gap * 1.5), height - (gap * 2.5)));
+                                // Non-accented clicks are dimmer
+                                currColor.alpha_(0.2);
+                                Pen.fillColor = currColor;
+                                Pen.addOval(localRect);
                             };
+                            Pen.fillStroke;
                         };
                     };
                 };
@@ -364,12 +390,7 @@ var makeRecordButton = { |parent|
     makeMIDITrackerCtrl.(ctrlPaneNotes);
 
     // Beat visualizer setup
-    makeBeatVisualizer.(
-        ctrlPaneNotes,
-        tempoClock: ~scheduler,
-        beatsPerBar: ~beatsPerBar,
-        clicksPerBeat: ~clicksPerBeat
-    );
+    makeBeatVisualizer.(ctrlPaneNotes);
 
     ~win.view.decorator.nextLine;
 

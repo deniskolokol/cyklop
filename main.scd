@@ -229,7 +229,7 @@ ServerQuit.removeAll;
         ~reverbSynth = Synth.new(
             \reverb, [
                 \amp, 1,
-                \xFade, 0.35,
+                \xFade, 0.35,   
                 \predelay, 0.1,
                 \revtime, 1.8,
                 \lpf, 4500,
@@ -281,7 +281,7 @@ ServerQuit.removeAll;
                     // Notify listeners that the pattern has stopped
                     ~patternStateManager.(name, false);
                 } {
-                    ~evnts[name].play(clock, quant: ~baseQuant);
+                    ~evnts[name].play(clock, quant: 1); 
 
                     // Notify listeners that the pattern has started
                     ~patternStateManager.(name, true);
@@ -292,6 +292,44 @@ ServerQuit.removeAll;
         postf("ERROR: Could not play event %\n", name);
     };
     nil;
+};
+
+
+// WARNING: remove this when beat visualizer becomes extension!
+~fillAccents = { |beats, clicks, accentOn|
+    // Accent pattern generator.
+    // the param `accentOn` can be either:
+    // - an Integer indicating which click to accent (1-based index),
+    //   e.g. 1 for the first click, 2 for the second click, etc.
+    // - an Array of click indices to accent, e.g. [1, 3] for accents on the
+    //   first and third clicks.
+    // 
+    // Returns an Array of 0s and 1s, where 1 indicates an accented click.
+    // Examples:
+    // - for 4 clicks per beat, accent on the first click: [1, 0, 0, 0]
+    // - for 4 clicks per beat, accent on the third click: [0, 0, 1, 0]
+    // Irregular accent patterns can be created by setting accentOn to an Array
+    // of click indices to accent, e.g. [1, 3] for accents on the first and
+    // third clicks - in this case the resulting pattern would be [1, 0, 1, 0]
+    // for 4 clicks per beat.
+    //
+    // Warning: invalid values (such as negative integers or val;ues that exceed
+    // the number of clicks per beat) will result in no accents being applied.
+    var accents;
+    case 
+    { accentOn.isInteger and: { accentOn > 0 } } {
+        accents = Array.fill(beats, { |i|
+            Array.fill(clicks, { |j| if (accentOn == (j+1)) { 1 } { 0 }})
+        });
+    }
+    { accentOn.isArray } {
+        accents = Array.fill(beats, { |i|
+            Array.fill(clicks, { |j| if (accentOn.includes(j+1)) { 1 } { 0 }})
+        });
+    }
+    { "Invalid accentOn value. Must be a positive Integer or an Array of click indices.".postln; 
+      accents = Array.fill(beats, { |i| Array.fill(clicks, 0) }) // Default to no accents
+    };
 };
 
 
@@ -363,8 +401,8 @@ s.waitForBoot({
 	// Trigger re-instantiating of the FX groups.
     s.freeAll;
 
-    // Show server meter and Node Tree.
-    s.meter;
+    // // Show server meter and Node Tree.
+    // s.meter;
 
     // Lastly sync server to ensure all async tasks are done.
     s.sync;
