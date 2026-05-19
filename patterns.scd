@@ -466,9 +466,9 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \bufnum, Pfunc({ ~wt_buf[0..1].choose }),
     \scale, Scale.pelog,
     \degree, Pseq([Prand([0, 1, 3], 24), Pseq([\], 1)], inf)
-        + myPrepeat.new(25, Pwrand([12, 15, 8], [0.78, 0.1, 0.12], inf)),
+        + myPrepeat.new(25, Pwrand([0, 3, -4], [0.78, 0.1, 0.12], inf)),
     \root, Pfunc({~root}),
-    \octave, Pfunc({~octave - 3}),
+    \octave, Pfunc({~octave}),
     \amp, Pseq([Pwhite(0.55, 0.65, 25)], inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outBass}),
