@@ -168,98 +168,15 @@ var makeMIDITrackerCtrl = { |parent|
 
 
 var makeBeatVisualizer = { |parent|
-    var beatView = UserView(parent, Rect(0, 0, parent.bounds.width, parent.bounds.height-80))
-        .background_(Color.clear)
-        .drawFunc_({ |view|
-            var left;
-            var top;
-            var widthBeat = ((view.bounds.width - (margin * 2)) / ~beatsPerBar) - (gap * 2);
-            var width = widthBeat / ~clicksPerBeat - gap;
-            var height = view.bounds.height - 20 - (margin * 4);
-            var currColor = Color.new255(24, 24, 24);
-            var colors = (
-                \beat: Color.gray(0.2),
-                \click: Color.gray(0.6),
-                \accent: Color.gray(0.8)
-            );
-            var localRect;
+    // Visualizer for beat, click, and accent signals.
+    // Warning: requires the extension TempoView, which is a custom view that
+    // listens to the scheduler and updates.
+    var panel = View(parent, (parent.bounds.width-10)@(parent.bounds.height-100))
+        .background_(transparent);
+    panel.decorator = FlowLayout(panel.bounds);
 
-            var getLocalRect = { |left, top, height, width, gap|
-                var localLeft, localTop, localWidth, localHeight;
-
-                localHeight = height - (gap * 2);
-                localWidth = width - gap;
-                localHeight = min(localHeight, localWidth); // Make it a square
-                localWidth = localHeight; // Make it a square
-                localLeft = left + ((width - localWidth) / 2); // Center horizontally
-                localTop = top + ((height - (gap * 2) - localHeight) / 2); // Center vertically
-
-                Rect(localLeft, localTop, localWidth, localHeight)
-            };
-
-            Pen.font = fontLabel;
-            if (~scheduler.isRunning) {
-                Pen.fillColor = colors[\accent];
-                Pen.stringAtPoint(
-                    format(
-                        "Bar: %, Beat: %",
-                        ~scheduler.bar, ~scheduler.beatInBar.round(0.001)
-                    ),
-                    Point(margin*4, margin)
-                );
-
-                Pen.strokeColor_(Color.gray(alpha: 0.5));
-                ~beatsPerBar.do { |beat|
-                    left = margin + (beat * (widthBeat + (2 * gap)));
-                    top = margin + 20; // Leave space for the label
-
-                    // Draw the beat rectangles.
-                    Pen.width = 1;
-                    Pen.strokeColor_(colors[\beat]);
-                    Pen.strokeRect(Rect(left, top, widthBeat, height));
-
-                    // Draw the click circles within each beat.
-                    Pen.strokeColor_(colors[\click]);
-                    Pen.width = 4;
-
-                    ~clicksPerBeat.do { |click|
-                        left = margin + (beat * (widthBeat + (2 * gap))) + (click * width) + (gap * (click + 1));
-                        top = margin + 20 + gap;
-
-                        localRect = getLocalRect.(left, top, height, width, gap);
-
-                        if (beat > ~scheduler.beatInBar.floor or:
-                                (beat == ~scheduler.beatInBar.floor and: 
-                                    (click > ((~scheduler.beatInBar - ~scheduler.beatInBar.floor) * ~clicksPerBeat).floor)
-                                )
-                            ) {
-                            Pen.addOval(localRect);
-                            Pen.stroke;
-                        } {
-                            if (~accents[beat][click] == 1) {
-                                currColor = Color.gray((beat+1)/(~scheduler.beatInBar+1));
-                                Pen.fillColor = currColor;
-                                Pen.addOval(localRect);
-                            } {
-                                // Non-accented clicks are dimmer
-                                currColor.alpha_(0.2);
-                                Pen.fillColor = currColor;
-                                Pen.addOval(localRect);
-                            };
-                            Pen.fillStroke;
-                        };
-                    };
-                };
-            } {
-                Pen.fillColor = Color.red(0.8);
-                Pen.stringAtPoint(
-                    "Press [R] to start, [S] to stop, [ESC] to clear and close.",
-                    Point(margin*4, margin*4)
-                );
-            };
-        });
-    beatView.animate = true;
-};  
+    TempoView(panel, ~scheduler, ~clicksPerBeat, ~accents)
+};
 
 
 var makeRecordButton = { |parent|
