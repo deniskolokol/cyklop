@@ -14,13 +14,13 @@ Server.default = s = Server.local;
 
 // Behringer U-Foria: 2
 // Focusrite Saffire: 4
-// PreSonus Studio: 18
-s.options.numInputBusChannels = 18;
+// PreSonus Studio: 8 (18 in total, but only 8 is used)
+s.options.numInputBusChannels = 8;
 
 // Behringer U-Foria: 2
 // Focusrite Saffire: 10
-// PreSonus Studio: 18
-s.options.numOutputBusChannels = 18;
+// PreSonus Studio: 16 (18 in total but in this project we use only 16)
+s.options.numOutputBusChannels = 16;
 
 s.options.blockSize = 512;
 s.options.memSize = 2097152; // 2Gb
@@ -55,9 +55,13 @@ ServerQuit.removeAll;
     };
 };
 
-~trackRoot = false; // Whether to track root note changes from MIDI input
-                    // false by default for possibility of live playing without
-                    // changing the root note.
+// The value of this indicates, whether:
+// - to track root note changes from MIDI input ('root' mode)
+// - to play live a selected synth without changing the root note ('synth' mode)
+// - to not track MIDI input at all ('off' mode, DEFAULT).
+~midiTrackMode = [\off, \root, \synth];
+~midiTrack = ~midiTrackMode[0]; // Default to 'off' mode
+
 ~getRoot = { |midinote| midinote % 12 }; // Note in 12-tone chromatic scale (0-11)
 ~getOctave = { |midinote| (midinote / 12).floor - 2 }; // Octave number (0-8)
 ~setRoot = { |midinum|
@@ -85,6 +89,7 @@ ServerQuit.removeAll;
 
 // Pads env control
 ~padEnvAtk = 0.5;
+~padEnvDec = 0.5;
 ~padEnvSus = 0.01;
 ~padEnvRel = 5;
 
@@ -224,7 +229,7 @@ ServerQuit.removeAll;
         ~reverbSynth = Synth.new(
             \reverb, [
                 \amp, 1,
-                \xFade, 0.35,
+                \xFade, 0.35,   
                 \predelay, 0.1,
                 \revtime, 1.8,
                 \lpf, 4500,
@@ -269,14 +274,14 @@ ServerQuit.removeAll;
         if (~evnts[name].isNil) {
             postf("WARNING: No event defined for %\n", name);
         } {
-            clock.schedAbs(clock.nextTimeOnGrid(), {
+            clock.schedAbs(clock.beats.ceil, {
                 if (~evnts[name].isPlaying) {
                     ~evnts[name].stop;
 
                     // Notify listeners that the pattern has stopped
                     ~patternStateManager.(name, false);
                 } {
-                    ~evnts[name].play;
+                    ~evnts[name].play(clock, quant: 1); 
 
                     // Notify listeners that the pattern has started
                     ~patternStateManager.(name, true);
@@ -287,6 +292,44 @@ ServerQuit.removeAll;
         postf("ERROR: Could not play event %\n", name);
     };
     nil;
+};
+
+
+// WARNING: remove this when beat visualizer becomes extension!
+~fillAccents = { |beats, clicks, accentOn|
+    // Accent pattern generator.
+    // the param `accentOn` can be either:
+    // - an Integer indicating which click to accent (1-based index),
+    //   e.g. 1 for the first click, 2 for the second click, etc.
+    // - an Array of click indices to accent, e.g. [1, 3] for accents on the
+    //   first and third clicks.
+    // 
+    // Returns an Array of 0s and 1s, where 1 indicates an accented click.
+    // Examples:
+    // - for 4 clicks per beat, accent on the first click: [1, 0, 0, 0]
+    // - for 4 clicks per beat, accent on the third click: [0, 0, 1, 0]
+    // Irregular accent patterns can be created by setting accentOn to an Array
+    // of click indices to accent, e.g. [1, 3] for accents on the first and
+    // third clicks - in this case the resulting pattern would be [1, 0, 1, 0]
+    // for 4 clicks per beat.
+    //
+    // Warning: invalid values (such as negative integers or val;ues that exceed
+    // the number of clicks per beat) will result in no accents being applied.
+    var accents;
+    case 
+    { accentOn.isInteger and: { accentOn > 0 } } {
+        accents = Array.fill(beats, { |i|
+            Array.fill(clicks, { |j| if (accentOn == (j+1)) { 1 } { 0 }})
+        });
+    }
+    { accentOn.isArray } {
+        accents = Array.fill(beats, { |i|
+            Array.fill(clicks, { |j| if (accentOn.includes(j+1)) { 1 } { 0 }})
+        });
+    }
+    { "Invalid accentOn value. Must be a positive Integer or an Array of click indices.".postln; 
+      accents = Array.fill(beats, { |i| Array.fill(clicks, 0) }) // Default to no accents
+    };
 };
 
 
@@ -352,14 +395,14 @@ s.waitForBoot({
     ~loadExternal.(~projectPath +/+ "patterns.scd", "event definitions", autoSync:true);
 
     // Register remaining functions
-    ServerTree.add(~makeNodes);ł
+    ServerTree.add(~makeNodes);
     ServerTree.add(~makeGUI);
 
 	// Trigger re-instantiating of the FX groups.
     s.freeAll;
 
-    // Show server meter and Node Tree.
-    s.meter;
+    // // Show server meter and Node Tree.
+    // s.meter;
 
     // Lastly sync server to ensure all async tasks are done.
     s.sync;

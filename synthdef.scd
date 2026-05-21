@@ -23,9 +23,8 @@ SynthDef("osc__s2", {
     var sig = osc_s2_core.(bufnum, freq, detune, amp, pan);
     var env = EnvGen.ar(
         Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
-        doneAction: Done.freeSelf
+        doneAction: 2
     );
-
     sig = sig * env;
     Out.ar(out, sig);
 }).add;

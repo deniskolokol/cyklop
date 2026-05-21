@@ -3,6 +3,13 @@ var margin=10, gap=5;
 var colorButton=Color.grey(0.3);
 var colorPane=Color.grey(0.1);
 var transparent=Color.grey(alpha:0.0);
+var fontLabel = Font("Menlo", 12);
+var beatColors = (
+    \beat: Color.gray(0.2),
+    \click: Color.gray(0.3),
+    \accent: Color.gray
+);
+
 
 // Wavetable GUI Visualizer
 var createWavetableGUI = {
@@ -74,20 +81,22 @@ var makePatternButtons = {
     var buttonWidth = 59;
     var buttonHeight = 50;
     var buttonsPerRow = 8;
+    var panelHeight;
     var margin = 5;
     var buttonPanel;
     var counter = 0;
     var buttons = Dictionary.new;
-    
-    // Create a panel for the pattern buttons
-    buttonPanel = View(parent, (parent.bounds.width-(margin*4))@60)
-        .background_(colorPane);
-    buttonPanel.decorator = FlowLayout(buttonPanel.bounds, margin@margin, gap@gap);
 
     // Convert keys to Array and sort them
     if (evntKeys.isNil) {
         evntKeys = patterns.keys.asArray.sort;
     };
+
+    // Create a panel for the pattern buttons
+    panelHeight = (evntKeys.size / buttonsPerRow).ceil * (buttonHeight + margin) + margin;
+    buttonPanel = View(parent, (parent.bounds.width-(margin*4))@panelHeight)
+        .background_(colorPane);
+    buttonPanel.decorator = FlowLayout(buttonPanel.bounds, margin@margin, gap@gap);
 
     // Create buttons for sorted patterns
     evntKeys.do({ |key|
@@ -97,7 +106,7 @@ var makePatternButtons = {
             [key.asString, Color.white, Color.red(0.4)]
         ])
         .action_({ |bt|
-            ~playStopEvent.(key, ~tempo);
+            ~playStopEvent.(key, ~scheduler);
         });
 
         buttons[key] = button; // Store button in dictionary
@@ -149,11 +158,24 @@ var makeMIDITrackerCtrl = { |parent|
         .align_(\right);
     btTrack = Button(parent, 100@30)
         .states_([
-            ["OFF", Color.white, Color.gray],
-            ["ON", Color.white, Color.red(0.4)]
+            [~midiTrackMode[0].asString.toUpper(), Color.white, Color.gray],
+            [~midiTrackMode[1].asString.toUpper(), Color.white, Color.red(0.4)],
+            [~midiTrackMode[2].asString.toUpper(), Color.white, Color.blue(0.4)],
         ])
-        .value_(~trackRoot.asInteger)
-        .action_({ |bt| ~trackRoot = bt.value.asBoolean });
+        .value_(~midiTrackMode.indexOf(~midiTrack))
+        .action_({ |bt| ~midiTrack = ~midiTrackMode[bt.value] });
+};
+
+
+var makeBeatVisualizer = { |parent|
+    // Visualizer for beat, click, and accent signals.
+    // Warning: requires the extension TempoView, which is a custom view that
+    // listens to the scheduler and updates.
+    var panel = View(parent, (parent.bounds.width-10)@(parent.bounds.height-100))
+        .background_(transparent);
+    panel.decorator = FlowLayout(panel.bounds);
+
+    TempoView(panel, ~scheduler, ~clicksPerBeat, ~accents)
 };
 
 
@@ -194,7 +216,7 @@ var makeRecordButton = { |parent|
     var btPlay, popupNote;
     var rootWatcher;
     var ctrlPaneTransp, ctrlPaneTranspTop, ctrlPaneNotes, plotPanel1, plotPanel2;
-    var panelHeight = 150;  // height for control panels
+    var panelHeight = 200;  // height for control panels
     var plotPanelHeight = winHeight-panelHeight-(margin*4);  // remaining height for plot panels
     var guiPatternKeys;
 
@@ -241,7 +263,7 @@ var makeRecordButton = { |parent|
                 if (~evnts[fullMixName].isNil) {
                     postf("WARNING: No event defined for '%'\n", fullMixName);
                 } {
-                    ~tempo.schedAbs(~tempo.nextTimeOnGrid(), {
+                    ~scheduler.schedAbs(~scheduler.nextTimeOnGrid(), {
                         if (~evnts[fullMixName].value.isPlaying) {
                             ~evnts[fullMixName].value.stop;
                         } {
@@ -261,7 +283,7 @@ var makeRecordButton = { |parent|
 
     // Not all keys should have buttons, e.g., the full mix button
     guiPatternKeys = [
-        \beat_x1, \beat_x2, \pad, \pad_s, \bass, \bass_s, \pulse, \melody
+        \beat_x1, \beat_x2, \pad, \pad_s, \bass, \bass_s, \pulse, \melody, \arpg
     ].asArray;
     makePatternButtons.(ctrlPaneTransp, ~evnts, guiPatternKeys);
 
@@ -283,6 +305,9 @@ var makeRecordButton = { |parent|
 
     // MIDI tracking toggle setup
     makeMIDITrackerCtrl.(ctrlPaneNotes);
+
+    // Beat visualizer setup
+    makeBeatVisualizer.(ctrlPaneNotes);
 
     ~win.view.decorator.nextLine;
 
