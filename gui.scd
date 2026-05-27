@@ -283,7 +283,8 @@ var makeRecordButton = { |parent|
 
     // Not all keys should have buttons, e.g., the full mix button
     guiPatternKeys = [
-        \beat_x1, \beat_x2, \pad, \pad_s, \bass, \bass_s, \pulse, \melody, \arpg
+        \beat_8, \beat_16, \pad, \pad_shap, \bass, \bass_s, \pulse, \melody,
+        \arpg, \beat_8_intro
     ].asArray;
     makePatternButtons.(ctrlPaneTransp, ~evnts, guiPatternKeys);
 

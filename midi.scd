@@ -129,26 +129,26 @@
         \noteOnKeyPad_ArturiaMINILAB3,
         ~withMIDILogging.({ |vel, num, chan, src|
             var setParm = switch(num)
-            { 36 } { \beat_x1 }
+            { 36 } { \beat_8 }
             { 37 } {
-                // Before playing beat_x2, change off-beat pattern: use either
-                // the next pattern in ~beat_x2offBeat array, or loop back to
+                // Before playing beat_16, change off-beat pattern: use either
+                // the next pattern in ~beat_16offBeat array, or loop back to
                 // first. This will alternate off-beat patterns on each trigger.
                 //
                 // Warning: this solution is necessary because Pdefn does not
                 // allow dynamic indexing directly.
-                if (~evnts[\beat_x2].isPlaying.not) {
+                if (~evnts[\beat_16].isPlaying.not) {
                     ~offBeatIndex = ~offBeatIndex + 1;
-                    if (~offBeatIndex >= ~beat_x2offBeat.size) {
+                    if (~offBeatIndex >= ~beat_16offBeat.size) {
                         ~offBeatIndex = 0;
                     };
                     postf("Off-beat pattern changed to index: %\n", ~offBeatIndex);
-                    Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
+                    Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
                 };
-                \beat_x2
+                \beat_16
             }
             { 38 } { \pad }
-            { 39 } { \pad_s }
+            { 39 } { \pad_shap }
             { 40 } { \bass }
             { 41 } { \bass_s }
             { 42 } { \pulse }
@@ -178,7 +178,7 @@
                 params = [
                     \freq, num.midicps,
                     \amp, vel.linlin(0, 127, 0.0, 1.0),
-                    \bufnum, ~wt_buf[3..6].choose,
+                    \bufnum, ~wt_buf[0..2].choose,
                     \out, ~outPads,
                     \atk, ~padEnvAtk,
                     \sus, ~padEnvSus,

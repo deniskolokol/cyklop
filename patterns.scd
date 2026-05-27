@@ -46,6 +46,16 @@ if (pdupClass.notNil) {
 ~evnts = Dictionary.new;
 
 // 1 bar straignt patterns.
+~hihatBarIntro = Pbind(
+    \instrument, \hihat,
+    \group, Pfunc({~mainGrp}),
+    \dur, Pseq([1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4], inf),
+    \amp, Pwhite(0.5, 1.0, inf),
+    \rel, Pgeom(0.02, 1.7, 6) ++ Pwrand([0.02, 0.1, 0.5], [0.7, 0.15, 0.15], 8),
+    \pan, Pgauss(0, 0.7, inf),
+    \out, Pfunc({~outDrums}),
+    \outRec, Pfunc({~outRecHihat})
+);
 ~hihatBarStraight = Pbind(
     \instrument, \hihat,
     \group, Pfunc({~mainGrp}),
@@ -342,23 +352,56 @@ if (pdupClass.notNil) {
     0.0, ~snareBarFill_8, // SNARE
 ]);
 
+
+// bookmark
+// Intro drum line
+~tomBarIntro = Pbind(
+    *~tomBarTemplate.((
+        dur: Pseq([1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2], inf),
+        amp: Pseq(0 ! 6) ++ Pgeom(0.8, 0.5, 4)
+        ))
+
+    
+);
+~snareBarIntro = Pbind(
+    *~snareBarTemplate.((amp: Pseq([1, 0, 0, 0, 1, 0, 0, 0, 0, 0.8])))
+);
+
+~beatBarIntro = Ptpar([
+    0.0, ~hihatBarIntro, // HAT
+    // 0.0, ~kickBarIntro, // KICK
+    0.0, ~tomBarIntro, // TOM
+    // 0.0, ~snareBarIntro, // SNARE
+]);
+
+~evnts[\beat_8_intro] = Pdef(\beat_8_intro,
+    Pseq([
+        Pseq([~hihatBarIntro], 1),
+        Prand([~hihatBarIntro, ~beatBarIntro], 1),
+        Pseq([~hihatBarIntro], 1),
+        Pseq([~beatBarIntro], 1),
+    ], inf)
+);
+
+
+
 // Base drum line.
 // Hihat measures 1/8th
-~evnts[\beat_x1] = Pdef(\beat_x1,
+~evnts[\beat_8] = Pdef(\beat_8,
     Pseq([
         Pseq([~beatBarStraight], 3),
         Prand([~beatBarFill_x1_1, ~beatBarFill_x1_2], 1),
     ], inf)
 );
 
-// Off-beat pattern selection for beat_x2.
+// Off-beat pattern selection for beat_16.
 ~offBeatIndex = -1; // this will ensure the first pattern is ~offBeat1!
-~beat_x2offBeat = [~offBeat1, ~offBeat2];
-// Pdefn to hold the index of beat_x2 offbeat.
-Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
+~beat_16offBeat = [~offBeat1, ~offBeat2];
+// Pdefn to hold the index of beat_16 offbeat.
+Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 
 // Hihat measures 1/16th
-~evnts[\beat_x2] = Pdef(\beat_x2,
+~evnts[\beat_16] = Pdef(\beat_16,
     Pseq([
         Pdefn(\offBeatChoice),
 
@@ -385,6 +428,14 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 // Synths.
 //
 // Background pad using simple wavetables
+// Warning: at the moment the chords consist of three unison voices with
+// randomly chosen intervals from the scale. While it's generally ok for the
+// live performance, it can lead to some weird dissonances in the recorded
+// version.
+// Here are few "working" chords to use for recorded version:
+// [1, 3, 8]
+// [0, 3, 7]
+// [0, 3, 8]
 ~evnts[\pad] = Pbindef(\pad,
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
@@ -399,13 +450,13 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
-    \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }),
+    \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }).trace,
     \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
 );
 
-~evnts[\pad_s] = Pbindef(\pad_s,
+~evnts[\pad_shap] = Pbindef(\pad_shap,
     \instrument, "shaper__s2",
     \group, Pfunc({~mainGrp}),
     \dur, Pwrand([2.5, 5, 10, 15], [0.05, 0.15, 0.35, 0.45], inf),
@@ -425,6 +476,7 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
 );
+
 
 // 5/4 bar bass using low complexity wavetables
 ~evnts[\bass_s] = Pbindef(\bass_s,
@@ -461,8 +513,8 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
     \rel, Pexprand(0.4, 1),
     \cAtk, 0,
     \cRel, Pwhite(5, 10).neg,
-    \detune, 0.1,
-    \bufnum, Pfunc({ ~wt_buf[0..1].choose }),
+    \detune, 0.01,
+    \bufnum, Pfunc({ ~wt_buf[0] }),
     \scale, Scale.pelog,
     \degree, Pseq([Prand([0, 1, 3], 24), Pseq([\], 1)], inf)
         + myPrepeat.new(25, Pwrand([0, 3, -4], [0.78, 0.1, 0.12], inf)),
@@ -578,8 +630,8 @@ Pdefn(\offBeatChoice, ~beat_x2offBeat[~offBeatIndex]);
 
 ~evnts[\mix_full] = Pdef(\mix_full,
     Ptpar([
-        // 0.0, ~evnts[\beat_x1].value,
-        0.0, ~evnts[\beat_x2].value,
+        // 0.0, ~evnts[\beat_8].value,
+        0.0, ~evnts[\beat_16].value,
         0.0, ~evnts[\bass].value,
         0.0, ~evnts[\pad].value,
         0.0, ~evnts[\pulse].value,
