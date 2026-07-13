@@ -314,7 +314,8 @@ SynthDef(\hihat, {
 
 // FX.
 SynthDef(\reverb, {
-    arg in, out=0, xFade=1, predelay=0.1, revtime=1.8, lpf=4500, mix=0.15;
+    arg in, out=0,
+        xFade=1, predelay=0.1, revtime=1.8, lpf=4500, mix=0.15;
     var signal;
     var dry = In.ar(in, 2);
     var temp = In.ar(in, 2);

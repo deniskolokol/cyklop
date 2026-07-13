@@ -359,8 +359,13 @@ ServerQuit.removeAll;
     postf("OK\n");
 
     "> Freeing MIDI...".post;
-    MIDIdef.freeAll;
-    postf("OK\n");
+    try {
+        ~midiOut.allNotesOff(0);
+        MIDIdef.freeAll;
+        postf("OK\n");
+    } { |error|
+        postf("WARNING: Could not free MIDI resources: %\n", error.errorString);
+    };
 
     "> Clearing buffers...".post;
     ~cleanupShaperBufs.();

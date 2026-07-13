@@ -84,13 +84,25 @@
             ~distSynth.set(\amount, setVal);
         }
         { 110 } {
-            // CC 110 (Knob 5) to Reverb xFade
+            // CC 110 (Knob 5) to VCF freq
+            setVal = val.linexp(0, 127, 150, 20000);
+            setParm = "VCF Freq";
+            ~reverbSynth.set(\ffreq, setVal);
+        }
+        { 111 } {
+            // CC 111 (Knob 6) to VCF res
+            setVal = val.linlin(0, 127, 0.0, 1.0);
+            setParm = "VCF Res";
+            ~reverbSynth.set(\fres, setVal);
+        }
+        { 116 } {
+            // CC 116 (Knob 7) to Reverb xFade
             setVal = val.linlin(0, 127, 0.0, 1.0);
             setParm = "Reverb xFade";
             ~reverbSynth.set(\xFade, setVal);
         }
         { 117 } {
-            // CC 117 (Knob ) to Reverb dry/wet mix
+            // CC 117 (Knob 8) to Reverb dry/wet mix
             setVal = val.linlin(0, 127, 0.1, 1.0);
             setParm = "Reverb mix";
             ~reverbSynth.set(\mix, setVal);
@@ -122,7 +134,9 @@
 
         // Return parameter name and value for logging
         [setParm, setVal]
-    }));
+    }),
+    srcID: srcKeyboard
+    );
 
     // Triggering events with pads (channel 9)
     MIDIdef.noteOn(
@@ -221,16 +235,20 @@
         \noteOnKeyPad_MAudioXSessionPro,
         ~withMIDILogging.({ |vel, num, chan, src|
             var setParm = "Note ON";
+
+            [vel, num, chan, src].postln; // Log raw MIDI data for debugging
+
+            setParm
         }),
-        chan: 0,
         srcID: srcCtlr
     );
 
     MIDIdef.noteOff(\noteOffKeyPad_MAudioXSessionPro,
         ~withMIDILogging.({ |vel, num, chan, src|
             var setParm = "Note OFF";
+
+            setParm
         }),
-        chan: 0,
         srcID: srcCtlr
     );
 

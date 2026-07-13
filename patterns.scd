@@ -353,36 +353,38 @@ if (pdupClass.notNil) {
 ]);
 
 
-// bookmark
 // Intro drum line
 ~tomBarIntro = Pbind(
     *~tomBarTemplate.((
         dur: Pseq([1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2], inf),
-        amp: Pseq(0 ! 6) ++ Pgeom(0.8, 0.5, 4)
+        amp: Pseq(0 ! 6) ++ Pgeom(1.0, 0.4, 4)
         ))
-
-    
 );
+
 ~snareBarIntro = Pbind(
-    *~snareBarTemplate.((amp: Pseq([1, 0, 0, 0, 1, 0, 0, 0, 0, 0.8])))
+    *~snareBarTemplate.((
+        dur: Pseq((0.5 ! 6) ++ (0.25 ! 8), inf),
+        amp: Pseq(0 ! 6) ++ Pgeom(0.1, 1.5, 8),
+        ))
 );
 
-~beatBarIntro = Ptpar([
+~beatBarIntro_singleStroke = Ptpar([
     0.0, ~hihatBarIntro, // HAT
-    // 0.0, ~kickBarIntro, // KICK
+    0.0, ~snareBarIntro, // SNARE
+]);
+
+~beatBarIntro_delay = Ptpar([
+    0.0, ~hihatBarIntro, // HAT
     0.0, ~tomBarIntro, // TOM
-    // 0.0, ~snareBarIntro, // SNARE
 ]);
 
 ~evnts[\beat_8_intro] = Pdef(\beat_8_intro,
     Pseq([
-        Pseq([~hihatBarIntro], 1),
-        Prand([~hihatBarIntro, ~beatBarIntro], 1),
-        Pseq([~hihatBarIntro], 1),
-        Pseq([~beatBarIntro], 1),
+        Pseq([~hihatBarIntro], 2),
+        Pseq([~beatBarIntro_delay], 1),
+        Pseq([~beatBarIntro_singleStroke], 1),
     ], inf)
 );
-
 
 
 // Base drum line.
@@ -450,7 +452,7 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
-    \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }).trace,
+    \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }),
     \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
@@ -465,13 +467,43 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \rel, (Pkey(\dur) * Pwhite(1.01, 1.15)),
     \cAtk, Pexprand(0.01, 0.5),
     \cRel, Pexprand(1, 2).neg,
-    \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
+    \detune, Pfunc({rrand(0.05, 0.15)} ! 3),
     \bufnum, Pfunc({ ~tf_buf.choose }),
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
-    \octave, Pfunc({~octave}),
+    \octave, Pfunc({~octave + 3}),
     \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }),
     \curveMax, Pexprand(1, 5),
+    \amp, Pexprand(0.07, 0.1),
+    \pan, Pwhite(-0.4, 0.4),
+    \out, Pfunc({~outPads}),
+);
+
+
+~evnts[\pad_intro] = Pbindef(\pad_intro,
+    // \instrument, "shaper__s2",
+    // \bufnum, Pfunc({ ~wt_buf[3..6].choose }),
+    // \group, Pfunc({~mainGrp}),
+
+    // Instead of the instructions above, use the following for sending the
+    // arpeggiated melody to the external synth via MIDI:
+    //
+    \type, \midi,       // This is a MIDI event
+    \midiout, ~midiOut, // Send it to your Neutron
+    \midicmd, \noteOn,  // The command is a note (default)
+    \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
+
+    \dur, 20,
+    \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 2}),
+    \sus, Pfunc({ ~padEnvSus ! 2 }),
+    \rel, Pkey(\dur) * Pwhite(1.01, 1.15), // Pfunc({ ~padEnvRel ! 2 }),
+    \cAtk, Pexprand(1, 2),
+    \cRel, Pexprand(1, 2).neg,
+    \detune, Pfunc({rrand(0.05, 0.15)} ! 2),
+    \scale, Scale.pelog,
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave}),
+    \degree, Pseq([[0, 7], [0, 8], [1, 3], [1, 7]], inf),
     \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
@@ -481,6 +513,7 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 // 5/4 bar bass using low complexity wavetables
 ~evnts[\bass_s] = Pbindef(\bass_s,
     \instrument, "osc__s2",
+    \bufnum, Pfunc({ ~wt_buf[0] }),
     \group, Pfunc({~mainGrp}),
     \dur, Pseq([1, 1/2, 1/2, 1/2, 1, 1/2, 1/2, 1/2], inf),
     \atk, 0.001,
@@ -489,7 +522,6 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \cAtk, 0,
     \cRel, Pwhite(5, 10).neg,
     \detune, Pwhite(0.05, 0.08, inf),
-    \bufnum, Pfunc({ ~wt_buf[0] }),
     \scale, Scale.pelog,
     \degree, Pseq([0, 0, 0, Rest(), Prand([1, 3, 7], 1), 1, Prand([1, 3], 1), Rest()], inf),
     \root, Pfunc({~root}),
