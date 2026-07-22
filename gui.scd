@@ -345,3 +345,6 @@ var makeRecordButton = { |parent|
     ~win.front;
 };
 )
+
+~evnts[\bass_s]
+~evnts = nil

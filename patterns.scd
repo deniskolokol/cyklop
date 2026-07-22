@@ -439,41 +439,63 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 // [0, 3, 7]
 // [0, 3, 8]
 ~evnts[\pad] = Pbindef(\pad,
-    \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
+
+    // Generator
+    \instrument, "osc__s2",
+    \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
+    \bufnum, Pfunc({ ~wt_buf[3..6].choose }),
+
+    // Env
     \dur, Pwrand([2.5, 5, 10, 15], [0.05, 0.15, 0.35, 0.45], inf),
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 3}),
     \sus, Pfunc({ ~padEnvSus ! 3 }),
-    \rel, Pkey(\dur) * Pwhite(1.01, 1.15),
+    \decay, Pkey(\dur) * Pwhite(0.4, 0.6),
+    \rel, Pkey(\dur) * Pwhite(0.5, 0.7),
     \cAtk, Pexprand(1, 2),
+    \cDec, Pexprand(2, 4),
     \cRel, Pexprand(1, 2).neg,
-    \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
-    \bufnum, Pfunc({ ~wt_buf[3..6].choose }),
+
+    // Harmony
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
     \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }),
+
+    // Route
     \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
 );
 
 ~evnts[\pad_shap] = Pbindef(\pad_shap,
-    \instrument, "shaper__s2",
     \group, Pfunc({~mainGrp}),
+
+    // Generator
+    \instrument, "shaper__s2",
+    \detune, Pfunc({rrand(0.05, 0.15)} ! 3),
+    \bufnum, Pfunc({ ~tf_buf.choose }).trace,
+
     \dur, Pwrand([2.5, 5, 10, 15], [0.05, 0.15, 0.35, 0.45], inf),
+
+    // Env
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 3}),
     \sus, Pfunc({ ~padEnvSus ! 3 }),
-    \rel, (Pkey(\dur) * Pwhite(1.01, 1.15)),
-    \cAtk, Pexprand(0.01, 0.5),
+    \decay, Pkey(\dur) * Pwhite(0.4, 0.6),
+    \rel, Pkey(\dur) * Pwhite(0.5, 0.7),
+    \cAtk, Pexprand(1, 2),
+    \cDec, Pexprand(2, 4),
     \cRel, Pexprand(1, 2).neg,
-    \detune, Pfunc({rrand(0.05, 0.15)} ! 3),
-    \bufnum, Pfunc({ ~tf_buf.choose }),
+
+    // Harmony
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
-    \octave, Pfunc({~octave + 3}),
+    \octave, Pfunc({~octave}),
     \degree, Pfunc({ ([0] ++ Scale.pelog.degrees[1..] ++ [12]).scramble[0..2] }),
-    \curveMax, Pexprand(1, 5),
+
+    \curveMax, Pkey(\dur) * Pwhite(0.5, 1.0),
+
+    // Route
     \amp, Pexprand(0.07, 0.1),
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
@@ -496,7 +518,7 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \dur, 20,
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 2}),
     \sus, Pfunc({ ~padEnvSus ! 2 }),
-    \rel, Pkey(\dur) * Pwhite(1.01, 1.15), // Pfunc({ ~padEnvRel ! 2 }),
+    \rel, Pkey(\dur) * Pwhite(1.01, 1.15),
     \cAtk, Pexprand(1, 2),
     \cRel, Pexprand(1, 2).neg,
     \detune, Pfunc({rrand(0.05, 0.15)} ! 2),
@@ -513,13 +535,23 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 // 5/4 bar bass using low complexity wavetables
 ~evnts[\bass_s] = Pbindef(\bass_s,
     \instrument, "osc__s2",
-    \bufnum, Pfunc({ ~wt_buf[0] }),
+    \bufnum, Pfunc({ ~wt_buf[~bassBuff] }),
     \group, Pfunc({~mainGrp}),
+
+    // Instead of the instructions above, use the following for sending the
+    // arpeggiated melody to the external synth via MIDI:
+    //
+    // \type, \midi,       // This is a MIDI event
+    // \midiout, ~midiOut, // Send it to your Neutron
+    // \midicmd, \noteOn,  // The command is a note (default)
+    // \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
+
     \dur, Pseq([1, 1/2, 1/2, 1/2, 1, 1/2, 1/2, 1/2], inf),
-    \atk, 0.001,
+    \atk, 0.01,
     \sus, 0.2,
     \rel, Pexprand(0.4, 1),
-    \cAtk, 0,
+    \cAtk, -1,
+    \cDec, 1,
     \cRel, Pwhite(5, 10).neg,
     \detune, Pwhite(0.05, 0.08, inf),
     \scale, Scale.pelog,
@@ -535,6 +567,16 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 ~evnts[\bass] = Pbindef(\bass,
     \instrument, "osc__s2",
     \group, Pfunc({~mainGrp}),
+    \bufnum, Pfunc({ ~wt_buf[~bassBuff] }),
+
+    // Instead of the instructions above, use the following for sending the
+    // arpeggiated melody to the external synth via MIDI:
+    //
+    // \type, \midi,       // This is a MIDI event
+    // \midiout, ~midiOut, // Send it to your Neutron
+    // \midicmd, \noteOn,  // The command is a note (default)
+    // \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
+
     \dur, Pseq([
         myPrepeat.new(16, Pseq([1/2], 1)),
         myPrepeat.new(8, Pseq([1], 1)),
@@ -546,7 +588,6 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \cAtk, 0,
     \cRel, Pwhite(5, 10).neg,
     \detune, 0.01,
-    \bufnum, Pfunc({ ~wt_buf[0] }),
     \scale, Scale.pelog,
     \degree, Pseq([Prand([0, 1, 3], 24), Pseq([\], 1)], inf)
         + myPrepeat.new(25, Pwrand([0, 3, -4], [0.78, 0.1, 0.12], inf)),

@@ -18,11 +18,11 @@ var osc_s2_core = { |bufnum=0, freq=200, detune=0.2, amp=0.2, pan=0|
 SynthDef("osc__s2", {
     arg bufnum=0, freq=200, detune=0.2,
         amp=0.2, pan=0, out=0,
-        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
+        atk=0.01, decay=0.3, sus=1, rel=0.01, cAtk=1, cDec=0, cRel=(-1);
 
     var sig = osc_s2_core.(bufnum, freq, detune, amp, pan);
     var env = EnvGen.ar(
-        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
+        Env([0, 1, sus, 0], [atk, decay, rel], [cAtk, cDec, cRel]),
         doneAction: 2
     );
     sig = sig * env;
@@ -34,7 +34,7 @@ SynthDef("osc__s2", {
 SynthDef("osc__s2_adsr", {
     arg bufnum=0, freq=200, detune=0.2, gate=1,
         amp=0.2, pan=0, out=0,
-        atk=0.01, decay=0.3, sus=1, rel=0.01, cAtk=1, cRel=(-3);
+        atk=0.01, decay=0.3, sus=1, rel=0.01, cAtk=1, cDec=0, cRel=(-3);
 
     var sig = osc_s2_core.(bufnum, freq, detune, amp, pan);
     var env = EnvGen.kr(
@@ -43,7 +43,7 @@ SynthDef("osc__s2_adsr", {
             decayTime: decay,
             sustainLevel: sus,
             releaseTime: rel,
-            curve: [cAtk, cRel, cRel]
+            curve: [cAtk, cDec, cRel]
         ),
         gate: gate,
         doneAction: Done.freeSelf
@@ -57,14 +57,14 @@ SynthDef("osc__s2_adsr", {
 SynthDef("vosc__s2", {
     arg bufnum=0, numBufs=2, freq=200, detune=0.2,
         amp=0.2, pan=0, out=0,
-        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
+        atk=0.01, decay=0.3, sus=1, rel=0.01, cAtk=1, cDec=0, cRel=(-1);
 
     var sig, env, bufpos, detuneCtrl;
 
     // This will create a vibrato effect by changing the buffer position
     bufpos = bufnum + SinOsc.kr(XLine.kr(0.01, numBufs-1, atk+sus)).range(0, 1);
     env = EnvGen.ar(
-        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
+        Env([0, 1, sus, 0], [atk, decay, rel], [cAtk, cDec, cRel]),
         doneAction: Done.freeSelf
     );
 
@@ -82,11 +82,11 @@ SynthDef("vosc__s2", {
 SynthDef("shaper__s2", {
     arg bufnum=0, freq=200, detune=0.2, curveMax=1,
         amp=0.2, pan=0, out=0,
-        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
+        atk=0.01, decay=0.3, sus=1, rel=0.01, cAtk=1, cDec=0, cRel=(-1);
 
     var input, sig, env, curve, detuneCtrl;
     env = EnvGen.ar(
-        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
+        Env([0, 1, sus, 0], [atk, decay, rel], [cAtk, cDec, cRel]),
         doneAction: Done.freeSelf
     );
 

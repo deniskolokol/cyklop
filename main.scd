@@ -90,8 +90,12 @@ ServerQuit.removeAll;
 // Pads env control
 ~padEnvAtk = 0.5;
 ~padEnvDec = 0.5;
-~padEnvSus = 0.01;
+~padEnvSus = 0.5;
 ~padEnvRel = 5;
+
+
+// Instruments buffer indices
+~bassBuff = 1;
 
 
 // Timing decorator
