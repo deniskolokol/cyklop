@@ -36,7 +36,7 @@ if (pdupClass.notNil) {
 ~stretch = 25/128 * ~baseQuant;
 ~clicksPerBeat = 2;
 ~accentOn = 1; // Accent on the first click of each beat
-~accents = ~fillAccents.(~beatsPerBar, ~clicksPerBeat, ~accentOn).postln;
+~accents = ~fillAccents.(~beatsPerBar, ~clicksPerBeat, ~accentOn);
 ~measure = (1 / ~baseQuant * ~clicksPerBeat) ! 10;
 ~scheduler = TempoClock.new(~bpm/60)
     .schedAbs(0, { ~scheduler.beatsPerBar_(~beatsPerBar) });
@@ -532,20 +532,11 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 );
 
 
-// 5/4 bar bass using low complexity wavetables
-~evnts[\bass_s] = Pbindef(\bass_s,
+// 8/10 bar bass using low complexity wavetables
+~bassMain = Pbind(
     \instrument, "osc__s2",
     \bufnum, Pfunc({ ~wt_buf[~bassBuff] }),
     \group, Pfunc({~mainGrp}),
-
-    // Instead of the instructions above, use the following for sending the
-    // arpeggiated melody to the external synth via MIDI:
-    //
-    // \type, \midi,       // This is a MIDI event
-    // \midiout, ~midiOut, // Send it to your Neutron
-    // \midicmd, \noteOn,  // The command is a note (default)
-    // \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
-
     \dur, Pseq([1, 1/2, 1/2, 1/2, 1, 1/2, 1/2, 1/2], inf),
     \atk, 0.01,
     \sus, 0.2,
@@ -553,15 +544,73 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \cAtk, -1,
     \cDec, 1,
     \cRel, Pwhite(5, 10).neg,
-    \detune, Pwhite(0.05, 0.08, inf),
+    \detune, Pwhite(0.05, 0.08),
     \scale, Scale.pelog,
-    \degree, Pseq([0, 0, 0, Rest(), Prand([1, 3, 7], 1), 1, Prand([1, 3], 1), Rest()], inf),
+    \degree, Pseq([0, 0, 0, Rest(), Prand([1, 3, 7], 1), 1, Prand([1, 3], 1), Rest()]),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
-    \amp, Pwhite(0.55, 0.65, inf),
-    \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
+    \amp, Pwhite(0.55, 0.65),
+    \pan, Pwhite(0.01, 0.3),
     \out, Pfunc({~outBass}),
 );
+
+~bassOff1 = Pbind(
+    \instrument, "osc__s2",
+    \bufnum, Pfunc({ ~wt_buf[~bassBuff] }),
+    \group, Pfunc({~mainGrp}),
+    \dur, Pseq([1, 1, 2, 1/2, 1/2], inf),
+    \atk, 0.1,
+    \sus, Pwhite(0.8, 1),
+    \rel, Pkey(\dur) * Pwhite(0.8, 1.2),
+    \cAtk, -1,
+    \cDec, 1,
+    \cRel, Pwhite(5, 10).neg,
+    \detune, Pwhite(0.05, 0.08),
+    \scale, Scale.pelog,
+    \degree, Pseq([0, Prand([0, 1, 3], 1), 0, 0, Rest()]),
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave}),
+    \amp, Pwhite(0.55, 0.65),
+    \pan, Pwhite(0.01, 0.3),
+    \out, Pfunc({~outBass}),
+);
+
+~bassOff2 = Pbind(
+    \instrument, "osc__s2",
+    \bufnum, Pfunc({ ~wt_buf[~bassBuff] }),
+    \group, Pfunc({~mainGrp}),
+    \dur, Pseq(1/2 ! 10, inf),
+    \atk, 0.01,
+    \sus, Pseq([
+        Pkey(\dur) * Pwhite(0.8, 1.2),
+        Pwhite(0.2, 0.3, 4),
+        Pkey(\dur) * Pwhite(0.8, 1.2),
+        Pwhite(0.2, 0.3, 3),
+        0.1
+    ]),
+    \rel, Pexprand(0.4, 0.5),
+    \cAtk, -1,
+    \cDec, 1,
+    \cRel, Pwhite(5, 10).neg,
+    \detune, Pwhite(0.05, 0.08),
+    \scale, Scale.pelog,
+    \degree, Pseq([0, 0, 0, 0, Rest(), Prand([0, 1, 3], 3), Rest() ! 2]),
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave}),
+    \amp, Pwhite(0.55, 0.65),
+    \pan, Pwhite(0.01, 0.3),
+    \out, Pfunc({~outBass}),
+);
+
+
+~evnts[\bass_s] = Pdef(\bass_s,
+    Pseq([
+        Pseq([~bassMain], 3),
+        Prand([~bassOff1, ~bassOff2], 1),
+    ], inf)
+);
+
+
 
 // Arpeggiated bass using the first wavetable (low complexity roughly eq to sine)
 ~evnts[\bass] = Pbindef(\bass,
@@ -671,14 +720,35 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \instrument, "osc__s2",
     \bufnum, Pfunc({~wt_buf[2..4].choose}),
     \group, Pfunc({~mainGrp}),
+    \dur, Pseq((1/2) ! 8, inf),
+    \atk, 0.001,
+    \sus, 0.2,
+    \rel, Pexprand(0.4, 1),
+    \cAtk, 0,
+    \cRel, Pwhite(5, 10).neg,
+    \detune, Pexprand(0.18, 0.25),
+    \scale, Scale.pelog,
 
-    // Instead of the instructions above, use the following for sending the
-    // arpeggiated melody to the external synth via MIDI:
-    //
-    // \type, \midi,       // This is a MIDI event
-    // \midiout, ~midiOut, // Send it to your Neutron
-    // \midicmd, \noteOn,  // The command is a note (default)
-    // \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
+    // The following creates a repeating pattern:
+    // c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  c#3 -  d#3 -  c 4 -  c 4 -  § -  c#3 -  c#3 -  c 4 -  c 4 -  § -  c 3
+    // which is 24 of the 4ths notes long, and thus fits nicely into the 5/4 time signature (24 x 1/4 = 6 bars).
+    \degree, Place(#[12, 12, \, [7, 7, 1, 1, 0], [8, 8, 3, 1, \]], inf),
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave}),
+    \amp, Pseq([Pgeom(0.45, -1.dbamp, 8)], inf),
+    \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
+    \out, Pfunc({~outMelody}),
+);
+
+
+// The same as ~evnts[\arpg] but sent to the external synth via MIDI.
+~evnts[\arpg_ext] = Pbindef(\arpg_ext,
+    \group, Pfunc({~mainGrp}),
+
+    \type, \midi,       // This is a MIDI event
+    \midiout, ~midiOut, // Send it to your Neutron
+    \midicmd, \noteOn,  // The command is a note (default)
+    \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
 
     \dur, Pseq((1/2) ! 8, inf),
     \atk, 0.001,
@@ -699,6 +769,7 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outMelody}),
 );
+
 
 
 ~evnts[\mix_full] = Pdef(\mix_full,

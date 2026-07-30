@@ -95,7 +95,7 @@ ServerQuit.removeAll;
 
 
 // Instruments buffer indices
-~bassBuff = 1;
+~bassBuff = 0;
 
 
 // Timing decorator
@@ -378,6 +378,15 @@ ServerQuit.removeAll;
 
     "> Clearing notification centers...".post;
     NotificationCenter.clear;
+    postf("OK\n");
+
+    "> Removing all patterns...".post;
+    ~evnts.keysValuesDo({ |key, pattern|
+        if (pattern.isPlaying) {
+            pattern.stop;
+        };
+        ~evnts.removeAt(key);
+    });
     postf("OK\n");
 
     "> Removing all functions...".post;
