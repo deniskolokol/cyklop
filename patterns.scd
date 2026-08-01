@@ -502,14 +502,10 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 );
 
 
+// Pad intro for the first 8 bars of the track. Much less sparse and more noisy
+// than the main pad.
+// WARNING: For paraphonic mode on Behringer Neutron!
 ~evnts[\pad_intro] = Pbindef(\pad_intro,
-    // \instrument, "shaper__s2",
-    // \bufnum, Pfunc({ ~wt_buf[3..6].choose }),
-    // \group, Pfunc({~mainGrp}),
-
-    // Instead of the instructions above, use the following for sending the
-    // arpeggiated melody to the external synth via MIDI:
-    //
     \type, \midi,       // This is a MIDI event
     \midiout, ~midiOut, // Send it to your Neutron
     \midicmd, \noteOn,  // The command is a note (default)
@@ -519,9 +515,6 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 2}),
     \sus, Pfunc({ ~padEnvSus ! 2 }),
     \rel, Pkey(\dur) * Pwhite(1.01, 1.15),
-    \cAtk, Pexprand(1, 2),
-    \cRel, Pexprand(1, 2).neg,
-    \detune, Pfunc({rrand(0.05, 0.15)} ! 2),
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
@@ -530,6 +523,27 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \pan, Pwhite(-0.4, 0.4),
     \out, Pfunc({~outPads}),
 );
+
+
+// One additional note building a chord in the \pad_intro made with Neutron.
+// WARNING: Switch off paraphonic mode before recording.
+~evnts[\pad_high] = Pbindef(\pad_high,
+    \type, \midi,       // This is a MIDI event
+    \midiout, ~midiOut, // Send it to your Neutron
+    \midicmd, \noteOn,  // The command is a note (default)
+    \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
+
+    \dur, 20,
+    \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 2}),
+    \sus, Pfunc({ ~padEnvSus ! 2 }),
+    \rel, Pkey(\dur) * Pwhite(1.01, 1.15),
+    \scale, Scale.pelog,
+    \root, Pfunc({~root}),
+    \octave, Pfunc({~octave + 2}),
+    \degree, Pseq([3, 1, -2, -4], inf),
+    \amp, Pexprand(0.07, 0.1),
+);
+
 
 
 // 8/10 bar bass using low complexity wavetables
