@@ -175,7 +175,7 @@ var makeBeatVisualizer = { |parent|
         .background_(transparent);
     panel.decorator = FlowLayout(panel.bounds);
 
-    TempoView(panel, ~scheduler, ~clicksPerBeat, ~accents)
+    TempoView(panel, ~scheduler, ~clicksPerBeat, ~accents, animate: false)
 };
 
 

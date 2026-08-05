@@ -158,19 +158,21 @@ ServerQuit.removeAll;
 
 		var numSegs = i.linexp(0, 9, 4, 40).round;
 
-        Env(
-			// Env always begins and ends with zero
-			// Inner points are random from -1.0 to 1.0
-			[0]++({1.0.rand}.dup(numSegs-1) * [1, -1]).scramble++[0],
+        // Env always begins and ends with zero
+        // Inner points are random from -1.0 to 1.0
+        var levels = [0]++({1.0.rand}.dup(numSegs-1) * [1, -1]).scramble++[0];
 
-			// Greater segment duration variety in higher-index wavetables
-			{exprand(1, i.linexp(0, 9, 1, 50))}.dup(numSegs),
+		// Greater segment duration variety in higher-index wavetables
+        var durs = {exprand(1, i.linexp(0, 9, 1, 50))}.dup(numSegs);
 
-			// Low-index wavetables tend to be sinusoidal
-			// High index wavetables tend to have sharp angles and corners
-			{[\sine, 0, exprand(1,20) * [1,-1].choose].wchoose([9-i, 3, i].normalizeSum)}.dup(numSegs)
-		).asSignal(1024)
-	});
+        // Low-index wavetables tend to be sinusoidal
+        // High index wavetables tend to have sharp angles and corners
+        var curves = {[\sine, 0, exprand(1,20) * [1,-1].choose].wchoose([9-i, 3, i].normalizeSum)}.dup(numSegs);
+
+        postf("  Wavetable %:\n\tlevels: %\n\tdurs: %\n\tcurves: %\n\n", i, levels, durs, curves);
+
+        Env(levels, durs, curves).asSignal(1024)
+    });
     postf("OK\n");
 
     // Check if there are buffers already and clean them up
