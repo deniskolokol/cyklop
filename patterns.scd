@@ -511,7 +511,7 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \midicmd, \noteOn,  // The command is a note (default)
     \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
 
-    \dur, 20,
+    \dur, 40,
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 2}),
     \sus, Pfunc({ ~padEnvSus ! 2 }),
     \rel, Pkey(\dur) * Pwhite(1.01, 1.15),
