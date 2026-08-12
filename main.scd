@@ -155,7 +155,6 @@ ServerQuit.removeAll;
     // Create 10 wavetables with increasing complexity
     "> Creating wavetables...".post;
     ~wt_sig = 10.collect({ |i|
-
 		var numSegs = i.linexp(0, 9, 4, 40).round;
 
         // Env always begins and ends with zero
@@ -163,15 +162,13 @@ ServerQuit.removeAll;
         var levels = [0]++({1.0.rand}.dup(numSegs-1) * [1, -1]).scramble++[0];
 
 		// Greater segment duration variety in higher-index wavetables
-        var durs = {exprand(1, i.linexp(0, 9, 1, 50))}.dup(numSegs);
+        var times = {exprand(1, i.linexp(0, 9, 1, 50))}.dup(numSegs);
 
         // Low-index wavetables tend to be sinusoidal
         // High index wavetables tend to have sharp angles and corners
         var curves = {[\sine, 0, exprand(1,20) * [1,-1].choose].wchoose([9-i, 3, i].normalizeSum)}.dup(numSegs);
 
-        postf("  Wavetable %:\n\tlevels: %\n\tdurs: %\n\tcurves: %\n\n", i, levels, durs, curves);
-
-        Env(levels, durs, curves).asSignal(1024)
+        Env(levels, times, curves).asSignal(1024)
     });
     postf("OK\n");
 
