@@ -17,12 +17,9 @@ var createWavetableGUI = {
         makeBuffersFunc,
         parent,
         label,
-        signalType,
-        height=200,
-        width=800;
+        signalType;
 
     var scrollView, plotView;
-    var plotHeight = height - 60 - (margin * 4);
 
     // Function to update all plots
     var updateWavetablePlots = { |plotView|
@@ -36,41 +33,49 @@ var createWavetableGUI = {
         }
     };
 
-    StaticText(parent, Rect(0, 0, width, 30))
+    StaticText(parent, Rect(0, 0, (label.asString.size * 7) + (margin * 2), 30))
         .string_(label)
-        .font_(Font("Arial", 16))
+        .font_(fontLabel)
         .stringColor_(Color.white);
+
+    // Add control buttons
+    Button(parent, 80@30)
+        .states_([["Load", Color.white, colorButton]])
+        .action_({ |bt| "Load bank".postln });
+
+    Button(parent, 80@30)
+        .states_([["Edit", Color.white, colorButton]])
+        .action_({ |bt| "Edit bank".postln });
+
+    Button(parent, 80@30)
+        .states_([["Refresh", Color.white, colorButton]])
+        .action_({ |bt| updateWavetablePlots.(plotView) });
+
+    Button(parent, 80@30)
+        .states_([["Generate", Color.white, colorButton]])
+        .action_({ |bt|
+            makeBuffersFunc.value;
+            updateWavetablePlots.(plotView)
+        });
 
     // Create the plot view
     plotView = Plotter(
         name: "WT",
-        bounds: Rect(0, 0, width-(margin * 2), plotHeight),
+        bounds: Rect(0, 0, parent.bounds.width-(margin * 2), parent.bounds.height - (30 + margin + gap)),
         parent: parent
-    );
-    plotView.value = wtArr;
-    plotView.editMode = true;
+    )
+    .plotMode_(\pfilled)
+    .value_(wtArr)
+    .editMode_(false);
+
     plotView.setProperties(
         \fontColor, Color(0.5, 1, 0);,
-        \plotColor, Color.red(0.7),
+        \plotColor, Color.red(0.75).alpha_(0.5),
         \backgroundColor, transparent,
         \gridColorX, Color.yellow(0.5),
         \gridColorY, Color.yellow(0.5)
     );
     plotView.refresh;
-
-    // Add control buttons
-    parent.decorator.nextLine;
-
-    Button(parent, 120@30)
-        .states_([["Refresh Plots", Color.white, colorButton]])
-        .action_({ updateWavetablePlots.(plotView) });
-
-    Button(parent, 120@30)
-        .states_([["Generate New", Color.white, colorButton]])
-        .action_({ 
-            makeBuffersFunc.value;
-            updateWavetablePlots.(plotView)
-        });
 };
 
 
@@ -210,7 +215,7 @@ var makeRecordButton = { |parent|
 
 // Main GUI creation function
 ~makeGUI = {
-    var winWidth = 1100;
+    var winWidth = 1150;
     var winHeight = Window.screenBounds.height-55;
     var palette = QPalette.dark;
     var btPlay, popupNote;
@@ -327,19 +332,15 @@ var makeRecordButton = { |parent|
         ~makeWavetableBufs,
         plotPanel1,
         "Wavetables (Osc & VOsc)",
-        signalType: \wavetable,
-        height: plotPanelHeight-(margin*2),
-        width: (winWidth/2)-(margin*3)
+        signalType: \wavetable
     );
     
     createWavetableGUI.(
         ~tf_sig,
         ~makeShaperBufs,
         plotPanel2,
-        "Transfer Functions (Shaper)",
-        signalType: \transfer,
-        height: plotPanelHeight-(margin*2),
-        width: (winWidth/2)-(margin*3)
+        "Transfer Func (Shaper)",
+        signalType: \transfer
     );
 
     ~win.front;
