@@ -41,15 +41,34 @@ var createWavetableGUI = {
     // Add control buttons
     Button(parent, 80@30)
         .states_([["Load", Color.white, colorButton]])
-        .action_({ |bt| "Load bank".postln });
+        .action_({ |bt|
+            var tempData;
+            FileDialog({ |path|
+                if (File.exists(path) and: { File.type(path) != \directory }) {
+                    tempData = File.use(path, "r", { |file| file.readAllString });
+                    tempData.postln;
+                } {
+                    ("Error: Selected path is not a valid file: " ++ path).postln;
+                };
+            },
+            fileMode: 1,
+            acceptMode: 0, // Open mode
+            stripResult: true,
+            path: thisProcess.nowExecutingPath
+            );
+        });
 
     Button(parent, 80@30)
         .states_([["Edit", Color.white, colorButton]])
-        .action_({ |bt| "Edit bank".postln });
+        .action_({ |bt|
+            "Edit bank".postln
+        });
 
     Button(parent, 80@30)
         .states_([["Refresh", Color.white, colorButton]])
-        .action_({ |bt| updateWavetablePlots.(plotView) });
+        .action_({ |bt|
+            updateWavetablePlots.(plotView)
+        });
 
     Button(parent, 80@30)
         .states_([["Generate", Color.white, colorButton]])
