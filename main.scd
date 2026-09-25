@@ -132,6 +132,45 @@ ServerQuit.removeAll;
 };
 
 
+// Save current configuration to a file.
+~saveConfig = {
+    var configPath = ~projectPath +/+ "config.txt";
+    var configData = (
+        midiTrack: ~midiTrack,
+        rootMIDI: ~rootMIDI,
+        root: ~root,
+        octave: ~octave,
+        padEnvAtk: ~padEnvAtk,
+        padEnvDec: ~padEnvDec,
+        padEnvSus: ~padEnvSus,
+        padEnvRel: ~padEnvRel,
+        wtBank: ~wavetableBank
+    );
+    File.writeText(configPath, configData.asJSON);
+    postf("Configuration saved to %\n", configPath);
+};
+
+// Load configuration from a file if it exists.
+~loadConfig = {
+    var configPath = ~projectPath +/+ "config.txt";
+    if (File.exists(configPath)) {
+        var configData = File.readText(configPath).asJSON;
+        ~midiTrack = configData[\midiTrack] ?? ~midiTrack;
+        ~rootMIDI = configData[\rootMIDI] ?? ~rootMIDI;
+        ~root = configData[\root] ?? ~root;
+        ~octave = configData[\octave] ?? ~octave;
+        ~padEnvAtk = configData[\padEnvAtk] ?? ~padEnvAtk;
+        ~padEnvDec = configData[\padEnvDec] ?? ~padEnvDec;
+        ~padEnvSus = configData[\padEnvSus] ?? ~padEnvSus;
+        ~padEnvRel = configData[\padEnvRel] ?? ~padEnvRel;
+        ~wavetableBank = configData[\wtBank] ?? ~wavetableBank;
+
+        postf("Configuration loaded from %\n", configPath);
+    } {
+        postf("No configuration file found at %\nDefaults used.", configPath);
+    };
+};
+
 // Buffers.
 ~cleanupWavetableBufs = {
     // Cleans up buffers used for wavetables and Shaper.
@@ -147,6 +186,61 @@ ServerQuit.removeAll;
         ~tf_buf.do({ |buf| buf.free });
         ~tf_buf = nil;
     };
+};
+
+
+// Save Events to YAML
+~saveListToYAML = { |data, filePath|
+    var yamlContent = "- ";
+    
+    yamlContent = yamlContent ++ data.collect { |event, i|
+        var curvesYAML = event[\curves].collect { |curve|
+            if (curve.isSymbol) { curve.asString } { curve }
+        }.asCompileString;
+        
+        (
+            "name: " ++ event[\name].quote ++ "\n" ++
+            "  levels: " ++ event[\levels].asCompileString ++ "\n" ++
+            "  times: " ++ event[\times].asCompileString ++ "\n" ++
+            "  curves: " ++ curvesYAML
+        )
+    }.join("\n- ");
+    
+    File.use(filePath, "w") { |file|
+        file.write(yamlContent)
+    };
+    
+    ("Saved % events to %".format(data.size, filePath)).postln;
+};
+
+
+~loadWavetableBank = { |data|
+    ~cleanupWavetableBufs.();
+    ~wt_sig = List.newClear(data.size);
+    data.collect({ |item|
+        item[\env] = Env(item[\levels], item[\times], item[\curves]).asSignal(1024);
+        ~wt_sig.add(item);
+    });
+
+    // Load into buffers in wavetable format
+    "> Loading wavetables into buffers...".post;
+    ~wt_buf = Buffer.allocConsecutive(~wt_sig.size, s, 2048, 1, {
+        arg buf, index;
+        var rout;
+        buf.setnMsg(0, ~wt_sig[index].asWavetable);
+        rout = Routine {
+            if (buf.numFrames.isNil.not) {
+                postf(
+                    "Wavetable % loaded into buffer % with % frames.\n",
+                    ~wt_sig[index][\name], buf.bufnum, buf.numFrames
+                );
+                ~wt_sig[index][\bufNum] = buf.bufnum;
+                rout.stop;
+            } {
+                0.01.wait;
+            };
+        }.play;
+    });
 };
 
 
@@ -219,7 +313,6 @@ ServerQuit.removeAll;
         buf.setnMsg(0, ~tf_sig[index].asWavetableNoWrap);
     });
 }));
-
 
 // Aggregate buffer creation
 ~makeBuffers = {
@@ -362,6 +455,9 @@ ServerQuit.removeAll;
 ~cleanup = {
     "[i] Cleaning up".postln;
     ~win.close;
+
+    "> Saving curent configuration...".post;
+    ~saveConfig.();
 
     "> Resetting bus counter...".post;
     s.newBusAllocators;
