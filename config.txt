@@ -1,0 +1,2 @@
+('padEnvAtk': 0.5, 'rootMIDI': 60, 'wtBank': "/Users/deko/Documents/src/cyklop/wtbank/bank1.scd", 'midiTrack': 'synth', 
+  'padEnvRel': 5, 'padEnvDec': 0.5, 'root': 0, 'octave': 3.0, 'padEnvSus': 0.5)

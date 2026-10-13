@@ -43,14 +43,18 @@ var createWavetableGUI = {
         .states_([["Load", Color.white, colorButton]])
         .action_({ |bt|
             var data;
+
             FileDialog({ |path|
                 if (File.exists(path) and: { File.type(path) != \directory }) {
                     // Store the selected wavetable bank path
                     ~wavetableBank = path;
 
                     // Load bank data from the selected file
-                    data = File.use(path, "r", { |file| file.readAllString });
+                    data = File.use(path, "r", { |file| file.readAllString }).interpret;
                     ~loadWavetableBank.(data);
+
+                    // Refresh the plots after loading new data
+                    updateWavetablePlots.(plotView);
                 } {
                     ("Error: Selected path is not a valid file: " ++ path).postln;
                 };
@@ -58,7 +62,7 @@ var createWavetableGUI = {
             fileMode: 1,
             acceptMode: 0, // Open mode
             stripResult: true,
-            path: PathName(thisProcess.nowExecutingPath).pathOnly
+            path: ~projectPath +/+ "wtbank"
             );
         });
 

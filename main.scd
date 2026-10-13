@@ -146,7 +146,7 @@ ServerQuit.removeAll;
         padEnvRel: ~padEnvRel,
         wtBank: ~wavetableBank
     );
-    File.writeText(configPath, configData.asJSON);
+    File.use(configPath, "w", { |f| f.write(configData.asCompileString)});
     postf("Configuration saved to %\n", configPath);
 };
 
@@ -154,7 +154,8 @@ ServerQuit.removeAll;
 ~loadConfig = {
     var configPath = ~projectPath +/+ "config.txt";
     if (File.exists(configPath)) {
-        var configData = File.readText(configPath).asJSON;
+        var configData = File.readAllString(configPath).interpret;
+
         ~midiTrack = configData[\midiTrack] ?? ~midiTrack;
         ~rootMIDI = configData[\rootMIDI] ?? ~rootMIDI;
         ~root = configData[\root] ?? ~root;
@@ -216,10 +217,8 @@ ServerQuit.removeAll;
 
 ~loadWavetableBank = { |data|
     ~cleanupWavetableBufs.();
-    ~wt_sig = List.newClear(data.size);
-    data.collect({ |item|
-        item[\env] = Env(item[\levels], item[\times], item[\curves]).asSignal(1024);
-        ~wt_sig.add(item);
+    ~wt_sig = data.collect({ |item|
+        Env(item[\levels], item[\times], item[\curves]).asSignal(1024)
     });
 
     // Load into buffers in wavetable format
@@ -232,9 +231,9 @@ ServerQuit.removeAll;
             if (buf.numFrames.isNil.not) {
                 postf(
                     "Wavetable % loaded into buffer % with % frames.\n",
-                    ~wt_sig[index][\name], buf.bufnum, buf.numFrames
+                    data[index][\name], buf.bufnum, buf.numFrames
                 );
-                ~wt_sig[index][\bufNum] = buf.bufnum;
+                data[index][\bufNum] = buf.bufnum;
                 rout.stop;
             } {
                 0.01.wait;
@@ -429,7 +428,7 @@ ServerQuit.removeAll;
             Array.fill(clicks, { |j| if (accentOn.includes(j+1)) { 1 } { 0 }})
         });
     }
-    { "Invalid accentOn value. Must be a positive Integer or an Array of click indices.".postln; 
+ł    { "Invalid accentOn value. Must be a positive Integer or an Array of click indices.".postln; 
       accents = Array.fill(beats, { |i| Array.fill(clicks, 0) }) // Default to no accents
     };
 };
@@ -519,6 +518,9 @@ s.waitForBoot({
 
 	// Trigger re-instantiating of the FX groups.
     s.freeAll;
+
+    // Load configuration from file if it exists, otherwise use defaults.
+    ~loadConfig.();
 
     // // Show server meter and Node Tree.
     // s.meter;

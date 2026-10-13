@@ -55,7 +55,14 @@
     postf("Keyboard source: %; Controller source: %\n", srcKeyboard, srcCtlr);
 
     // MIDIOut object for sending messages to external synth
-    ~midiOut = MIDIOut.newByName("Studio 1824c", "Studio 1824c");
+    //
+    // This will send it to whatever is connected to the otput of the audio
+    // interface, e.g., Studio 1824c:
+    // ~midiOut = MIDIOut.newByName("Studio 1824c", "Studio 1824c");
+    //
+    // This will send it directly to Neutron synth (if it's running and
+    // connected via USB):
+    ~midiOut = MIDIOut.newByName("Neutron", "Neutron");
 
     // Arturia MINILAB 3
     //
