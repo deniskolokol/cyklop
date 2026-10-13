@@ -247,7 +247,9 @@ var makeRecordButton = { |parent|
     var palette = QPalette.dark;
     var btPlay, popupNote;
     var rootWatcher;
-    var ctrlPaneTransp, ctrlPaneTranspTop, ctrlPaneNotes, plotPanel1, plotPanel2;
+    var ctrlPaneTransp, ctrlPaneTranspTop, ctrlPaneNotes;
+    var mainPanel, mainTabbedView;
+    // var plotPanel1, plotPanel2;
     var panelHeight = 200;  // height for control panels
     var plotPanelHeight = winHeight-panelHeight-(margin*4);  // remaining height for plot panels
     var guiPatternKeys;
@@ -344,31 +346,40 @@ var makeRecordButton = { |parent|
 
     ~win.view.decorator.nextLine;
 
-    // Create two adjacent panels for plots
-    plotPanel1 = View(~win, (winWidth/2-margin)@plotPanelHeight)
+    // Create main panel for tabbed view
+    mainPanel = View(~win, (winWidth-margin)@plotPanelHeight)
         .background_(colorPane);
-    plotPanel1.decorator = FlowLayout(plotPanel1.bounds, margin@margin, gap@gap);
-    
-    plotPanel2 = View(~win, (winWidth/2-margin)@plotPanelHeight)
-        .background_(colorPane);
-    plotPanel2.decorator = FlowLayout(plotPanel2.bounds, margin@margin, gap@gap);
+    mainPanel.decorator = FlowLayout(mainPanel.bounds, margin@margin, gap@gap);
 
-    // Create wavetable GUIs in their respective panels
-    createWavetableGUI.(
-        ~wt_sig,
-        ~makeWavetableBufs,
-        plotPanel1,
-        "Wavetables (Osc & VOsc)",
-        signalType: \wavetable
-    );
-    
-    createWavetableGUI.(
-        ~tf_sig,
-        ~makeShaperBufs,
-        plotPanel2,
-        "Transfer Func (Shaper)",
-        signalType: \transfer
-    );
+    mainTabbedView = TabbedView(mainPanel, mainPanel.bounds, ["Wavetables", "Transfer Func"])
+        .tabPosition_(\top)
+        .tabHeight_(30)
+        .tabWidth_(150)
+        .font_(fontLabel)
+        .unfocusedColors_([Color.gray(0.1)])
+        .focusFrameColor_(colorButton)
+        .stringColor_(Color.white)
+        .stringFocusedColor_(Color.white);
+
+    mainTabbedView.views[0].flow({ |pane|
+        createWavetableGUI.(
+            ~wt_sig,
+            ~makeWavetableBufs,
+            pane,
+            "Wavetables (Osc & VOsc)",
+            signalType: \wavetable
+        );
+    });
+
+    mainTabbedView.views[1].flow({ |pane| 
+        createWavetableGUI.(
+            ~tf_sig,
+            ~makeShaperBufs,
+            pane,
+            "Transfer Func (Shaper)",
+            signalType: \transfer
+        );
+    });
 
     ~win.front;
 };
