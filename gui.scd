@@ -10,6 +10,30 @@ var beatColors = (
     \accent: Color.gray
 );
 
+// GUI elements available in the global scope
+var mainTabbedView;
+var editorTypes = (
+    \wavetable: "Wavetables",
+    \transfer: "Transfer Func",
+    \wavetableEdit: "Wavetables: edit",
+    \transferEdit: "Transfer Func: edit"
+);
+
+var openEditorTab = { |editorType|
+    var openTabs = mainTabbedView.instVarAt(mainTabbedView.class.instVarNames.indexOf(\labels));
+    if (openTabs.includes(editorTypes[editorType])) {
+        mainTabbedView.focus(openTabs.indexOf(editorTypes[editorType]))
+    } {
+        mainTabbedView.add(editorTypes[editorType]);
+        mainTabbedView.views[mainTabbedView.views.size-1].flow({ |pane|
+            var paneHost = View(
+                pane,
+                (pane.bounds.width - (margin * 2))@(pane.bounds.height - (margin * 2))
+            ).background_(transparent);
+            paneHost.decorator = FlowLayout(paneHost.bounds, margin@margin, gap@gap);
+        });
+    };
+};
 
 // Wavetable GUI Visualizer
 var createWavetableGUI = {
@@ -69,7 +93,8 @@ var createWavetableGUI = {
     Button(parent, 80@30)
         .states_([["Edit", Color.white, colorButton]])
         .action_({ |bt|
-            "Edit bank".postln
+            "Edit bank".postln;
+            openEditorTab.((signalType.asString ++ "Edit").asSymbol);
         });
 
     Button(parent, 80@30)
@@ -248,7 +273,7 @@ var makeRecordButton = { |parent|
     var btPlay, popupNote;
     var rootWatcher;
     var ctrlPaneTransp, ctrlPaneTranspTop, ctrlPaneNotes;
-    var mainPanel, mainTabbedView;
+    var mainPanel;
     // var plotPanel1, plotPanel2;
     var panelHeight = 200;  // height for control panels
     var plotPanelHeight = winHeight-panelHeight-(margin*4);  // remaining height for plot panels
@@ -356,26 +381,32 @@ var makeRecordButton = { |parent|
         .tabHeight_(30)
         .tabWidth_(150)
         .font_(fontLabel)
-        .unfocusedColors_([Color.gray(0.1)])
-        .focusFrameColor_(colorButton)
+        .unfocusedColors_([Color.gray(0.15)])
+        .focusFrameColor_(transparent)
         .stringColor_(Color.white)
         .stringFocusedColor_(Color.white);
 
     mainTabbedView.views[0].flow({ |pane|
+        var paneHost = View(pane, (pane.bounds.width - (margin * 2))@(pane.bounds.height - (margin * 2)))
+            .background_(transparent);
+        paneHost.decorator = FlowLayout(paneHost.bounds, margin@margin, gap@gap);
         createWavetableGUI.(
             ~wt_sig,
             ~makeWavetableBufs,
-            pane,
+            paneHost,
             "Wavetables (Osc & VOsc)",
             signalType: \wavetable
         );
     });
 
-    mainTabbedView.views[1].flow({ |pane| 
+    mainTabbedView.views[1].flow({ |pane|
+        var paneHost = View(pane, (pane.bounds.width - (margin * 2))@(pane.bounds.height - (margin * 2)))
+            .background_(transparent);
+        paneHost.decorator = FlowLayout(paneHost.bounds, margin@margin, gap@gap);
         createWavetableGUI.(
             ~tf_sig,
             ~makeShaperBufs,
-            pane,
+            paneHost,
             "Transfer Func (Shaper)",
             signalType: \transfer
         );
