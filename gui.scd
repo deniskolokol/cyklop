@@ -31,6 +31,11 @@ var openEditorTab = { |editorType|
                 (pane.bounds.width - (margin * 2))@(pane.bounds.height - (margin * 2))
             ).background_(transparent);
             paneHost.decorator = FlowLayout(paneHost.bounds, margin@margin, gap@gap);
+            if (editorType == \wavetableEdit) {
+                EnvEditor.makeGUI(paneHost, ~bank)
+            } {
+                "Transfer Func edit GUI not implemented yet.".postln;
+            };
         });
     };
 };

@@ -217,7 +217,8 @@ ServerQuit.removeAll;
 
 ~loadWavetableBank = { |data|
     ~cleanupWavetableBufs.();
-    ~wt_sig = data.collect({ |item|
+    ~bank = data;
+    ~wt_sig = ~bank[\presets].collect({ |item|
         Env(item[\levels], item[\times], item[\curves]).asSignal(1024)
     });
 
@@ -227,13 +228,14 @@ ServerQuit.removeAll;
         arg buf, index;
         var rout;
         buf.setnMsg(0, ~wt_sig[index].asWavetable);
+
         rout = Routine {
             if (buf.numFrames.isNil.not) {
                 postf(
                     "Wavetable % loaded into buffer % with % frames.\n",
-                    data[index][\name], buf.bufnum, buf.numFrames
+                    ~bank[\presets][index][\name], buf.bufnum, buf.numFrames
                 );
-                data[index][\bufNum] = buf.bufnum;
+                ~bank[\presets][index][\bufNum] = buf.bufnum;
                 rout.stop;
             } {
                 0.01.wait;
