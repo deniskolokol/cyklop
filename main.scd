@@ -154,7 +154,6 @@ ServerQuit.removeAll;
         padEnvDec: ~padEnvDec,
         padEnvSus: ~padEnvSus,
         padEnvRel: ~padEnvRel,
-        wtBank: ~wavetableBank
     );
     File.use(configPath, "w", { |f| f.write(configData.asCompileString)});
     postf("Configuration saved to %\n", configPath);
@@ -174,7 +173,6 @@ ServerQuit.removeAll;
         ~padEnvDec = configData[\padEnvDec] ?? ~padEnvDec;
         ~padEnvSus = configData[\padEnvSus] ?? ~padEnvSus;
         ~padEnvRel = configData[\padEnvRel] ?? ~padEnvRel;
-        ~wavetableBank = configData[\wtBank] ?? ~wavetableBank;
 
         postf("Configuration loaded from %\n", configPath);
     } {

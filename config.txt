@@ -1,2 +1,2 @@
-('padEnvAtk': 0.01, 'rootMIDI': 60, 'wtBank': "bank1.scd", 'midiTrack': 'root', 
-  'padEnvRel': 1.0, 'padEnvDec': 0.5, 'root': 0, 'octave': 3.0, 'padEnvSus': 1.2673228346457)
+('octave': 3.0, 'midiTrack': 'root', 'padEnvRel': 1.0, 'padEnvDec': 0.5, 
+  'padEnvAtk': 0.01, 'root': 0, 'rootMIDI': 60, 'padEnvSus': 1.2673228346457)
