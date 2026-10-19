@@ -18,11 +18,11 @@ var osc_s2_core = { |bufnum=0, freq=200, detune=0.2, amp=0.2, pan=0|
 SynthDef("osc__s2", {
     arg bufnum=0, freq=200, detune=0.2,
         amp=0.2, pan=0, out=0,
-        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
+        atk=0.01, decay=0.3, sus=1, rel=0.01, cAtk=1, cDec=0, cRel=(-1);
 
     var sig = osc_s2_core.(bufnum, freq, detune, amp, pan);
     var env = EnvGen.ar(
-        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
+        Env([0, 1, sus, 0], [atk, decay, rel], [cAtk, cDec, cRel]),
         doneAction: 2
     );
     sig = sig * env;
@@ -34,7 +34,7 @@ SynthDef("osc__s2", {
 SynthDef("osc__s2_adsr", {
     arg bufnum=0, freq=200, detune=0.2, gate=1,
         amp=0.2, pan=0, out=0,
-        atk=0.01, decay=0.3, sus=1, rel=0.01, cAtk=1, cRel=(-3);
+        atk=0.01, decay=0.3, sus=1, rel=0.01, cAtk=1, cDec=0, cRel=(-3);
 
     var sig = osc_s2_core.(bufnum, freq, detune, amp, pan);
     var env = EnvGen.kr(
@@ -43,7 +43,7 @@ SynthDef("osc__s2_adsr", {
             decayTime: decay,
             sustainLevel: sus,
             releaseTime: rel,
-            curve: [cAtk, cRel, cRel]
+            curve: [cAtk, cDec, cRel]
         ),
         gate: gate,
         doneAction: Done.freeSelf
@@ -57,14 +57,14 @@ SynthDef("osc__s2_adsr", {
 SynthDef("vosc__s2", {
     arg bufnum=0, numBufs=2, freq=200, detune=0.2,
         amp=0.2, pan=0, out=0,
-        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
+        atk=0.01, decay=0.3, sus=1, rel=0.01, cAtk=1, cDec=0, cRel=(-1);
 
     var sig, env, bufpos, detuneCtrl;
 
     // This will create a vibrato effect by changing the buffer position
     bufpos = bufnum + SinOsc.kr(XLine.kr(0.01, numBufs-1, atk+sus)).range(0, 1);
     env = EnvGen.ar(
-        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
+        Env([0, 1, sus, 0], [atk, decay, rel], [cAtk, cDec, cRel]),
         doneAction: Done.freeSelf
     );
 
@@ -82,11 +82,11 @@ SynthDef("vosc__s2", {
 SynthDef("shaper__s2", {
     arg bufnum=0, freq=200, detune=0.2, curveMax=1,
         amp=0.2, pan=0, out=0,
-        atk=0.01, sus=1, rel=0.01, cAtk=1, cRel=(-1);
+        atk=0.01, decay=0.3, sus=1, rel=0.01, cAtk=1, cDec=0, cRel=(-1);
 
     var input, sig, env, curve, detuneCtrl;
     env = EnvGen.ar(
-        Env([0, 1, 1, 0], [atk, sus, rel], [cAtk, 0, cRel]),
+        Env([0, 1, sus, 0], [atk, decay, rel], [cAtk, cDec, cRel]),
         doneAction: Done.freeSelf
     );
 
@@ -109,7 +109,7 @@ SynthDef("shaper__s2", {
 // DRUMS.
 
 // Kick drums and snare are inspired by:
-// https://www.youtube.com/watch?v=xYc7_PbbtuE&list=WL&index=59&t=2s
+// https://www.youtube.com/watch?v=xYc7_PbbtuE
 
 // Synthetic kick drum.
 SynthDef(\kick_synth, {
@@ -135,7 +135,7 @@ SynthDef(\kick_synth, {
     snd = snd * Env.perc(att, rel, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
 
-    // write mono copy to recording bus (if set)
+    // Write mono copy to recording bus (if set)
     Out.ar(outRec, snd);
 
     snd = Pan2.ar(snd, pan);
@@ -143,7 +143,7 @@ SynthDef(\kick_synth, {
 }).add;
 
 
-// "Acoutsic" kick drum
+// "Acoutsic" kick drum.
 SynthDef(\kick_acoustic, {
     arg out=0, outRec, att=0.001, rel=1.3, curve=(-6), amp=0.56, pan=0,
         bpfreq1=7120, bprq1=0.5, bpfreq2=3120, bprq2=0.3,
@@ -180,7 +180,7 @@ SynthDef(\kick_acoustic, {
     snd = snd * Env.perc(att, rel, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
 
-    // write mono copy to recording bus
+    // Write mono copy to recording bus.
     Out.ar(outRec, snd);
 
     snd = Pan2.ar(snd, pan);
@@ -239,10 +239,10 @@ SynthDef(\snare, {
     snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
 
-    // write mono copy to recording bus before spreading
+    // Write mono copy to recording bus before spreading.
     Out.ar(outRec, Mix.ar(snd));
 
-    // monitoring output
+    // Monitoring output.
     Out.ar(out, snd);
 }).add;
 
@@ -285,10 +285,10 @@ SynthDef(\tom, {
     snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
 
-    // write mono copy to recording bus before spreading
+    // Write mono copy to recording bus before spreading.
     Out.ar(outRec, Mix.ar(snd));
 
-    // monitoring output
+    // Monitoring output.
     Out.ar(out, snd);
 }).add;
 
@@ -304,17 +304,18 @@ SynthDef(\hihat, {
     signal = signal * env * attenuate;
     signal = Pan2.ar(signal, pan);
 
-    // record
+    // Write a copy to recording bus before spreading.
     Out.ar(outRec, signal);
 
-    // monitor
+    // Monitoring output.
     Out.ar(out, signal);
 }).add;
 
 
 // FX.
 SynthDef(\reverb, {
-    arg in, out=0, xFade=1, predelay=0.1, revtime=1.8, lpf=4500, mix=0.15;
+    arg in, out=0,
+        xFade=1, predelay=0.1, revtime=1.8, lpf=4500, mix=0.15;
     var signal;
     var dry = In.ar(in, 2);
     var temp = In.ar(in, 2);

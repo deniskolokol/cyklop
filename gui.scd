@@ -10,6 +10,35 @@ var beatColors = (
     \accent: Color.gray
 );
 
+// GUI elements available in the global scope
+var mainTabbedView;
+var editorTypes = (
+    \wavetable: "Wavetables",
+    \transfer: "Transfer Func",
+    \wavetableEdit: "Wavetables: edit",
+    \transferEdit: "Transfer Func: edit"
+);
+
+var openEditorTab = { |editorType|
+    var openTabs = mainTabbedView.instVarAt(mainTabbedView.class.instVarNames.indexOf(\labels));
+    if (openTabs.includes(editorTypes[editorType])) {
+        mainTabbedView.focus(openTabs.indexOf(editorTypes[editorType]))
+    } {
+        mainTabbedView.add(editorTypes[editorType]);
+        mainTabbedView.views[mainTabbedView.views.size-1].flow({ |pane|
+            var paneHost = View(
+                pane,
+                (pane.bounds.width - (margin * 2))@(pane.bounds.height - (margin * 2))
+            ).background_(transparent);
+            paneHost.decorator = FlowLayout(paneHost.bounds, margin@margin, gap@gap);
+            if (editorType == \wavetableEdit) {
+                EnvEditor.makeGUI(paneHost, ~bank)
+            } {
+                "Transfer Func edit GUI not implemented yet.".postln;
+            };
+        });
+    };
+};
 
 // Wavetable GUI Visualizer
 var createWavetableGUI = {
@@ -17,12 +46,9 @@ var createWavetableGUI = {
         makeBuffersFunc,
         parent,
         label,
-        signalType,
-        height=200,
-        width=800;
+        signalType;
 
     var scrollView, plotView;
-    var plotHeight = height - 60 - (margin * 4);
 
     // Function to update all plots
     var updateWavetablePlots = { |plotView|
@@ -36,41 +62,43 @@ var createWavetableGUI = {
         }
     };
 
-    StaticText(parent, Rect(0, 0, width, 30))
+    StaticText(parent, Rect(0, 0, (label.asString.size * 7) + (margin * 2), 30))
         .string_(label)
-        .font_(Font("Arial", 16))
+        .font_(fontLabel)
         .stringColor_(Color.white);
+
+    // Add control buttons
+    Button(parent, 80@30)
+        .states_([["Refresh", Color.white, colorButton]])
+        .action_({ |bt|
+            updateWavetablePlots.(plotView)
+        });
+
+    Button(parent, 80@30)
+        .states_([["Generate", Color.white, colorButton]])
+        .action_({ |bt|
+            makeBuffersFunc.value;
+            updateWavetablePlots.(plotView)
+        });
 
     // Create the plot view
     plotView = Plotter(
         name: "WT",
-        bounds: Rect(0, 0, width-(margin * 2), plotHeight),
+        bounds: Rect(0, 0, parent.bounds.width-(margin * 2), parent.bounds.height - (30 + margin + gap)),
         parent: parent
-    );
-    plotView.value = wtArr;
-    plotView.editMode = true;
+    )
+    .plotMode_(\pfilled)
+    .value_(wtArr)
+    .editMode_(false);
+
     plotView.setProperties(
         \fontColor, Color(0.5, 1, 0);,
-        \plotColor, Color.red(0.7),
+        \plotColor, Color.red(0.75).alpha_(0.5),
         \backgroundColor, transparent,
         \gridColorX, Color.yellow(0.5),
         \gridColorY, Color.yellow(0.5)
     );
     plotView.refresh;
-
-    // Add control buttons
-    parent.decorator.nextLine;
-
-    Button(parent, 120@30)
-        .states_([["Refresh Plots", Color.white, colorButton]])
-        .action_({ updateWavetablePlots.(plotView) });
-
-    Button(parent, 120@30)
-        .states_([["Generate New", Color.white, colorButton]])
-        .action_({ 
-            makeBuffersFunc.value;
-            updateWavetablePlots.(plotView)
-        });
 };
 
 
@@ -175,7 +203,7 @@ var makeBeatVisualizer = { |parent|
         .background_(transparent);
     panel.decorator = FlowLayout(panel.bounds);
 
-    TempoView(panel, ~scheduler, ~clicksPerBeat, ~accents)
+    TempoView(panel, ~scheduler, ~clicksPerBeat, ~accents, animate: false)
 };
 
 
@@ -187,10 +215,7 @@ var makeRecordButton = { |parent|
         ])
         .value_(0)
         .action_({ |bt|
-            // var path = ~projectPath +/+ format("recording_%.wav", Date.getDate.stamp);
-
             if (bt.value == 1) {
-
                 // Omitting the first two buses, as ~outDrums is a stereo bus
                 // for monitoring (there are individual buses for drum recording).
                 var bus = ~outDrums + 2;
@@ -210,12 +235,13 @@ var makeRecordButton = { |parent|
 
 // Main GUI creation function
 ~makeGUI = {
-    var winWidth = 1100;
+    var winWidth = 1150;
     var winHeight = Window.screenBounds.height-55;
     var palette = QPalette.dark;
     var btPlay, popupNote;
     var rootWatcher;
-    var ctrlPaneTransp, ctrlPaneTranspTop, ctrlPaneNotes, plotPanel1, plotPanel2;
+    var ctrlPaneTransp, ctrlPaneTranspTop, ctrlPaneNotes;
+    var mainPanel;
     var panelHeight = 200;  // height for control panels
     var plotPanelHeight = winHeight-panelHeight-(margin*4);  // remaining height for plot panels
     var guiPatternKeys;
@@ -283,7 +309,8 @@ var makeRecordButton = { |parent|
 
     // Not all keys should have buttons, e.g., the full mix button
     guiPatternKeys = [
-        \beat_x1, \beat_x2, \pad, \pad_s, \bass, \bass_s, \pulse, \melody, \arpg
+        \beat_8, \beat_16, \pad, \pad_shap, \bass, \bass_s, \pulse, \melody,
+        \beat_8_intro, \pad_intro, \pad_high, \arpg, \arpg_ext
     ].asArray;
     makePatternButtons.(ctrlPaneTransp, ~evnts, guiPatternKeys);
 
@@ -311,35 +338,46 @@ var makeRecordButton = { |parent|
 
     ~win.view.decorator.nextLine;
 
-    // Create two adjacent panels for plots
-    plotPanel1 = View(~win, (winWidth/2-margin)@plotPanelHeight)
+    // Create main panel for tabbed view
+    mainPanel = View(~win, (winWidth-margin)@plotPanelHeight)
         .background_(colorPane);
-    plotPanel1.decorator = FlowLayout(plotPanel1.bounds, margin@margin, gap@gap);
-    
-    plotPanel2 = View(~win, (winWidth/2-margin)@plotPanelHeight)
-        .background_(colorPane);
-    plotPanel2.decorator = FlowLayout(plotPanel2.bounds, margin@margin, gap@gap);
+    mainPanel.decorator = FlowLayout(mainPanel.bounds, margin@margin, gap@gap);
 
-    // Create wavetable GUIs in their respective panels
-    createWavetableGUI.(
-        ~wt_sig,
-        ~makeWavetableBufs,
-        plotPanel1,
-        "Wavetables (Osc & VOsc)",
-        signalType: \wavetable,
-        height: plotPanelHeight-(margin*2),
-        width: (winWidth/2)-(margin*3)
-    );
-    
-    createWavetableGUI.(
-        ~tf_sig,
-        ~makeShaperBufs,
-        plotPanel2,
-        "Transfer Functions (Shaper)",
-        signalType: \transfer,
-        height: plotPanelHeight-(margin*2),
-        width: (winWidth/2)-(margin*3)
-    );
+    mainTabbedView = TabbedView(mainPanel, mainPanel.bounds, ["Wavetables", "Transfer Func"])
+        .tabPosition_(\top)
+        .tabHeight_(30)
+        .tabWidth_(150)
+        .font_(fontLabel)
+        .unfocusedColors_([Color.gray(0.15)])
+        .focusFrameColor_(transparent)
+        .stringColor_(Color.white)
+        .stringFocusedColor_(Color.white);
+
+    mainTabbedView.views[0].flow({ |pane|
+        var paneHost = View(pane, (pane.bounds.width - (margin * 2))@(pane.bounds.height - (margin * 2)))
+            .background_(transparent);
+        paneHost.decorator = FlowLayout(paneHost.bounds, margin@margin, gap@gap);
+        createWavetableGUI.(
+            ~wt_sig,
+            ~makeWavetableBufs,
+            paneHost,
+            "Wavetables (Osc & VOsc)",
+            signalType: \wavetable
+        );
+    });
+
+    mainTabbedView.views[1].flow({ |pane|
+        var paneHost = View(pane, (pane.bounds.width - (margin * 2))@(pane.bounds.height - (margin * 2)))
+            .background_(transparent);
+        paneHost.decorator = FlowLayout(paneHost.bounds, margin@margin, gap@gap);
+        createWavetableGUI.(
+            ~tf_sig,
+            ~makeShaperBufs,
+            paneHost,
+            "Transfer Func (Shaper)",
+            signalType: \transfer
+        );
+    });
 
     ~win.front;
 };

@@ -6,8 +6,31 @@
 s.quit;
 
 (
+// Global variables.
+
 // Project parent path.
 ~projectPath = PathName(thisProcess.nowExecutingPath).parentPath;
+
+// External synth name (for MIDIOut).
+~extSynthName = "Neutron";
+
+// Audio Interface MIDI name (for MIDIIn/Out).
+~audioInterfaceName = "Studio 1824c";
+
+// Default Pads envelope control (ADSR) values.
+~padEnvAtk = 0.5; // seconds
+~padEnvDec = 0.5; // seconds
+~padEnvSus = 0.5; // 0.0-1.0 (sustain level)
+~padEnvRel = 5; // seconds
+
+// Instruments buffer indices
+// Bass - first wavetable (low complexity roughly eq to sine)
+~bassBuff = 0;
+
+
+// WARNING: global variables specific to patterns are defined in the
+// pattern files (patterns.scd).
+
 
 // Server config.
 Server.default = s = Server.local;
@@ -30,8 +53,6 @@ s.newBusAllocators;
 ServerBoot.removeAll;
 ServerTree.removeAll;
 ServerQuit.removeAll;
-
-// Global variables.
 
 // Root key
 //
@@ -76,7 +97,7 @@ ServerQuit.removeAll;
         ~octave
     );
 };
-~setRoot.(60); // Default root note in 12-tone scale (C2, MIDI 36)
+~setRoot.(60); // Default root note in 12-tone scale (C3, MIDI 60)
 
 
 // Find index of middle C (MIDI 60) for default selection
@@ -85,13 +106,6 @@ ServerQuit.removeAll;
 
 // Dictionary to store synths played with the keyboard
 ~synths = Dictionary.new;
-
-
-// Pads env control
-~padEnvAtk = 0.5;
-~padEnvDec = 0.5;
-~padEnvSus = 0.01;
-~padEnvRel = 5;
 
 
 // Timing decorator
@@ -127,6 +141,47 @@ ServerQuit.removeAll;
     }
 };
 
+// Configuration.
+// Save current configuration.
+~saveConfig = {
+    var configPath = ~projectPath +/+ "config.txt";
+    var configData = (
+        midiTrack: ~midiTrack,
+        rootMIDI: ~rootMIDI,
+        root: ~root,
+        octave: ~octave,
+        padEnvAtk: ~padEnvAtk,
+        padEnvDec: ~padEnvDec,
+        padEnvSus: ~padEnvSus,
+        padEnvRel: ~padEnvRel,
+        wtBank: ~wavetableBank
+    );
+    File.use(configPath, "w", { |f| f.write(configData.asCompileString)});
+    postf("Configuration saved to %\n", configPath);
+};
+
+// Load configuration from a file if it exists.
+~loadConfig = {
+    var configPath = ~projectPath +/+ "config.txt";
+    if (File.exists(configPath)) {
+        var configData = File.readAllString(configPath).interpret;
+
+        ~midiTrack = configData[\midiTrack] ?? ~midiTrack;
+        ~rootMIDI = configData[\rootMIDI] ?? ~rootMIDI;
+        ~root = configData[\root] ?? ~root;
+        ~octave = configData[\octave] ?? ~octave;
+        ~padEnvAtk = configData[\padEnvAtk] ?? ~padEnvAtk;
+        ~padEnvDec = configData[\padEnvDec] ?? ~padEnvDec;
+        ~padEnvSus = configData[\padEnvSus] ?? ~padEnvSus;
+        ~padEnvRel = configData[\padEnvRel] ?? ~padEnvRel;
+        ~wavetableBank = configData[\wtBank] ?? ~wavetableBank;
+
+        postf("Configuration loaded from %\n", configPath);
+    } {
+        postf("No configuration file found at %\nDefaults used.", configPath);
+    };
+};
+
 
 // Buffers.
 ~cleanupWavetableBufs = {
@@ -151,22 +206,27 @@ ServerQuit.removeAll;
     // Create 10 wavetables with increasing complexity
     "> Creating wavetables...".post;
     ~wt_sig = 10.collect({ |i|
-
 		var numSegs = i.linexp(0, 9, 4, 40).round;
 
-        Env(
-			// Env always begins and ends with zero
-			// Inner points are random from -1.0 to 1.0
-			[0]++({1.0.rand}.dup(numSegs-1) * [1, -1]).scramble++[0],
+        // Env always begins and ends with zero
+        // Inner points are random from -1.0 to 1.0
+        var levels = [0]++({1.0.rand}.dup(numSegs-1) * [1, -1]).scramble++[0];
 
-			// Greater segment duration variety in higher-index wavetables
-			{exprand(1, i.linexp(0, 9, 1, 50))}.dup(numSegs),
+		// Greater segment duration variety in higher-index wavetables
+        var times = {exprand(1, i.linexp(0, 9, 1, 50))}.dup(numSegs);
 
-			// Low-index wavetables tend to be sinusoidal
-			// High index wavetables tend to have sharp angles and corners
-			{[\sine, 0, exprand(1,20) * [1,-1].choose].wchoose([9-i, 3, i].normalizeSum)}.dup(numSegs)
-		).asSignal(1024)
-	});
+        // Low-index wavetables tend to be sinusoidal
+        // High index wavetables tend to have sharp angles and corners
+        var curves = {[\sine, 0, exprand(1,20) * [1,-1].choose].wchoose([9-i, 3, i].normalizeSum)}.dup(numSegs);
+
+        postf(
+            "\n%\nlevels: %\ntimes: %\ncurves: %\n",
+            i, levels.round(0.001), times.round(0.001),
+            curves.collect({ |item| if (item.isFloat) { item.round(0.001) } { "\\" ++ item }})
+        );
+
+        Env(levels, times, curves).asSignal(1024)
+    });
     postf("OK\n");
 
     // Check if there are buffers already and clean them up
@@ -210,7 +270,6 @@ ServerQuit.removeAll;
         buf.setnMsg(0, ~tf_sig[index].asWavetableNoWrap);
     });
 }));
-
 
 // Aggregate buffer creation
 ~makeBuffers = {
@@ -303,7 +362,7 @@ ServerQuit.removeAll;
     //   e.g. 1 for the first click, 2 for the second click, etc.
     // - an Array of click indices to accent, e.g. [1, 3] for accents on the
     //   first and third clicks.
-    // 
+    //
     // Returns an Array of 0s and 1s, where 1 indicates an accented click.
     // Examples:
     // - for 4 clicks per beat, accent on the first click: [1, 0, 0, 0]
@@ -327,7 +386,7 @@ ServerQuit.removeAll;
             Array.fill(clicks, { |j| if (accentOn.includes(j+1)) { 1 } { 0 }})
         });
     }
-    { "Invalid accentOn value. Must be a positive Integer or an Array of click indices.".postln; 
+ł    { "Invalid accentOn value. Must be a positive Integer or an Array of click indices.".postln; 
       accents = Array.fill(beats, { |i| Array.fill(clicks, 0) }) // Default to no accents
     };
 };
@@ -354,13 +413,21 @@ ServerQuit.removeAll;
     "[i] Cleaning up".postln;
     ~win.close;
 
+    "> Saving curent configuration...".post;
+    ~saveConfig.();
+
     "> Resetting bus counter...".post;
     s.newBusAllocators;
     postf("OK\n");
 
     "> Freeing MIDI...".post;
-    MIDIdef.freeAll;
-    postf("OK\n");
+    try {
+        ~midiOut.allNotesOff(0);
+        MIDIdef.freeAll;
+        postf("OK\n");
+    } { |error|
+        postf("WARNING: Could not free MIDI resources: %\n", error.errorString);
+    };
 
     "> Clearing buffers...".post;
     ~cleanupShaperBufs.();
@@ -369,6 +436,15 @@ ServerQuit.removeAll;
 
     "> Clearing notification centers...".post;
     NotificationCenter.clear;
+    postf("OK\n");
+
+    "> Removing all patterns...".post;
+    ~evnts.keysValuesDo({ |key, pattern|
+        if (pattern.isPlaying) {
+            pattern.stop;
+        };
+        ~evnts.removeAt(key);
+    });
     postf("OK\n");
 
     "> Removing all functions...".post;
@@ -400,6 +476,9 @@ s.waitForBoot({
 
 	// Trigger re-instantiating of the FX groups.
     s.freeAll;
+
+    // Load configuration from file if it exists, otherwise use defaults.
+    ~loadConfig.();
 
     // // Show server meter and Node Tree.
     // s.meter;
