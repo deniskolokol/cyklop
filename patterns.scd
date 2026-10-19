@@ -17,13 +17,15 @@ if (pdupClass.notNil) {
 	myPrepeat = Pstutter;
 };
 
+// Global variables
+
 // Routing
 ~outDrums = 0;
 ~outPads = 2;
 ~outBass = 4;
 ~outMelody = 6;
 
-// Additional buses for separate recording of drum elements
+// Additional buses for separate recording of drum elements.
 ~outRecHihat = 8; // hihat is stereo
 ~outRecKick = 10;
 ~outRecSnare = 11;
@@ -439,6 +441,7 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 // [0, 3, 7]
 // [0, 3, 8]
 ~evnts[\pad] = Pbindef(\pad,
+    // Server placement
     \group, Pfunc({~mainGrp}),
 
     // Generator
@@ -446,8 +449,10 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \detune, Pfunc({rrand(0.15, 0.4)} ! 3),
     \bufnum, Pfunc({ ~wt_buf[3..6].choose }),
 
-    // Env
+    // Timing
     \dur, Pwrand([2.5, 5, 10, 15], [0.05, 0.15, 0.35, 0.45], inf),
+
+    // Env
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 3}),
     \sus, Pfunc({ ~padEnvSus ! 3 }),
     \decay, Pkey(\dur) * Pwhite(0.4, 0.6),
@@ -469,6 +474,7 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 );
 
 ~evnts[\pad_shap] = Pbindef(\pad_shap,
+    // Server placement
     \group, Pfunc({~mainGrp}),
 
     // Generator
@@ -476,6 +482,7 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     \detune, Pfunc({rrand(0.05, 0.15)} ! 3),
     \bufnum, Pfunc({ ~tf_buf.choose }).trace,
 
+    // Timing
     \dur, Pwrand([2.5, 5, 10, 15], [0.05, 0.15, 0.35, 0.45], inf),
 
     // Env
@@ -506,156 +513,125 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 // than the main pad.
 // WARNING: For paraphonic mode on Behringer Neutron!
 ~evnts[\pad_intro] = Pbindef(\pad_intro,
+    // Generator
     \type, \midi,       // This is a MIDI event
-    \midiout, ~midiOut, // Send it to your Neutron
+    \midiout, ~midiOut, // Sent to Neutron
     \midicmd, \noteOn,  // The command is a note (default)
     \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
 
+    // Timing
     \dur, 40,
+
+    // Env
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 2}),
     \sus, Pfunc({ ~padEnvSus ! 2 }),
     \rel, Pkey(\dur) * Pwhite(1.01, 1.15),
+
+    // Harmony
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
     \degree, Pseq([[0, 7], [0, 8], [1, 3], [1, 7]], inf),
-    \amp, Pexprand(0.07, 0.1),
-    \pan, Pwhite(-0.4, 0.4),
-    \out, Pfunc({~outPads}),
+
+    // Routing (out to MIDI, no need to route to audio output)
+    \amp, Pexprand(0.07, 0.1)
 );
 
 
 // One additional note building a chord in the \pad_intro made with Neutron.
 // WARNING: Switch off paraphonic mode before recording.
 ~evnts[\pad_high] = Pbindef(\pad_high,
+    // Generator
     \type, \midi,       // This is a MIDI event
-    \midiout, ~midiOut, // Send it to your Neutron
+    \midiout, ~midiOut, // Sent to Neutron
     \midicmd, \noteOn,  // The command is a note (default)
     \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
 
+    // Timing
     \dur, 20,
+
+    // Env
     \atk, Pfunc({rrand(~padEnvAtk, ~padEnvAtk * 1.1) ! 2}),
     \sus, Pfunc({ ~padEnvSus ! 2 }),
     \rel, Pkey(\dur) * Pwhite(1.01, 1.15),
+
+    // Harmony
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave + 2}),
     \degree, Pseq([3, 1, -2, -4], inf),
-    \amp, Pexprand(0.07, 0.1),
+
+    // Routing (out to MIDI, no need to route to audio output)
+    \amp, Pexprand(0.07, 0.1)
 );
 
 
-
-// 8/10 bar bass using low complexity wavetables
-~bassMain = Pbind(
+// 8/10 bar bass using low complexity wavetables.
+~evnts[\bass_s] = Pbindef(\bass_s,
+    // Generator
     \instrument, "osc__s2",
     \bufnum, Pfunc({ ~wt_buf[~bassBuff] }),
+
+    // Server placement
     \group, Pfunc({~mainGrp}),
+
+    // Timing
     \dur, Pseq([1, 1/2, 1/2, 1/2, 1, 1/2, 1/2, 1/2], inf),
+
+    // Env
     \atk, 0.01,
     \sus, 0.2,
     \rel, Pexprand(0.4, 1),
     \cAtk, -1,
     \cDec, 1,
     \cRel, Pwhite(5, 10).neg,
+
+    // Harmony
     \detune, Pwhite(0.05, 0.08),
     \scale, Scale.pelog,
-    \degree, Pseq([0, 0, 0, Rest(), Prand([1, 3, 7], 1), 1, Prand([1, 3], 1), Rest()]),
+    \degree, Pseq([0, 0, 0, Rest(), Prand([1, 3, 7], 1), 1, Prand([1, 3], 1), Rest()], inf),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
-    \amp, Pwhite(0.55, 0.65),
-    \pan, Pwhite(0.01, 0.3),
-    \out, Pfunc({~outBass}),
-);
 
-~bassOff1 = Pbind(
-    \instrument, "osc__s2",
-    \bufnum, Pfunc({ ~wt_buf[~bassBuff] }),
-    \group, Pfunc({~mainGrp}),
-    \dur, Pseq([1, 1, 2, 1/2, 1/2], inf),
-    \atk, 0.1,
-    \sus, Pwhite(0.8, 1),
-    \rel, Pkey(\dur) * Pwhite(0.8, 1.2),
-    \cAtk, -1,
-    \cDec, 1,
-    \cRel, Pwhite(5, 10).neg,
-    \detune, Pwhite(0.05, 0.08),
-    \scale, Scale.pelog,
-    \degree, Pseq([0, Prand([0, 1, 3], 1), 0, 0, Rest()]),
-    \root, Pfunc({~root}),
-    \octave, Pfunc({~octave}),
-    \amp, Pwhite(0.55, 0.65),
-    \pan, Pwhite(0.01, 0.3),
-    \out, Pfunc({~outBass}),
-);
-
-~bassOff2 = Pbind(
-    \instrument, "osc__s2",
-    \bufnum, Pfunc({ ~wt_buf[~bassBuff] }),
-    \group, Pfunc({~mainGrp}),
-    \dur, Pseq(1/2 ! 10, inf),
-    \atk, 0.01,
-    \sus, Pseq([
-        Pkey(\dur) * Pwhite(0.8, 1.2),
-        Pwhite(0.2, 0.3, 4),
-        Pkey(\dur) * Pwhite(0.8, 1.2),
-        Pwhite(0.2, 0.3, 3),
-        0.1
-    ]),
-    \rel, Pexprand(0.4, 0.5),
-    \cAtk, -1,
-    \cDec, 1,
-    \cRel, Pwhite(5, 10).neg,
-    \detune, Pwhite(0.05, 0.08),
-    \scale, Scale.pelog,
-    \degree, Pseq([0, 0, 0, 0, Rest(), Prand([0, 1, 3], 3), Rest() ! 2]),
-    \root, Pfunc({~root}),
-    \octave, Pfunc({~octave}),
-    \amp, Pwhite(0.55, 0.65),
-    \pan, Pwhite(0.01, 0.3),
-    \out, Pfunc({~outBass}),
+    // Routing
+    \amp, Pwhite(0.55, 0.65, inf),
+    \pan, Pwhite(0.01, 0.3, inf),
+    \out, Pfunc({~outBass})
 );
 
 
-~evnts[\bass_s] = Pdef(\bass_s,
-    Pseq([
-        Pseq([~bassMain], 3),
-        Prand([~bassOff1, ~bassOff2], 1),
-    ], inf)
-);
-
-
-
-// Arpeggiated bass using the first wavetable (low complexity roughly eq to sine)
+// Arpeggiated bass using low complexity wavetables.
 ~evnts[\bass] = Pbindef(\bass,
+    // Generator
     \instrument, "osc__s2",
-    \group, Pfunc({~mainGrp}),
     \bufnum, Pfunc({ ~wt_buf[~bassBuff] }),
 
-    // Instead of the instructions above, use the following for sending the
-    // arpeggiated melody to the external synth via MIDI:
-    //
-    // \type, \midi,       // This is a MIDI event
-    // \midiout, ~midiOut, // Send it to your Neutron
-    // \midicmd, \noteOn,  // The command is a note (default)
-    // \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
+    // Server placement
+    \group, Pfunc({~mainGrp}),
 
+    // Timing
     \dur, Pseq([
         myPrepeat.new(16, Pseq([1/2], 1)),
         myPrepeat.new(8, Pseq([1], 1)),
         Prand([2, 4, 8], 1)
     ], inf),
+
+    // Env
     \atk, 0.001,
     \sus, 0.2,
     \rel, Pexprand(0.4, 1),
     \cAtk, 0,
     \cRel, Pwhite(5, 10).neg,
+
+    // Harmony
     \detune, 0.01,
     \scale, Scale.pelog,
     \degree, Pseq([Prand([0, 1, 3], 24), Pseq([\], 1)], inf)
         + myPrepeat.new(25, Pwrand([0, 3, -4], [0.78, 0.1, 0.12], inf)),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
+
+    // Routing
     \amp, Pseq([Pwhite(0.55, 0.65, 25)], inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outBass}),
@@ -664,19 +640,11 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 
 // Arpeggiated pulse using mid/high complexity wavetables
 ~evnts[\pulse] = Pbindef(\pulse,
-    \instrument, "osc__s2",
+    // Server placement
     \group, Pfunc({~mainGrp}),
-    \dur, Pseq([
-        myPrepeat.new(16, Pseq([1/2], 1)),
-        myPrepeat.new(8, Pseq([1], 1)),
-        Prand([2, 4, 8, 12, 24], 1)
-    ], inf),
-    \atk, 0.001,
-    \sus, 0.2,
-    \rel, Pexprand(0.4, 1),
-    \cAtk, 0,
-    \cRel, Pwhite(5, 10).neg,
-    \detune, 0.3,
+
+    // Generator
+    \instrument, "osc__s2",
     // Higher complexity wavetables for the first 8 bars to make the pulse more prominent in the mix
     // Next 8 bars - mid complexity to give the pulse a bit more space and avoid masking the bass
     // Last 8 bars (plus one extra-note) - low complexity to make the pulse more subdued
@@ -685,6 +653,23 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
         Pfuncn({~wt_buf[5..7].choose}, 8),
         Pfuncn({~wt_buf[4..5].choose}, 9)
     ], inf),
+
+    // Timing
+    \dur, Pseq([
+        myPrepeat.new(16, Pseq([1/2], 1)),
+        myPrepeat.new(8, Pseq([1], 1)),
+        Prand([2, 4, 8, 12, 24], 1)
+    ], inf),
+
+    // Env
+    \atk, 0.001,
+    \sus, 0.2,
+    \rel, Pexprand(0.4, 1),
+    \cAtk, 0,
+    \cRel, Pwhite(5, 10).neg,
+
+    // Harmony
+    \detune, 0.3,
     \scale, Scale.pelog,
     \degree, (
         Pseq([Prand([0, 1, 7], 24), Pseq([\], 1)], inf)
@@ -692,31 +677,42 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     ),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave - 3}),
+
+    // Routing
     \amp, Pseq([Pgeom(0.45, -1.dbamp, 25)], inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outMelody}),
 );
 
-// Minimal melody in the upper register using variable wavetable oscillator
+// Minimal melody in the upper register using variable wavetable oscillator.
 ~evnts[\melody] = Pbindef(\melody,
+    // Generator
     \instrument, "vosc__s2",
-    \group, Pfunc({~mainGrp}),
-    \dur, Prand([
-        Pseq([4, 3, 1, Prand([24, 32, 40])], 1),
-        Pseq([3, 2, 3, Prand([24, 32, 40])], 1),
-    ], inf),
-    \atk, 0.01,
-    \sus, 0.3,
-    \rel, 1.5,
-    \cAtk, -2,
-    \cRel, -2,
-    \detune, Pexprand(0.18, 0.25),
+    \numBufs, Prand((2..4), inf),
     \bufnum, Pwrand([
         Pfunc({ ~wt_buf[0] }),
         Pfunc({ ~wt_buf[1] }),
         Pfuncn({ ~wt_buf[2] }, 2),
     ], [1, 3, 9].normalizeSum, inf),
-    \numBufs, Prand((2..4), inf),
+
+    // Server placement
+    \group, Pfunc({~mainGrp}),
+
+    // Timing
+    \dur, Prand([
+        Pseq([4, 3, 1, Prand([24, 32, 40])], 1),
+        Pseq([3, 2, 3, Prand([24, 32, 40])], 1),
+    ], inf),
+
+    // Env
+    \atk, 0.01,
+    \sus, 0.3,
+    \rel, 1.5,
+    \cAtk, -2,
+    \cRel, -2,
+
+    // Harmony
+    \detune, Pexprand(0.18, 0.25),
     \scale, Scale.pelog,
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave + 2}),
@@ -725,30 +721,43 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
         Pseq([7, -4, Prand([-5, 3, \]), \], 1),
         Pseq([8, 12, Prand([7, 8, \]), \], 1)
     ], inf),
+
+    // Routing
     \amp, Pseq([0.18, 0.24, 0.28, 0], inf),
+    \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outMelody}),
 );
 
 // More complex melody using variable wavetable oscillator and more rhythmic variation.
 ~evnts[\arpg] = Pbindef(\arpg,
+    // Generator
     \instrument, "osc__s2",
     \bufnum, Pfunc({~wt_buf[2..4].choose}),
+
+    // Server placement
     \group, Pfunc({~mainGrp}),
+
+    // Timing
     \dur, Pseq((1/2) ! 8, inf),
+
+    // Env
     \atk, 0.001,
     \sus, 0.2,
     \rel, Pexprand(0.4, 1),
     \cAtk, 0,
     \cRel, Pwhite(5, 10).neg,
+
+    // Harmony
     \detune, Pexprand(0.18, 0.25),
     \scale, Scale.pelog,
-
     // The following creates a repeating pattern:
     // c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  c#3 -  d#3 -  c 4 -  c 4 -  § -  c#3 -  c#3 -  c 4 -  c 4 -  § -  c 3
     // which is 24 of the 4ths notes long, and thus fits nicely into the 5/4 time signature (24 x 1/4 = 6 bars).
     \degree, Place(#[12, 12, \, [7, 7, 1, 1, 0], [8, 8, 3, 1, \]], inf),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
+
+    // Routing
     \amp, Pseq([Pgeom(0.45, -1.dbamp, 8)], inf),
     \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
     \out, Pfunc({~outMelody}),
@@ -757,38 +766,39 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
 
 // The same as ~evnts[\arpg] but sent to the external synth via MIDI.
 ~evnts[\arpg_ext] = Pbindef(\arpg_ext,
-    \group, Pfunc({~mainGrp}),
-
+    // Route to external synth via MIDI
     \type, \midi,       // This is a MIDI event
-    \midiout, ~midiOut, // Send it to your Neutron
+    \midiout, ~midiOut, // Sent to Neutron
     \midicmd, \noteOn,  // The command is a note (default)
     \chan, 0,           // MIDI Channel (0 is channel 1 for external synth)
 
+    // Timing
     \dur, Pseq((1/2) ! 8, inf),
+
+    // Env
     \atk, 0.001,
     \sus, 0.2,
     \rel, Pexprand(0.4, 1),
     \cAtk, 0,
     \cRel, Pwhite(5, 10).neg,
+
+    // Harmony
     \detune, Pexprand(0.18, 0.25),
     \scale, Scale.pelog,
-
-    // The following creates a repeating pattern:
-    // c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  g 3 -  g#3 -  c 4 -  c 4 -  § -  c#3 -  d#3 -  c 4 -  c 4 -  § -  c#3 -  c#3 -  c 4 -  c 4 -  § -  c 3
-    // which is 24 of the 4ths notes long, and thus fits nicely into the 5/4 time signature (24 x 1/4 = 6 bars).
+    // The same pattern as in ~evnts[\arpg].
     \degree, Place(#[12, 12, \, [7, 7, 1, 1, 0], [8, 8, 3, 1, \]], inf),
     \root, Pfunc({~root}),
     \octave, Pfunc({~octave}),
+
+    // Routing
     \amp, Pseq([Pgeom(0.45, -1.dbamp, 8)], inf),
-    \pan, Pwhite(0.01, 0.3) * Pseq([1, -1], inf),
-    \out, Pfunc({~outMelody}),
 );
 
 
-
+// Mix all basic the events into one (neither for recording nor for performance,
+// just for listening and debugging).
 ~evnts[\mix_full] = Pdef(\mix_full,
     Ptpar([
-        // 0.0, ~evnts[\beat_8].value,
         0.0, ~evnts[\beat_16].value,
         0.0, ~evnts[\bass].value,
         0.0, ~evnts[\pad].value,

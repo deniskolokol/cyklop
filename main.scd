@@ -6,8 +6,31 @@
 s.quit;
 
 (
+// Global variables.
+
 // Project parent path.
 ~projectPath = PathName(thisProcess.nowExecutingPath).parentPath;
+
+// External synth name (for MIDIOut).
+~extSynthName = "Neutron";
+
+// Audio Interface MIDI name (for MIDIIn/Out).
+~audioInterfaceName = "Studio 1824c";
+
+// Default Pads envelope control (ADSR) values.
+~padEnvAtk = 0.5; // seconds
+~padEnvDec = 0.5; // seconds
+~padEnvSus = 0.5; // 0.0-1.0 (sustain level)
+~padEnvRel = 5; // seconds
+
+// Instruments buffer indices
+// Bass - first wavetable (low complexity roughly eq to sine)
+~bassBuff = 0;
+
+
+// WARNING: global variables that are pattern specific are defined in the
+// pattern files (patterns.scd).
+
 
 // Server config.
 Server.default = s = Server.local;
@@ -30,8 +53,6 @@ s.newBusAllocators;
 ServerBoot.removeAll;
 ServerTree.removeAll;
 ServerQuit.removeAll;
-
-// Global variables.
 
 // Root key
 //
@@ -76,7 +97,7 @@ ServerQuit.removeAll;
         ~octave
     );
 };
-~setRoot.(60); // Default root note in 12-tone scale (C2, MIDI 36)
+~setRoot.(60); // Default root note in 12-tone scale (C3, MIDI 60)
 
 
 // Find index of middle C (MIDI 60) for default selection
@@ -85,17 +106,6 @@ ServerQuit.removeAll;
 
 // Dictionary to store synths played with the keyboard
 ~synths = Dictionary.new;
-
-
-// Pads env control
-~padEnvAtk = 0.5;
-~padEnvDec = 0.5;
-~padEnvSus = 0.5;
-~padEnvRel = 5;
-
-
-// Instruments buffer indices
-~bassBuff = 0;
 
 
 // Timing decorator
@@ -131,8 +141,8 @@ ServerQuit.removeAll;
     }
 };
 
-
-// Save current configuration to a file.
+// Configuration.
+// Save current configuration.
 ~saveConfig = {
     var configPath = ~projectPath +/+ "config.txt";
     var configData = (
@@ -172,6 +182,7 @@ ServerQuit.removeAll;
     };
 };
 
+
 // Buffers.
 ~cleanupWavetableBufs = {
     // Cleans up buffers used for wavetables and Shaper.
@@ -187,31 +198,6 @@ ServerQuit.removeAll;
         ~tf_buf.do({ |buf| buf.free });
         ~tf_buf = nil;
     };
-};
-
-
-// Save Events to YAML
-~saveListToYAML = { |data, filePath|
-    var yamlContent = "- ";
-    
-    yamlContent = yamlContent ++ data.collect { |event, i|
-        var curvesYAML = event[\curves].collect { |curve|
-            if (curve.isSymbol) { curve.asString } { curve }
-        }.asCompileString;
-        
-        (
-            "name: " ++ event[\name].quote ++ "\n" ++
-            "  levels: " ++ event[\levels].asCompileString ++ "\n" ++
-            "  times: " ++ event[\times].asCompileString ++ "\n" ++
-            "  curves: " ++ curvesYAML
-        )
-    }.join("\n- ");
-    
-    File.use(filePath, "w") { |file|
-        file.write(yamlContent)
-    };
-    
-    ("Saved % events to %".format(data.size, filePath)).postln;
 };
 
 
@@ -406,7 +392,7 @@ ServerQuit.removeAll;
     //   e.g. 1 for the first click, 2 for the second click, etc.
     // - an Array of click indices to accent, e.g. [1, 3] for accents on the
     //   first and third clicks.
-    // 
+    //
     // Returns an Array of 0s and 1s, where 1 indicates an accented click.
     // Examples:
     // - for 4 clicks per beat, accent on the first click: [1, 0, 0, 0]
