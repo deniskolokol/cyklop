@@ -219,12 +219,6 @@ ServerQuit.removeAll;
         // High index wavetables tend to have sharp angles and corners
         var curves = {[\sine, 0, exprand(1,20) * [1,-1].choose].wchoose([9-i, 3, i].normalizeSum)}.dup(numSegs);
 
-        postf(
-            "\n%\nlevels: %\ntimes: %\ncurves: %\n",
-            i, levels.round(0.001), times.round(0.001),
-            curves.collect({ |item| if (item.isFloat) { item.round(0.001) } { "\\" ++ item }})
-        );
-
         Env(levels, times, curves).asSignal(1024)
     });
     postf("OK\n");

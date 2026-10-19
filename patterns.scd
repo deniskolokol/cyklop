@@ -480,7 +480,7 @@ Pdefn(\offBeatChoice, ~beat_16offBeat[~offBeatIndex]);
     // Generator
     \instrument, "shaper__s2",
     \detune, Pfunc({rrand(0.05, 0.15)} ! 3),
-    \bufnum, Pfunc({ ~tf_buf.choose }).trace,
+    \bufnum, Pfunc({ ~tf_buf.choose }),
 
     // Timing
     \dur, Pwrand([2.5, 5, 10, 15], [0.05, 0.15, 0.35, 0.45], inf),
