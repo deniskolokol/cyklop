@@ -28,7 +28,7 @@ s.quit;
 ~bassBuff = 0;
 
 
-// WARNING: global variables that are pattern specific are defined in the
+// WARNING: global variables specific to patterns are defined in the
 // pattern files (patterns.scd).
 
 
@@ -198,36 +198,6 @@ ServerQuit.removeAll;
         ~tf_buf.do({ |buf| buf.free });
         ~tf_buf = nil;
     };
-};
-
-
-~loadWavetableBank = { |data|
-    ~cleanupWavetableBufs.();
-    ~bank = data;
-    ~wt_sig = ~bank[\presets].collect({ |item|
-        Env(item[\levels], item[\times], item[\curves]).asSignal(1024)
-    });
-
-    // Load into buffers in wavetable format
-    "> Loading wavetables into buffers...".post;
-    ~wt_buf = Buffer.allocConsecutive(~wt_sig.size, s, 2048, 1, {
-        arg buf, index;
-        var rout;
-        buf.setnMsg(0, ~wt_sig[index].asWavetable);
-
-        rout = Routine {
-            if (buf.numFrames.isNil.not) {
-                postf(
-                    "Wavetable % loaded into buffer % with % frames.\n",
-                    ~bank[\presets][index][\name], buf.bufnum, buf.numFrames
-                );
-                ~bank[\presets][index][\bufNum] = buf.bufnum;
-                rout.stop;
-            } {
-                0.01.wait;
-            };
-        }.play;
-    });
 };
 
 

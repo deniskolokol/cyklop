@@ -69,40 +69,6 @@ var createWavetableGUI = {
 
     // Add control buttons
     Button(parent, 80@30)
-        .states_([["Load", Color.white, colorButton]])
-        .action_({ |bt|
-            var data;
-
-            FileDialog({ |path|
-                if (File.exists(path) and: { File.type(path) != \directory }) {
-                    // Store the selected wavetable bank path
-                    ~wavetableBank = path;
-
-                    // Load bank data from the selected file
-                    data = File.use(path, "r", { |file| file.readAllString }).interpret;
-                    ~loadWavetableBank.(data);
-
-                    // Refresh the plots after loading new data
-                    updateWavetablePlots.(plotView);
-                } {
-                    ("Error: Selected path is not a valid file: " ++ path).postln;
-                };
-            },
-            fileMode: 1,
-            acceptMode: 0, // Open mode
-            stripResult: true,
-            path: ~projectPath +/+ "wtbank"
-            );
-        });
-
-    Button(parent, 80@30)
-        .states_([["Edit", Color.white, colorButton]])
-        .action_({ |bt|
-            "Edit bank".postln;
-            openEditorTab.((signalType.asString ++ "Edit").asSymbol);
-        });
-
-    Button(parent, 80@30)
         .states_([["Refresh", Color.white, colorButton]])
         .action_({ |bt|
             updateWavetablePlots.(plotView)
@@ -249,10 +215,7 @@ var makeRecordButton = { |parent|
         ])
         .value_(0)
         .action_({ |bt|
-            // var path = ~projectPath +/+ format("recording_%.wav", Date.getDate.stamp);
-
             if (bt.value == 1) {
-
                 // Omitting the first two buses, as ~outDrums is a stereo bus
                 // for monitoring (there are individual buses for drum recording).
                 var bus = ~outDrums + 2;
@@ -279,7 +242,6 @@ var makeRecordButton = { |parent|
     var rootWatcher;
     var ctrlPaneTransp, ctrlPaneTranspTop, ctrlPaneNotes;
     var mainPanel;
-    // var plotPanel1, plotPanel2;
     var panelHeight = 200;  // height for control panels
     var plotPanelHeight = winHeight-panelHeight-(margin*4);  // remaining height for plot panels
     var guiPatternKeys;

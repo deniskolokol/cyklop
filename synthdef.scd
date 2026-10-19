@@ -109,7 +109,7 @@ SynthDef("shaper__s2", {
 // DRUMS.
 
 // Kick drums and snare are inspired by:
-// https://www.youtube.com/watch?v=xYc7_PbbtuE&list=WL&index=59&t=2s
+// https://www.youtube.com/watch?v=xYc7_PbbtuE
 
 // Synthetic kick drum.
 SynthDef(\kick_synth, {
@@ -135,7 +135,7 @@ SynthDef(\kick_synth, {
     snd = snd * Env.perc(att, rel, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
 
-    // write mono copy to recording bus (if set)
+    // Write mono copy to recording bus (if set)
     Out.ar(outRec, snd);
 
     snd = Pan2.ar(snd, pan);
@@ -143,7 +143,7 @@ SynthDef(\kick_synth, {
 }).add;
 
 
-// "Acoutsic" kick drum
+// "Acoutsic" kick drum.
 SynthDef(\kick_acoustic, {
     arg out=0, outRec, att=0.001, rel=1.3, curve=(-6), amp=0.56, pan=0,
         bpfreq1=7120, bprq1=0.5, bpfreq2=3120, bprq2=0.3,
@@ -180,7 +180,7 @@ SynthDef(\kick_acoustic, {
     snd = snd * Env.perc(att, rel, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
 
-    // write mono copy to recording bus
+    // Write mono copy to recording bus.
     Out.ar(outRec, snd);
 
     snd = Pan2.ar(snd, pan);
@@ -239,10 +239,10 @@ SynthDef(\snare, {
     snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
 
-    // write mono copy to recording bus before spreading
+    // Write mono copy to recording bus before spreading.
     Out.ar(outRec, Mix.ar(snd));
 
-    // monitoring output
+    // Monitoring output.
     Out.ar(out, snd);
 }).add;
 
@@ -285,10 +285,10 @@ SynthDef(\tom, {
     snd = snd * Env.perc(0.001, 1, curve: curve).ar(Done.freeSelf);
     snd = snd * amp * attenuate;
 
-    // write mono copy to recording bus before spreading
+    // Write mono copy to recording bus before spreading.
     Out.ar(outRec, Mix.ar(snd));
 
-    // monitoring output
+    // Monitoring output.
     Out.ar(out, snd);
 }).add;
 
@@ -304,10 +304,10 @@ SynthDef(\hihat, {
     signal = signal * env * attenuate;
     signal = Pan2.ar(signal, pan);
 
-    // record
+    // Write a copy to recording bus before spreading.
     Out.ar(outRec, signal);
 
-    // monitor
+    // Monitoring output.
     Out.ar(out, signal);
 }).add;
 
