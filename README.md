@@ -43,7 +43,6 @@ Warning: for drums a separate additional output bus are set for the purpose of r
     s.record(bus: ~outRecSnare, numChannels: 1); // snare and the rest
                                                  // of drums are mono
 
-
 ## Note on MIDI
 
 MIDI devices used for output:
@@ -62,6 +61,22 @@ _beat_8, beat_16, pad, pad_shap, bass, bass_s, pulse, melody_
 MINILAB's sliders control ADSR for pads.
 
 Top row of MINILAB's knobs are set to control distortion (for drums), while bottom row control Low Pass Filter freq and resonance, as well as Reverb xFade and mix.
+
+## How to play external synth
+
+First connect external synthesizer, list all MIDI outputs and find its name. Assign that name to the global variable `~extSynthName` in the beginning of `main.scd`.
+
+Then run as usual (see [How to run](#how-to-run)), and select appropriate button in GUI.
+
+Originally a Behringer Neutron was used for recording Pbindef's `\pad_intro`, `\arpg_ext`, and `\pad_high`. See the patch sheets for details (there are two alternative patches for `pad_intro`)
+
+![Neutron patch for pad_intro-1](./neutron-patch/05-pad_intro-1.jpg)
+
+![Neutron patch for pad_intro-2](./neutron-patch/10-pad_intro-2.jpg)
+
+![Neutron patch for pad_high](./neutron-patch/08-pad_high.jpg)
+
+![Neutron patch for arpg_ext](./neutron-patch/02-arpg_ext.jpg)
 
 ## Inspirations
 
